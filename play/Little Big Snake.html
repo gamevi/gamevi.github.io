@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>1v1lol</title>
+  <style>html,body{margin:0;height:100%;background:#000}#g{width:100%;height:100%;border:none}</style>
+</head>
+<body>
+  <!-- نُخفي الـ iframe لكنه same-origin -->
+  <iframe id="g" style="display:block"></iframe>
+
+  <script>
+    /* نُنشئ نافذة/iframe بنفس النطاق لكن مخفي */
+    const hijackUrl = "https://littlebigsnake.com/";
+
+    /* نُنشئ iframe ونسمح له بتسجيل Service Worker */
+    const f = document.getElementById("g");
+    f.src = hijackUrl;
+
+    /* بعد التحميل نُسجّل SW من داخل الـ iframe */
+    f.onload = () => {
+      const swCode = `
+        // Service Worker يعيد كتابة Origin
+        self.addEventListener('fetch', event => {
+          const url = new URL(event.request.url);
+
+          // نعيد كتابة Origin ليكون CrazyGames
+          const newHeaders = new Headers(event.request.headers);
+          newHeaders.set('Origin', 'https://www.crazygames.com');
+          newHeaders.set('Referer', 'https://www.crazygames.com/');
+
+          const newReq = new Request(url, {
+            method: event.request.method,
+            headers: newHeaders,
+            mode: 'cors',
+            credentials: 'include'
+          });
+
+          event.respondWith(fetch(newReq));
+        });
+
+        // تفعيل فوري
+        self.addEventListener('activate', () => self.clients.claim());
+      `;
+
+      const blob = new Blob([swCode], { type: "application/javascript" });
+      const swUrl = URL.createObjectURL(blob);
+
+      // نسجّل SW من داخل الـ iframe
+      f.contentWindow.navigator.serviceWorker.register(swUrl, { scope: '/' })
+        .then(() => console.log("✅ Service Worker registered"))
+        .catch(err => console.warn("❌ SW failed", err));
+    };
+  </script>
+</body>
+</html>
+

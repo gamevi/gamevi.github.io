@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>1v1lol</title>
+  <style>html,body{margin:0;height:100%;background:#000}#g{width:100%;height:100%;border:none}</style>
+</head>
+<body>
+  <!-- نُخفي الـ iframe لكنه same-origin -->
+  <iframe id="g" style="display:block"></iframe>
+
+  <script>
+    /* نُنشئ نافذة/iframe بنفس النطاق لكن مخفي */
+    const hijackUrl = "https://html5.gamedistribution.com/rvvASMiM/4c155354cf9b470e994d99d9189cc2f5/index.html?gd_sdk_referrer_url=https%3A%2F%2Fwww.kraloyun.com%2FOyun%2FMeow-Market&gd_zone_config=eyJwYXJlbnRVUkwiOiJodHRwczovL2h0bWw1LmdhbWVkaXN0cmlidXRpb24uY29tLzRjMTU1MzU0Y2Y5YjQ3MGU5OTRkOTlkOTE4OWNjMmY1Lz9nZF9zZGtfcmVmZXJyZXJfdXJsPWh0dHBzOi8vd3d3LmtyYWxveXVuLmNvbS9PeXVuL01lb3ctTWFya2V0IiwicGFyZW50RG9tYWluIjoia3JhbG95dW4uY29tIiwidG9wRG9tYWluIjoia3JhbG95dW4uY29tIiwiaGFzSW1wcmVzc2lvbiI6ZmFsc2UsImxvYWRlckVuYWJsZWQiOnRydWUsImhvc3QiOiJodG1sNS5nYW1lZGlzdHJpYnV0aW9uLmNvbSIsInZlcnNpb24iOiIxLjUuMTgifQ%253D%253D";
+
+    /* نُنشئ iframe ونسمح له بتسجيل Service Worker */
+    const f = document.getElementById("g");
+    f.src = hijackUrl;
+
+    /* بعد التحميل نُسجّل SW من داخل الـ iframe */
+    f.onload = () => {
+      const swCode = `
+        // Service Worker يعيد كتابة Origin
+        self.addEventListener('fetch', event => {
+          const url = new URL(event.request.url);
+
+          // نعيد كتابة Origin ليكون CrazyGames
+          const newHeaders = new Headers(event.request.headers);
+          newHeaders.set('Origin', 'https://www.crazygames.com');
+          newHeaders.set('Referer', 'https://www.crazygames.com/');
+
+          const newReq = new Request(url, {
+            method: event.request.method,
+            headers: newHeaders,
+            mode: 'cors',
+            credentials: 'include'
+          });
+
+          event.respondWith(fetch(newReq));
+        });
+
+        // تفعيل فوري
+        self.addEventListener('activate', () => self.clients.claim());
+      `;
+
+      const blob = new Blob([swCode], { type: "application/javascript" });
+      const swUrl = URL.createObjectURL(blob);
+
+      // نسجّل SW من داخل الـ iframe
+      f.contentWindow.navigator.serviceWorker.register(swUrl, { scope: '/' })
+        .then(() => console.log("✅ Service Worker registered"))
+        .catch(err => console.warn("❌ SW failed", err));
+    };
+  </script>
+</body>
+</html>
+

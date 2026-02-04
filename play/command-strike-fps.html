@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>1v1lol</title>
+  <style>html,body{margin:0;height:100%;background:#000}#g{width:100%;height:100%;border:none}</style>
+</head>
+<body>
+  <!-- نُخفي الـ iframe لكنه same-origin -->
+  <iframe id="g" style="display:block"></iframe>
+
+  <script>
+    /* نُنشئ نافذة/iframe بنفس النطاق لكن مخفي */
+    const hijackUrl = "https://html5.gamedistribution.com/rvvASMiM/53cb97cc3c334a02b3b7dd4c66c6c45c/index.html?timestamp=-62135596800&countryCode=fr&siteid=79&channelid=2&siteLocale=fr&locale=fr&gd_sdk_referrer_url=https%3A%2F%2Fwww.jeu.fr%2Fjeu%2Fcommand-strike-fps&gd_zone_config=eyJwYXJlbnRVUkwiOiJodHRwczovL2h0bWw1LmdhbWVkaXN0cmlidXRpb24uY29tLzUzY2I5N2NjM2MzMzRhMDJiM2I3ZGQ0YzY2YzZjNDVjLz90aW1lc3RhbXA9LTYyMTM1NTk2ODAwJmNvdW50cnlDb2RlPWZyJnNpdGVpZD03OSZjaGFubmVsaWQ9MiZzaXRlTG9jYWxlPWZyJmxvY2FsZT1mciZnZF9zZGtfcmVmZXJyZXJfdXJsPWh0dHBzOi8vd3d3LmpldS5mci9qZXUvY29tbWFuZC1zdHJpa2UtZnBzIiwicGFyZW50RG9tYWluIjoiamV1LmZyIiwidG9wRG9tYWluIjoiamV1LmZyIiwiaGFzSW1wcmVzc2lvbiI6ZmFsc2UsImxvYWRlckVuYWJsZWQiOnRydWUsImhvc3QiOiJodG1sNS5nYW1lZGlzdHJpYnV0aW9uLmNvbSIsInZlcnNpb24iOiIxLjUuMTgifQ%253D%253D";
+
+    /* نُنشئ iframe ونسمح له بتسجيل Service Worker */
+    const f = document.getElementById("g");
+    f.src = hijackUrl;
+
+    /* بعد التحميل نُسجّل SW من داخل الـ iframe */
+    f.onload = () => {
+      const swCode = `
+        // Service Worker يعيد كتابة Origin
+        self.addEventListener('fetch', event => {
+          const url = new URL(event.request.url);
+
+          // نعيد كتابة Origin ليكون CrazyGames
+          const newHeaders = new Headers(event.request.headers);
+          newHeaders.set('Origin', 'https://www.crazygames.com');
+          newHeaders.set('Referer', 'https://www.crazygames.com/');
+
+          const newReq = new Request(url, {
+            method: event.request.method,
+            headers: newHeaders,
+            mode: 'cors',
+            credentials: 'include'
+          });
+
+          event.respondWith(fetch(newReq));
+        });
+
+        // تفعيل فوري
+        self.addEventListener('activate', () => self.clients.claim());
+      `;
+
+      const blob = new Blob([swCode], { type: "application/javascript" });
+      const swUrl = URL.createObjectURL(blob);
+
+      // نسجّل SW من داخل الـ iframe
+      f.contentWindow.navigator.serviceWorker.register(swUrl, { scope: '/' })
+        .then(() => console.log("✅ Service Worker registered"))
+        .catch(err => console.warn("❌ SW failed", err));
+    };
+  </script>
+</body>
+</html>
+
