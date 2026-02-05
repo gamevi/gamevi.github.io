@@ -110,12 +110,14 @@
     .back-btn:hover{background:#a29bfe;transform:translateY(-2px)}
     .game-container{padding:30px 0;text-align:center}
     
-    /* إصلاح game-frame لمنع Layout Shift */
-    .game-frame{
+    /* === التعديل الأساسي: لعرض اللعبة في الأعلى للزوار === */
+    /* حاوية اللعبة في الأعلى (للزائر) */
+    #game-for-visitor {
+      display: block !important;
       width:100%;
       max-width:800px;
       height:600px;
-      margin:0 auto;
+      margin:0 auto 30px;
       border-radius:10px;
       overflow:hidden;
       box-shadow:0 10px 30px rgba(0,0,0,.5);
@@ -124,92 +126,16 @@
       min-height:400px;
     }
     
-    /* تحسين iframe للحجز الآمن للمساحة */
-    #game-iframe{width:100%;height:100%;min-height:100%;border:none;display:none;position:absolute;top:0;left:0;z-index:1}
-    
-    .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:#002B50;position:absolute;top:0;left:0;width:100%;z-index:2}
-    .loading-spinner{width:50px;height:50px;border:5px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#3CF7DC;animation:spin 1s ease-in-out infinite;margin-bottom:20px}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .game-info{background:rgba(255,255,255,.1);backdrop-filter:blur(10px);padding:20px;border-radius:10px;max-width:800px;margin:20px auto 0}
-    .game-title{font-size:2rem;margin-bottom:10px;color:#ffd700}
-    .game-description{margin-bottom:15px;font-size:1.1rem}
-    .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-top:20px}
-    .feature-item{background:rgba(255,255,255,.1);padding:15px;border-radius:8px;text-align:left}
-    .feature-item h3{color:#3CF7DC;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-    .seo-content{margin-top:40px;padding:25px;background:rgba(0,0,0,.3);border-radius:10px;text-align:left}
-    .seo-content h1{color:#ffd700;margin-bottom:15px;font-size:1.8rem}
-    .seo-content h2{color:#3CF7DC;margin:25px 0 15px;font-size:1.5rem}
-    .seo-content p{margin-bottom:15px}
-    .game-categories{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px}
-    .category-tag{background:rgba(108,92,231,.7);padding:5px 12px;border-radius:20px;font-size:.9rem}
-    .related-links{margin-top:25px;padding-top:20px;border-top:1px solid rgba(255,255,255,.2);text-align:center}
-    .related-links a{color:#3CF7DC;text-decoration:none;margin:0 10px;transition:color .3s}
-    .related-links a:hover{color:#ffd700;text-decoration:underline}
-
-    /* أنماط الأقسام الجديدة */
-    .game-guide-sections {
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 25px;
-      margin: 30px 0;
-      border-left: 5px solid #6c5ce7;
+    /* حاوية اللعبة في الأسفل (للـ Googlebot) - مخفية للزوار */
+    #game-for-googlebot {
+      display: none !important;
     }
     
-    .guide-section {
-      margin-bottom: 25px;
+    /* حاوية اللعبة المخفية للـ Googlebot */
+    .hidden-game-container {
+      display: none;
     }
     
-    .guide-section:last-child {
-      margin-bottom: 0;
-    }
-    
-    .section-title {
-      color: #3CF7DC;
-      font-size: 1.4rem;
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .section-content p {
-      margin-bottom: 10px;
-      line-height: 1.6;
-    }
-    
-    /* تنسيق خاص للقوائم */
-    .section-content .list-item {
-      margin-left: 20px;
-      position: relative;
-    }
-    
-    .section-content .list-item:before {
-      content: "•";
-      color: #6c5ce7;
-      position: absolute;
-      left: -15px;
-    }
-    
-    /* تنسيق خاص لأسئلة وأجوبة FAQ */
-    .section-content .faq-question {
-      color: #ffd700;
-      margin-top: 15px;
-      margin-bottom: 5px;
-    }
-    
-    .section-content .faq-answer {
-      margin-left: 20px;
-      margin-bottom: 15px;
-      color: rgba(255, 255, 255, 0.9);
-    }
-    
-    .section-divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      margin: 25px 0;
-    }
-
     /* زر التكبير */
     .zoom-btn{position:absolute;right:12px;bottom:12px;z-index:9999;background:rgba(0,0,0,.6);color:#fff;border:none;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;backdrop-filter:blur(4px);transition:transform .15s ease,background .15s ease;box-shadow:0 6px 18px rgba(0,0,0,.45)}
     .zoom-btn:hover{transform:translateY(-3px);background:rgba(0,0,0,.8)}
@@ -323,6 +249,223 @@
       100% { transform: scale(1); }
     }
     
+    /* إطارات اللعبة */
+    .game-frame {
+      width:100%;
+      max-width:800px;
+      height:600px;
+      margin:0 auto;
+      border-radius:10px;
+      overflow:hidden;
+      box-shadow:0 10px 30px rgba(0,0,0,.5);
+      background:#000;
+      position:relative;
+      min-height:400px;
+    }
+    
+    #game-iframe {
+      width:100%;
+      height:100%;
+      min-height:100%;
+      border:none;
+      display:none;
+      position:absolute;
+      top:0;
+      left:0;
+      z-index:1;
+    }
+    
+    .loading {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100%;
+      background:#002B50;
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      z-index:2;
+    }
+    
+    .loading-spinner {
+      width:50px;
+      height:50px;
+      border:5px solid rgba(255,255,255,.3);
+      border-radius:50%;
+      border-top-color:#3CF7DC;
+      animation:spin 1s ease-in-out infinite;
+      margin-bottom:20px;
+    }
+    
+    @keyframes spin {
+      to { transform:rotate(360deg) }
+    }
+    
+    .game-info {
+      background:rgba(255,255,255,.1);
+      backdrop-filter:blur(10px);
+      padding:20px;
+      border-radius:10px;
+      max-width:800px;
+      margin:20px auto 0;
+    }
+    
+    .game-title {
+      font-size:2rem;
+      margin-bottom:10px;
+      color:#ffd700;
+    }
+    
+    .game-description {
+      margin-bottom:15px;
+      font-size:1.1rem;
+    }
+    
+    .features {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:15px;
+      margin-top:20px;
+    }
+    
+    .feature-item {
+      background:rgba(255,255,255,.1);
+      padding:15px;
+      border-radius:8px;
+      text-align:left;
+    }
+    
+    .feature-item h3 {
+      color:#3CF7DC;
+      margin-bottom:8px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    
+    .seo-content {
+      margin-top:40px;
+      padding:25px;
+      background:rgba(0,0,0,.3);
+      border-radius:10px;
+      text-align:left;
+    }
+    
+    .seo-content h1 {
+      color:#ffd700;
+      margin-bottom:15px;
+      font-size:1.8rem;
+    }
+    
+    .seo-content h2 {
+      color:#3CF7DC;
+      margin:25px 0 15px;
+      font-size:1.5rem;
+    }
+    
+    .seo-content p {
+      margin-bottom:15px;
+    }
+    
+    .game-categories {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:15px;
+    }
+    
+    .category-tag {
+      background:rgba(108,92,231,.7);
+      padding:5px 12px;
+      border-radius:20px;
+      font-size:.9rem;
+    }
+    
+    .related-links {
+      margin-top:25px;
+      padding-top:20px;
+      border-top:1px solid rgba(255,255,255,.2);
+      text-align:center;
+    }
+    
+    .related-links a {
+      color:#3CF7DC;
+      text-decoration:none;
+      margin:0 10px;
+      transition:color .3s;
+    }
+    
+    .related-links a:hover {
+      color:#ffd700;
+      text-decoration:underline;
+    }
+
+    /* أنماط الأقسام الجديدة */
+    .game-guide-sections {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 25px;
+      margin: 30px 0;
+      border-left: 5px solid #6c5ce7;
+    }
+    
+    .guide-section {
+      margin-bottom: 25px;
+    }
+    
+    .guide-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .section-title {
+      color: #3CF7DC;
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .section-content p {
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+    
+    /* تنسيق خاص للقوائم */
+    .section-content .list-item {
+      margin-left: 20px;
+      position: relative;
+    }
+    
+    .section-content .list-item:before {
+      content: "•";
+      color: #6c5ce7;
+      position: absolute;
+      left: -15px;
+    }
+    
+    /* تنسيق خاص لأسئلة وأجوبة FAQ */
+    .section-content .faq-question {
+      color: #ffd700;
+      margin-top: 15px;
+      margin-bottom: 5px;
+    }
+    
+    .section-content .faq-answer {
+      margin-left: 20px;
+      margin-bottom: 15px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      margin: 25px 0;
+    }
+
     /* قسم الألعاب المقترحة */
     .suggested-games {
       margin-top: 50px;
@@ -527,7 +670,12 @@
       min-height: 150px;
     }
 
-    @media (max-height:500px){.game-frame{height:400px}}
+    @media (max-height:500px) {
+      .game-frame, #game-for-visitor {
+        height:400px
+      }
+    }
+    
     @media (max-width:768px){
       .page-layout {
         flex-direction: column;
@@ -535,9 +683,15 @@
       .sidebar {
         min-width: 100%;
       }
-      .game-frame{height:400px}
-      .features{grid-template-columns:1fr}
-      .games-grid{grid-template-columns:repeat(auto-fill, minmax(250px, 1fr))}
+      .game-frame, #game-for-visitor {
+        height:400px;
+      }
+      .features {
+        grid-template-columns:1fr;
+      }
+      .games-grid {
+        grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+      }
       .ad-banner {
         padding: 10px;
       }
@@ -566,12 +720,24 @@
         font-size: 1.2rem;
       }
     }
+    
     @media (max-width:480px){
-      .game-frame{height:300px}
-      .header-content{flex-direction:column;gap:15px}
-      .game-title{font-size:1.5rem}
-      .seo-content h1{font-size:1.5rem}
-      .games-grid{grid-template-columns:1fr}
+      .game-frame, #game-for-visitor {
+        height:300px;
+      }
+      .header-content {
+        flex-direction:column;
+        gap:15px;
+      }
+      .game-title {
+        font-size:1.5rem;
+      }
+      .seo-content h1 {
+        font-size:1.5rem;
+      }
+      .games-grid {
+        grid-template-columns:1fr;
+      }
       .ad-banner img {
         max-width: 100% !important;
         height: auto !important;
@@ -609,15 +775,11 @@
       <!-- الجانب الأيسر - المحتوى الرئيسي -->
       <main class="main-content">
         <div class="game-container">
-          <!-- مكان للإعلان فوق الـ iframe -->
+          <!-- مكان للإعلان فوق اللعبة -->
           <div id="ad-above-iframe" style="min-height: 90px;"></div>
           
-          <!-- === بداية: حاوية اللعبة الرئيسية (ظاهرة للزوار فقط) === -->
-          <!-- iframe سيتم إنشاؤه ديناميكياً هنا فقط للزوار الحقيقيين -->
-          <div id="game-area-visitor" class="game-frame">
-            <!-- مكان للإعلان عند التكبير - إعلان fullscreen موجود -->
-            <div id="fullscreen-ad"></div>
-            
+          <!-- === حاوية اللعبة التي يراها الزوار في الأعلى === -->
+          <div id="game-for-visitor" class="game-frame">
             <!-- شاشة التشغيل (اللعبة مخفية في البداية) -->
             <div id="play-screen" class="play-button-container">
               <img src="https://gamevi.github.io/images/102.webp" 
@@ -636,7 +798,7 @@
                 <span class="play-btn-icon">▶</span>
                 <span>PLAY NOW FOR FREE</span>
               </button>
-             </div>
+            </div>
             
             <!-- شاشة التحميل (مخفية في البداية) -->
             <div class="loading" id="loading" style="display:none;">
@@ -644,18 +806,18 @@
               <div id="loading-text">Loading Senya and Oscar 2...</div>
             </div>
 
-            <!-- اللعبة (مخفية في البداية) -->
-            <!-- iframe سينشأ ديناميكياً هنا فقط عند النقر على play -->
+            <!-- iframe سيتم إنشاؤه هنا عند النقر -->
             <div id="game-iframe-container"></div>
-            <!-- زر التكبير فقط (لا يوجد زر تصغير) -->
+            
+            <!-- زر التكبير -->
             <button id="zoom-btn" class="zoom-btn" aria-label="Toggle fullscreen" style="display:none;">⤢</button>
           </div>
-          <!-- === نهاية: حاوية اللعبة الرئيسية === -->
+          <!-- === نهاية حاوية اللعبة للزوار === -->
 
-          <!-- مكان للإعلان تحت الـ iframe -->
+          <!-- مكان للإعلان تحت اللعبة -->
           <div id="ad-below-iframe" style="min-height: 90px;"></div>
           
-          <!-- === بداية: المحتوى النصي للـ SEO (يراه Googlebot في الأعلى) === -->
+          <!-- === المحتوى النصي للـ SEO (يراه Googlebot أولاً) === -->
           <div class="game-info">
             <h2 class="game-title">Senya and Oscar 2</h2>
             <p class="game-description">At first glance, it looks playful and almost harmless: a tiny knight marching forward with a cat companion and cartoonish enemies lining the road. Then you realize this journey is less about rushing ahead and more about knowing when to stop, block, strike, and spend wisely. Every encounter becomes a small decision point. Do you push forward with risky health, or step back and improve your gear? Do you tank hits or learn the enemy’s rhythm? Over time, the road starts to feel like a sequence of short tactical puzzles stitched together by humor and charm. The more you play, the more you notice how much the game rewards patience over aggression, observation over panic, and planning over button mashing.</p>
@@ -730,6 +892,7 @@
       </div>
     </div>
 
+          <!-- محتوى SEO -->
           <div class="seo-content">
             <h2>Play Senya and Oscar 2</h2>
             
@@ -760,7 +923,18 @@
           
           <!-- مكان للإعلان أسفل الصفحة -->
           <div id="ad-page-bottom" style="min-height: 250px;"></div>
-          <!-- === نهاية: المحتوى النصي للـ SEO === -->
+          
+          <!-- === حاوية اللعبة المخفية للـ Googlebot في أسفل الكود === -->
+          <!-- لا تظهر للزوار، فقط للـ Googlebot في الكود -->
+          <div id="game-for-googlebot" class="hidden-game-container">
+            <!-- هذه الحاوية تحتوي على iframe في الكود ولكنها مخفية للزوار -->
+            <!-- Googlebot يراها في الكود في الأسفل، مما يحسن SEO -->
+            <div style="text-align:center; margin: 40px 0;">
+              <h3 style="color: #ffd700;">Play Senya and Oscar 2</h3>
+              <p style="margin: 15px 0;">Enjoy this free HTML5 game directly in your browser.</p>
+              <div id="game-iframe-googlebot" style="display:none;"></div>
+            </div>
+          </div>
         </div>
       </main>
       
@@ -804,9 +978,10 @@
           gameIframe.style.top = '0';
           gameIframe.style.left = '0';
           gameIframe.style.zIndex = '1';
-          gameIframe.setAttribute('allow', 'autoplay;fullscreen');
+          gameIframe.setAttribute('allow', 'autoplay; fullscreen');
           gameIframe.setAttribute('scrolling', 'no');
           gameIframe.setAttribute('title', 'Senya and Oscar 2 - Free HTML5 Game on gamevi');
+          gameIframe.setAttribute('frameborder', '0');
           
           // إضافة iframe إلى الحاوية
           gameIframeContainer.innerHTML = '';
@@ -831,7 +1006,8 @@
             if (typeof gtag !== 'undefined') {
               gtag('event', 'game_start', {
                 'game_title': 'Senya and Oscar 2',
-                'game_id': 'senya-and-oscar-2'
+                'game_id': 'senya-and-oscar-2',
+                'event_category': 'Game Play'
               });
             }
           };
@@ -843,7 +1019,8 @@
             if (typeof gtag !== 'undefined') {
               gtag('event', 'game_error', {
                 'game_title': 'Senya and Oscar 2',
-                'game_id': 'senya-and-oscar-2'
+                'game_id': 'senya-and-oscar-2',
+                'event_category': 'Game Errors'
               });
             }
           };
@@ -853,7 +1030,7 @@
       // دالة التكبير/التصغير
       if (zoomBtn) {
         zoomBtn.addEventListener('click', function() {
-          const gameFrame = document.querySelector('.game-frame');
+          const gameFrame = document.querySelector('#game-for-visitor');
           
           if (!document.fullscreenElement && 
               !document.webkitFullscreenElement && 
