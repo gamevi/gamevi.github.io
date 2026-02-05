@@ -16,7 +16,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Senya and Oscar 2</title>
   <meta name="description" content="At first glance, it looks playful and almost harmless: a tiny knight marching forward with a cat companion and cartoonish enemies lining the road. Then you">
-  <meta name="keywords" content="Adventure, Action, RPG, Side-Scroller">
+  <meta name="keywords" content="Action, Side-Scroller, RPG, Adventure">
   <meta name="robots" content="index, follow, max-image-preview:large">
   
   <!-- Preconnect for critical domains -->
@@ -970,7 +970,7 @@
           // إنشاء iframe ديناميكياً فقط عند النقر
           gameIframe = document.createElement('iframe');
           gameIframe.id = 'game-iframe';
-          gameIframe.src = 'https://19140.cache.armorgames.com/files/games/senya-and-oscar-2-19140/index.html?key=y8&v=1621457030&value=default';
+          gameIframe.src = 'https://gamevi.github.io/play/zombie-hunters-arena.html';
           gameIframe.style.width = '100%';
           gameIframe.style.height = '100%';
           gameIframe.style.border = 'none';
@@ -978,7 +978,9 @@
           gameIframe.style.top = '0';
           gameIframe.style.left = '0';
           gameIframe.style.zIndex = '1';
-          gameIframe.setAttribute('allow', 'autoplay; fullscreen');
+          gameIframe.setAttribute('allow', 'autoplay; fullscreen; gamepad; payment; xr-spatial-tracking; cross-origin-isolated; accelerometer; gyroscope; magnetometer; microphone; camera');
+          gameIframe.setAttribute('allowfullscreen', 'true');
+          gameIframe.setAttribute('allowtransparency', 'true');
           gameIframe.setAttribute('scrolling', 'no');
           gameIframe.setAttribute('title', 'Senya and Oscar 2 - Free HTML5 Game on gamevi');
           gameIframe.setAttribute('frameborder', '0');
