@@ -216,7 +216,7 @@
     .game-frame.fullscreen-css #game-iframe{display:block!important;width:100%!important;height:100%!important}
     
     .play-button-container {
-      display: none !important;
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -268,7 +268,6 @@
     }
     
     .play-btn {
-    display: none !important;
       background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
       color: white;
       border: none;
@@ -484,7 +483,6 @@
       .features{grid-template-columns:1fr}
       .games-grid{grid-template-columns:repeat(auto-fill, minmax(250px, 1fr))}
       .play-button-title {
-      display: none !important;
         font-size: 2rem;
       }
       .play-btn {
@@ -492,7 +490,6 @@
         font-size: 1.2rem;
       }
       .game-preview-image {
-      display: none !important;
         width: 160px;
         height: 160px;
       }
@@ -622,32 +619,37 @@
         </div>
       </div>
     
-  <div class="gameplay-section">
-    <div id="ad-above-iframe" style="min-height: 90px;"></div>
-    <div class="game-frame">
-      <div id="fullscreen-ad"></div>
-      <!-- ===== إزالة play-screen بالكامل ===== -->
-      <!-- لا توجد شاشة play-button-container بعد الآن -->
-      
-      <div class="loading" id="loading" style="display:flex;">
-        <div class="loading-spinner"></div>
-        <div id="loading-text">Loading Stickman Clash...</div>
+      <div class="gameplay-section">
+        <div id="ad-above-iframe" style="min-height: 90px;"></div>
+        <div class="game-frame">
+          <div id="fullscreen-ad"></div>
+          <div id="play-screen" class="play-button-container">
+            <img src="https://gamevi.github.io/images/173.webp" 
+                 alt="Stickman Clash" 
+                 class="game-preview-image" 
+                 id="game-preview-image" 
+                 width="200" 
+                 height="200" 
+                 loading="eager"
+                 fetchpriority="high"
+                 decoding="async"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjNkM1Q0U3Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSI0MCIgZm9udC13ZWlnaHQ9ImJvbGQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIwLjM1ZW0iPj5fPC90ZXh0Pgo8L3N2Zz4K';">
+            <h1 class="play-button-title">Stickman Clash</h1>
+            <button id="play-btn" class="play-btn">
+              <span class="play-btn-icon">▶</span>
+              <span>PLAY NOW FOR FREE</span>
+            </button>
+          </div>
+          <div class="loading" id="loading" style="display:none;">
+            <div class="loading-spinner"></div>
+            <div id="loading-text">Preparing game...</div>
+          </div>
+          <iframe id="game-iframe" src="" allow="autoplay;fullscreen" scrolling="no" title="Stickman Clash - Free HTML5 Game on gamevi" style="width:100%;height:100%;"></iframe>
+          <button id="zoom-btn" class="zoom-btn" aria-label="Toggle fullscreen" style="display:none;">⤢</button>
+        </div>
+        <div id="ad-below-iframe" style="min-height: 90px;"></div>
       </div>
-      
-      <!-- ===== الإطار يبدأ مباشرة ===== -->
-      <iframe id="game-iframe" 
-              src="https://gamevi.github.io/play/stickman-clash.html" 
-              allow="autoplay;fullscreen" 
-              scrolling="no" 
-              title="Stickman Clash - Free HTML5 Game on gamevi" 
-              style="width:100%;height:100%;border:none;display:none;">
-      </iframe>
-      
-      <button id="zoom-btn" class="zoom-btn" aria-label="Toggle fullscreen" style="display:none;">⤢</button>
-    </div>
-    <div id="ad-below-iframe" style="min-height: 90px;"></div>
-  </div>
-
+    
       <div class="seo-content">
         <h2>Play Stickman Clash</h2>
         
@@ -678,10 +680,10 @@
         <h2>🎮 Suggested Games You Might Like</h2>
         <div class="games-grid" id="suggested-games-grid">
           
-      <a href="sort-it.html" class="game-card">
+      <a href="starblast-io.html" class="game-card">
         <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/153.webp" 
-               alt="Play Sort It" 
+          <img src="https://gamevi.github.io/images/159.webp" 
+               alt="Play Starblast-io" 
                loading="lazy"
                decoding="async"
                width="280"
@@ -689,16 +691,16 @@
                onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDI4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMTgwIiBmaWxsPSIjNkM1Q0U3Ii8+Cjx0ZXh0IHg9IjE0MCIgeT0iOTAiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj48L3RleHQ+Cjwvc3ZnPj4=';">
         </div>
         <div class="game-card-content">
-          <h3 class="game-card-title">Sort It</h3>
-          <p class="game-card-description">Staring down a forest of glass cylinders, each crammed with a mishmash of crimson, azure, emerald or...</p>
-          <span class="game-card-genre">Puzzle</span>
+          <h3 class="game-card-title">Starblast-io</h3>
+          <p class="game-card-description">There's a quiet moment at the start where nothing feels dangerous. A small ship, a few asteroids, so...</p>
+          <span class="game-card-genre">Arcade</span>
         </div>
       </a>
     
-      <a href="gun-racing.html" class="game-card">
+      <a href="last-play-ragdoll-sandbox.html" class="game-card">
         <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/143.webp" 
-               alt="Play Gun Racing" 
+          <img src="https://gamevi.github.io/images/154.webp" 
+               alt="Play Last Play Ragdoll Sandbox" 
                loading="lazy"
                decoding="async"
                width="280"
@@ -706,43 +708,43 @@
                onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDI4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMTgwIiBmaWxsPSIjNkM1Q0U3Ii8+Cjx0ZXh0IHg9IjE0MCIgeT0iOTAiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj48L3RleHQ+Cjwvc3ZnPj4=';">
         </div>
         <div class="game-card-content">
-          <h3 class="game-card-title">Gun Racing</h3>
-          <p class="game-card-description">Gun Racing mixes driving with action-packed shooting. Every turn presents a choice: speed ahead, col...</p>
+          <h3 class="game-card-title">Last Play Ragdoll Sandbox</h3>
+          <p class="game-card-description">Spawn into this blocky apocalypse and immediately feel the pull of pure, unfiltered idiocy. A ragdol...</p>
+          <span class="game-card-genre">Sandbox</span>
+        </div>
+      </a>
+    
+      <a href="growden-io.html" class="game-card">
+        <div class="game-card-image">
+          <img src="https://gamevi.github.io/images/172.webp" 
+               alt="Play Growden IO" 
+               loading="lazy"
+               decoding="async"
+               width="280"
+               height="180"
+               onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDI4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMTgwIiBmaWxsPSIjNkM1Q0U3Ii8+Cjx0ZXh0IHg9IjE0MCIgeT0iOTAiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj48L3RleHQ+Cjwvc3ZnPj4=';">
+        </div>
+        <div class="game-card-content">
+          <h3 class="game-card-title">Growden IO</h3>
+          <p class="game-card-description">You begin as a speck — ambiguous and vulnerable. But within seconds, that speck becomes a focal poin...</p>
+          <span class="game-card-genre">Multiplayer</span>
+        </div>
+      </a>
+    
+      <a href="moto-maniac-3.html" class="game-card">
+        <div class="game-card-image">
+          <img src="https://gamevi.github.io/images/146.webp" 
+               alt="Play Moto Maniac 3" 
+               loading="lazy"
+               decoding="async"
+               width="280"
+               height="180"
+               onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDI4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMTgwIiBmaWxsPSIjNkM1Q0U3Ii8+Cjx0ZXh0IHg9IjE0MCIgeT0iOTAiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj48L3RleHQ+Cjwvc3ZnPj4=';">
+        </div>
+        <div class="game-card-content">
+          <h3 class="game-card-title">Moto Maniac 3</h3>
+          <p class="game-card-description">Moto Maniac 3 challenges you to control your bike across ramps, slopes, and tricky obstacles. Every ...</p>
           <span class="game-card-genre">Racing</span>
-        </div>
-      </a>
-    
-      <a href="miner-cat-4.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/183.webp" 
-               alt="Play Miner Cat 4" 
-               loading="lazy"
-               decoding="async"
-               width="280"
-               height="180"
-               onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDI4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMTgwIiBmaWxsPSIjNkM1Q0U3Ii8+Cjx0ZXh0IHg9IjE0MCIgeT0iOTAiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj48L3RleHQ+Cjwvc3ZnPj4=';">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Miner Cat 4</h3>
-          <p class="game-card-description">Ever felt your heart skip a beat because a chunk of rock suddenly gave way? That's the kind of pulse...</p>
-          <span class="game-card-genre">Adventure</span>
-        </div>
-      </a>
-    
-      <a href="find-the-difference.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/148.webp" 
-               alt="Play Find the Difference" 
-               loading="lazy"
-               decoding="async"
-               width="280"
-               height="180"
-               onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDI4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyODAiIGhlaWdodD0iMTgwIiBmaWxsPSIjNkM1Q0U3Ii8+Cjx0ZXh0IHg9IjE0MCIgeT0iOTAiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjE4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj48L3RleHQ+Cjwvc3ZnPj4=';">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Find the Difference</h3>
-          <p class="game-card-description">It starts with a smug sense of confidence. You look at two vibrant, high-definition images and think...</p>
-          <span class="game-card-genre">Puzzle</span>
         </div>
       </a>
     
@@ -762,68 +764,74 @@
   </div>
   
   <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const loading = document.getElementById('loading');
-    const gameIframe = document.getElementById('game-iframe');
-    const zoomBtn = document.getElementById('zoom-btn');
-    
-    // ===== الإطار يبدأ التحميل مباشرة =====
-    if (gameIframe) {
-      gameIframe.onload = function() {
-        loading.style.display = 'none';
-        gameIframe.style.display = 'block';
-        zoomBtn.style.display = 'flex';
-        
-        try {
-          gameIframe.contentWindow.focus();
-        } catch (e) {
-          console.log('Game loaded successfully');
-        }
-      };
+    document.addEventListener('DOMContentLoaded', function() {
+      const playBtn = document.getElementById('play-btn');
+      const playScreen = document.getElementById('play-screen');
+      const loading = document.getElementById('loading');
+      const gameIframe = document.getElementById('game-iframe');
+      const zoomBtn = document.getElementById('zoom-btn');
       
-      gameIframe.onerror = function() {
-        loading.innerHTML = '<div class="error-state">⚠️ Failed to load game. Please try again later.</div>';
-      };
-    }
-    
-    // ===== زر التكبير/التصغير فقط =====
-    if (zoomBtn) {
-      zoomBtn.addEventListener('click', function() {
-        const gameFrame = document.querySelector('.game-frame');
-        
-        if (!document.fullscreenElement && 
-            !document.webkitFullscreenElement && 
-            !document.msFullscreenElement) {
+      if (playBtn) {
+        playBtn.addEventListener('click', function() {
+          playScreen.style.display = 'none';
+          loading.style.display = 'flex';
+          gameIframe.src = 'https://gamevi.github.io/play/stickman-clash.html';
+          
+          gameIframe.onload = function() {
+            loading.style.display = 'none';
+            gameIframe.style.display = 'block';
+            zoomBtn.style.display = 'flex';
+            
+            try {
+              gameIframe.contentWindow.focus();
+            } catch (e) {
+              console.log('Game loaded successfully');
+            }
+          };
+          
+          gameIframe.onerror = function() {
+            loading.innerHTML = '<div class="error-state">⚠️ Failed to load game. Please try again later.</div>';
+          };
+        });
+      }
+      
+      if (zoomBtn) {
+        zoomBtn.addEventListener('click', function() {
+          const gameFrame = document.querySelector('.game-frame');
+          
+          if (!document.fullscreenElement && 
+              !document.webkitFullscreenElement && 
+              !document.msFullscreenElement) {
             zoomBtn.style.display = 'none';
-          if (gameFrame.requestFullscreen) {
-            gameFrame.requestFullscreen();
-          } else if (gameFrame.webkitRequestFullscreen) {
-            gameFrame.webkitRequestFullscreen();
-          } else if (gameFrame.msRequestFullscreen) {
-            gameFrame.msRequestFullscreen();
+            if (gameFrame.requestFullscreen) {
+              gameFrame.requestFullscreen();
+            } else if (gameFrame.webkitRequestFullscreen) {
+              gameFrame.webkitRequestFullscreen();
+            } else if (gameFrame.msRequestFullscreen) {
+              gameFrame.msRequestFullscreen();
+            } else {
+              gameFrame.classList.add('fullscreen-css');
+            }
           } else {
-            gameFrame.classList.add('fullscreen-css');
+            zoomBtn.style.display = 'flex';
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+              document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+              document.msExitFullscreen();
+            } else {
+              gameFrame.classList.remove('fullscreen-css');
+            }
           }
-        } else {
-        zoomBtn.style.display = 'flex';
-          if (document.exitFullscreen) {
-            document.exitFullscreen();
-          } else if (document.webkitExitFullscreen) {
-            document.webkitExitFullscreen();
-          } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-          } else {
-            gameFrame.classList.remove('fullscreen-css');
-          }
-        }
-      });
-    }
-    
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('msfullscreenchange', handleFullscreenChange);
-    
-    function handleFullscreenChange() {
+        });
+      }
+      
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.addEventListener('msfullscreenchange', handleFullscreenChange);
+      
+      function handleFullscreenChange() {
       const isFullscreen = document.fullscreenElement || 
                          document.webkitFullscreenElement || 
                          document.msFullscreenElement;
@@ -833,9 +841,9 @@
         zoomBtn.style.display = isFullscreen ? 'none' : 'flex';
         zoomBtn.textContent = isFullscreen ? '⤡' : '⤢';
       }
-    }
-  });
-</script>
+      }
+    });
+  </script>
   
   <script src="ads-manager.js" defer></script>
 </body>
