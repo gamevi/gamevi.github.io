@@ -244,6 +244,7 @@
       height: 180px;
       object-fit: cover;
       background-color: #2d3436;
+      display: block;
     }
     
     .game-info {
@@ -491,12 +492,12 @@
       <button id="searchButton">Search</button>
     </div>
 
-    <!-- Categories - سيتم تعبئتها ديناميكياً من JSON -->
+    <!-- Categories -->
     <div class="categories" id="categories">
       <div class="category active" data-category="all">All Games</div>
     </div>
 
-    <!-- Games Grid - سيتم تعبئتها ديناميكياً من JSON -->
+    <!-- Games Grid -->
     <section>
       <h2 class="section-title">🎮 All Games</h2>
       <div class="games-grid" id="gamesGrid">
@@ -589,7 +590,20 @@
         const categoriesString = Array.isArray(game.categories) ? game.categories.join(',') : game.categories;
         card.setAttribute('data-category', categoriesString);
 
-        const imageUrl = game.image || `https://via.placeholder.com/300x180/667eea/ffffff?text=${encodeURIComponent(game.title.substring(0, 20))}`;
+        // التأكد من مسار الصورة الصحيح
+        let imageUrl = game.image || '';
+        
+        // إذا كان المسار يبدأ بـ /images أو images أضف الدومين الكامل
+        if (imageUrl && !imageUrl.startsWith('http')) {
+          if (imageUrl.startsWith('/')) {
+            imageUrl = 'https://Gamevi.github.io' + imageUrl;
+          } else if (imageUrl.startsWith('images/')) {
+            imageUrl = 'https://Gamevi.github.io/' + imageUrl;
+          } else {
+            imageUrl = 'https://Gamevi.github.io/images/' + imageUrl;
+          }
+        }
+
         const gameUrl = game.url || `/${game.id || game.title.toLowerCase().replace(/\s+/g, '-')}.html`;
 
         card.innerHTML = `
@@ -597,7 +611,7 @@
                alt="${game.title} - ${game.description || 'Free unblocked game'}" 
                class="game-image" 
                loading="lazy"
-               onerror="this.onerror=null; this.src='https://via.placeholder.com/300x180/667eea/ffffff?text=${encodeURIComponent(game.title.substring(0, 15))}'">
+               onerror="this.onerror=null; this.src='https://via.placeholder.com/300x180/667eea/ffffff?text=${encodeURIComponent(game.title.substring(0, 15))}'; this.style.backgroundColor='#6c5ce7';">
           <div class="game-info">
             <h3 class="game-title">${game.title}</h3>
             <a href="${gameUrl}" class="play-btn">Play Now</a>
@@ -642,14 +656,91 @@
         } catch (error) {
           console.error('Error loading games:', error);
           
-          // إذا فشل تحميل JSON، عرض رسالة خطأ
-          gamesGrid.innerHTML = `
-            <div class="no-results" style="display:block;">
-              <h3>⚠️ Could not load games</h3>
-              <p>Please make sure games.json file exists and try again.</p>
-            </div>
-          `;
+          // إذا فشل تحميل JSON، استخدم البيانات الافتراضية
+          useDefaultGames();
         }
+      }
+
+      // ========================
+      // USE DEFAULT GAMES (BACKUP)
+      // ========================
+      function useDefaultGames() {
+        const defaultGames = [
+          {
+            id: "senya-and-oscar-vs-zombies",
+            title: "Senya and Oscar vs Zombies",
+            description: "In this quirky twist on classic hero duos, you follow a brave pair fighting through hordes of zombies.",
+            image: "https://Gamevi.github.io/images/176.webp",
+            categories: ["action", "strategy", "arcade"],
+            url: "/senya-and-oscar-vs-zombies.html"
+          },
+          {
+            id: "zombie-hunters",
+            title: "Zombie Hunters",
+            description: "A corner of the arena lights up, and sheer chaos spills out as you hunt down zombies.",
+            image: "https://Gamevi.github.io/images/177.webp",
+            categories: ["action", "strategy", "multiplayer"],
+            url: "/zombie-hunters-arena.html"
+          },
+          {
+            id: "imposter-battle-royale",
+            title: "Imposter Battle Royale",
+            description: "A shrill alarm echoes as players spill into a fractured arena. Who is the imposter?",
+            image: "https://Gamevi.github.io/images/178.webp",
+            categories: ["action", "strategy", "multiplayer"],
+            url: "/imposter-battle-royale.html"
+          },
+          {
+            id: "sort-parking",
+            title: "Sort Parking",
+            description: "A line of cars, idle at first, suddenly feels like a puzzle waiting to be solved.",
+            image: "https://Gamevi.github.io/images/179.webp",
+            categories: ["strategy", "arcade", "puzzle"],
+            url: "/sort-parking.html"
+          },
+          {
+            id: "blocky-trials",
+            title: "Blocky Trials",
+            description: "There's a tactile feeling to wrestling with a grid that feels both simple and deep.",
+            image: "https://Gamevi.github.io/images/180.webp",
+            categories: ["arcade", "puzzle"],
+            url: "/blocky-trials.html"
+          },
+          {
+            id: "tanko-io",
+            title: "Tanko io",
+            description: "You drop into a wide open playing field with only your tank and your wits.",
+            image: "https://Gamevi.github.io/images/181.webp",
+            categories: ["action", "strategy", "multiplayer"],
+            url: "/tanko-io.html"
+          },
+          {
+            id: "dumb-ways-to-die-2",
+            title: "Dumb Ways to Die 2",
+            description: "A flash of color and frenetic motion greets you, and before you know it you're hooked.",
+            image: "https://Gamevi.github.io/images/182.webp",
+            categories: ["action", "arcade"],
+            url: "/dumb-ways-to-die-2.html"
+          },
+          {
+            id: "miner-cat-4",
+            title: "Miner Cat 4",
+            description: "One minute you're tapping at soft soil, the next a spark of something valuable appears.",
+            image: "https://Gamevi.github.io/images/183.webp",
+            categories: ["arcade", "adventure", "puzzle"],
+            url: "/miner-cat-4.html"
+          }
+        ];
+        
+        allGames = defaultGames;
+        
+        // جمع الفئات
+        defaultGames.forEach(game => {
+          game.categories.forEach(cat => uniqueCategories.add(cat.toLowerCase()));
+        });
+        
+        renderCategories();
+        renderGames(defaultGames);
       }
 
       // ========================
@@ -664,7 +755,7 @@
           const categoryEl = document.createElement('div');
           categoryEl.className = 'category';
           categoryEl.setAttribute('data-category', category);
-          categoryEl.textContent = category.charAt(0).toUpperCase() + category.slice(1); // تكبير أول حرف
+          categoryEl.textContent = category.charAt(0).toUpperCase() + category.slice(1);
           categoriesContainer.appendChild(categoryEl);
         });
 
@@ -697,11 +788,9 @@
         let visibleCount = 0;
         
         gameCards.forEach(card => {
-          // التحقق من الفئة
           const cardCategories = card.getAttribute('data-category')?.split(',') || [];
           const categoryMatch = activeCategory === 'all' || cardCategories.includes(activeCategory);
           
-          // التحقق من البحث
           let searchMatch = true;
           if (searchTerm !== '') {
             const title = card.querySelector('.game-title')?.textContent.toLowerCase() || '';
@@ -717,7 +806,6 @@
           }
         });
         
-        // إظهار/إخفاء رسالة عدم وجود نتائج
         noResults.style.display = visibleCount === 0 ? 'block' : 'none';
       }
 
@@ -729,11 +817,8 @@
         
         categories.forEach(category => {
           category.addEventListener('click', function() {
-            // إزالة active من جميع الفئات
             categories.forEach(cat => cat.classList.remove('active'));
-            // إضافة active للفئة المختارة
             this.classList.add('active');
-            // تصفية الألعاب
             filterGames();
           });
         });
@@ -756,7 +841,7 @@
           
           searchInput.addEventListener('input', function() {
             if (this.value.trim() === '') {
-              filterGames(); // إعادة تعيين البحث مع الحفاظ على تصفية الفئة
+              filterGames();
             }
           });
         }
@@ -782,12 +867,11 @@
       // ========================
       function init() {
         initMobileMenu();
-        loadGames(); // تحميل الألعاب من JSON
+        loadGames();
         initSearch();
         initSmoothScroll();
       }
 
-      // بدء التطبيق عند تحميل الصفحة
       document.addEventListener('DOMContentLoaded', init);
     })();
   </script>
