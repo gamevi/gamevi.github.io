@@ -1,4 +1,19 @@
 [
+ {
+    "id": "basket-random",
+    "thumbnail": "https://gamevi.github.io/images/185.webp",
+    "genre": "Sports, Arcade, Physics"
+  },
+  {
+    "id": "football-bros-retro",
+    "thumbnail": "https://gamevi.github.io/images/186.webp",
+    "genre": "Sports, Arcade, Retro"
+  },
+  {
+    "id": "slow-roads-io",
+    "thumbnail": "https://gamevi.github.io/images/184.webp",
+    "genre": "Driving, Simulation, Casual, Endless"
+  }, 
   {
     "id": "senya-and-oscar-vs-zombies",
     "thumbnail": "https://gamevi.github.io/images/176.webp",
