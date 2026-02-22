@@ -1,4 +1,24 @@
 [
+  {
+    "id": "mineenergy-2",
+    "thumbnail": "https://gamevi.github.io/images/187.webp",
+    "genre": "Strategy, Simulation, Building, Management"
+  },
+  {
+    "id": "bubble-shooter",
+    "thumbnail": "https://gamevi.github.io/images/188.webp",
+    "genre": "Puzzle, Arcade, Casual, Matching"
+  },
+  {
+    "id": "veck-io",
+    "thumbnail": "https://gamevi.github.io/images/189.webp",
+    "genre": "Action, .io, Multiplayer, Arena"
+  },
+  {
+    "id": "mk48-io",
+    "thumbnail": "https://gamevi.github.io/images/190.webp",
+    "genre": "Action, .io, Multiplayer, Naval Combat"
+  },
  {
     "id": "basket-random",
     "thumbnail": "https://gamevi.github.io/images/185.webp",
