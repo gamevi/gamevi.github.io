@@ -1,5 +1,15 @@
 [
   {
+    "id": "miniblox-io",
+    "thumbnail": "https://gamevi.github.io/images/191.webp",
+    "genre": "Strategy, .io, Puzzle, Competitive"
+  },
+  {
+    "id": "night-city-racing",
+    "thumbnail": "https://gamevi.github.io/images/190.webp",
+    "genre": "Racing, Urban, Drift, Action"
+  },
+  {
     "id": "mineenergy-2",
     "thumbnail": "https://gamevi.github.io/images/187.webp",
     "genre": "Strategy, Simulation, Building, Management"
