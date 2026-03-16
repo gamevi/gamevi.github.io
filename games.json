@@ -1,5 +1,15 @@
 [
   {
+    "id": "dino's-farm-shop",
+    "thumbnail": "https://gamevi.github.io/images/194.webp",
+    "genre": "Simulation, Strategy, Farming, Trading"
+  },
+  {
+    "id": "mecha-allstars-battle-royale",
+    "thumbnail": "https://gamevi.github.io/images/193.webp",
+    "genre": "Action, Mecha, Battle Royale, Arena Combat"
+  },
+  {
     "id": "miniblox-io",
     "thumbnail": "https://gamevi.github.io/images/192.webp",
     "genre": "Strategy, .io, Puzzle, Competitive"
