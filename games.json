@@ -1,5 +1,15 @@
 [
   {
+    "id": "obby-gym-simulator-escape",
+    "thumbnail": "https://gamevi.github.io/images/196.webp",
+    "genre": "Platformer, Obby, Simulation, Puzzle"
+  },
+  {
+    "id": "simple-city",
+    "thumbnail": "https://gamevi.github.io/images/195.webp",
+    "genre": "Simulation, City-Building, Strategy, Management"
+  },
+  {
     "id": "dino's-farm-shop",
     "thumbnail": "https://gamevi.github.io/images/194.webp",
     "genre": "Simulation, Strategy, Farming, Trading"
