@@ -217,22 +217,27 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
 .faq-divider{height:1px;background:rgba(255,255,255,.1);margin:15px 0}
 .gameplay-section{margin:40px 0}
 .zoom-btn{position:absolute;right:12px;bottom:12px;z-index:9999;background:rgba(0,0,0,.6);color:#fff;border:none;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;backdrop-filter:blur(4px)}
-.suggested-games{margin-top:60px;padding:40px 0;border-top:2px solid rgba(255,255,255,.2)}
-.suggested-games h2{text-align:center;margin-bottom:35px;font-size:2.2rem;color:#ffd700}
-.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:30px}
-.game-card{background:rgba(255,255,255,.1);border-radius:12px;overflow:hidden;transition:.3s;text-decoration:none;color:inherit}
-.game-card:hover{transform:translateY(-8px);box-shadow:0 12px 25px rgba(0,0,0,.4)}
-.game-card-image{width:100%;height:180px;overflow:hidden}
-.game-card-image img{width:100%;height:100%;object-fit:cover}
-.game-card-title{font-size:1.3rem;margin:15px;color:#ffd700}
-.game-card-description{margin:0 15px 15px;opacity:.9}
-.game-card-genre{display:inline-block;margin:0 15px 15px;background:rgba(108,92,231,.7);padding:5px 12px;border-radius:20px}
+/* ===== Mini Game Cards ===== */
+.mini-games-row{margin:30px 0;padding:20px 0;border-top:1px solid rgba(255,255,255,.15)}
+.mini-games-row h3{font-size:1rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;font-weight:600}
+.mini-games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.mini-game-card{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:#fff;transition:.25s;gap:6px}
+.mini-game-card:hover{transform:translateY(-4px)}
+.mini-card-image{position:relative;width:100%;border-radius:8px;overflow:hidden;aspect-ratio:4/3}
+.mini-card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:.3s}
+.mini-game-card:hover .mini-card-image img{transform:scale(1.08)}
+.mini-play-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;font-size:1.5rem;color:#fff}
+.mini-game-card:hover .mini-play-overlay{opacity:1}
+.mini-card-title{font-size:.72rem;font-weight:600;text-align:center;line-height:1.3;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.9)}
+/* ===== Suggested section bottom ===== */
+.suggested-games{margin-top:50px;padding:30px 0;border-top:2px solid rgba(255,255,255,.2)}
+.suggested-games h2{text-align:center;margin-bottom:25px;font-size:1.8rem;color:#ffd700}
 .page-layout{display:flex;gap:30px;margin-top:30px}
 .main-content{flex:3}
 .sidebar{flex:1;min-width:300px}
 .list-item{padding-left:10px;border-left:2px solid rgba(60,247,220,.4);margin-bottom:8px}
-@media (max-width:768px){.page-layout{flex-direction:column}.sidebar{min-width:100%}.game-frame{height:450px}.game-title{font-size:2.2rem}.features{grid-template-columns:1fr}}
-@media (max-width:480px){.game-frame{height:350px}.header-content{flex-direction:column;gap:15px}.game-title{font-size:1.8rem}.games-grid{grid-template-columns:1fr}}</style>
+@media (max-width:768px){.page-layout{flex-direction:column}.sidebar{min-width:100%}.game-frame{height:450px}.game-title{font-size:2.2rem}.features{grid-template-columns:1fr}.mini-games-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}}
+@media (max-width:480px){.game-frame{height:350px}.header-content{flex-direction:column;gap:15px}.game-title{font-size:1.8rem}.mini-games-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}}</style>
 </head>
 <body>
   <div id="interstitial-ad"></div>
@@ -285,6 +290,54 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
     <p>Plan streets, manage resources, and grow your city in Simple City. Strategic planning affects citizen satisfaction.</p><p>Simple City offers players a casual yet strategic city-building experience. Design your urban layout, balance residential, commercial, and industrial zones, and optimize resource distribution to keep citizens happy and the city thriving. Strategic placement and timely expansions make every decision impactful.</p>
   </div>
 
+          <!-- Mini Games Row #1 (بعد SEO) -->
+          <div class="mini-games-row">
+            
+            <div class="mini-games-grid">
+  <a href="kirka.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/69.webp" alt="Play Kirka" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Kirka</span>
+  </a>
+  <a href="disk-strike-carrom-challenge.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/155.webp" alt="Play Disk Strike Carrom Challenge" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Disk Strike Carrom Challenge</span>
+  </a>
+  <a href="tanko-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/181.webp" alt="Play Tanko.io" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Tanko.io</span>
+  </a>
+  <a href="cuberealm-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/175.webp" alt="Play CubeRealm.io" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">CubeRealm.io</span>
+  </a>
+  <a href="top-speed-racing-3d.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/170.webp" alt="Play Top Speed Racing 3D" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Top Speed Racing 3D</span>
+  </a>
+  <a href="portal-of-doom-undead-rising.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/156.webp" alt="Play Portal of Doom: Undead Rising" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Portal of Doom: Undead Rising</span>
+  </a></div>
+          </div>
+
           <!-- 3. الفقرة الذهبية -->
           <div class="golden-paragraph"><h3>🏙️ Urban Planning Insights</h3><p>Manage city resources and infrastructure strategically.</p><p>Plan roads and utilities for maximum efficiency.</p></div>
 
@@ -311,6 +364,40 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
       
     </div>
   </div>
+
+          <!-- Mini Games Row #2 (بعد المميزات) -->
+          <div class="mini-games-row">
+            
+            <div class="mini-games-grid">
+  <a href="sort-parking.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/179.webp" alt="Play Sort Parking" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Sort Parking</span>
+  </a>
+  <a href="mineclicker-2.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/144.webp" alt="Play MineClicker 2 – Incremental Mining Idle Adventure" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">MineClicker 2 – Incremental Mining Idle Adventure</span>
+  </a>
+  <a href="imposter-battle-royale.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/178.webp" alt="Play Imposter Battle Royale" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Imposter Battle Royale</span>
+  </a>
+  <a href="fortzone-battle-royale.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/58.webp" alt="Play Fortzone Battle Royale" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Fortzone Battle Royale</span>
+  </a></div>
+          </div>
 
           <!-- 5. Guide Sections -->
           <div class="game-guide-sections">
@@ -419,13 +506,14 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
               <div id="game-facade" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:pointer;z-index:5;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;" onclick="loadGameIframe()">
                 <img src="https://gamevi.github.io/images/195.webp"
                      alt="Play Simple City"
-                     style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.7;"
+                     style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.55;"
                      loading="lazy" width="800" height="600">
                 <div style="position:relative;z-index:2;text-align:center;">
-                  <div style="width:80px;height:80px;background:rgba(60,247,220,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 20px rgba(0,0,0,0.5);">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
+                  <div style="width:90px;height:90px;background:linear-gradient(135deg,#ff6b35,#f7c948);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 0 0 8px rgba(255,107,53,.25),0 6px 30px rgba(0,0,0,.6);transition:.3s;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
                   </div>
-                  <p style="color:#fff;font-size:1.2rem;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,0.8);">Click to Play Simple City</p>
+                  <div style="background:linear-gradient(135deg,#ff6b35,#f7c948);color:#fff;font-size:1.15rem;font-weight:800;padding:14px 38px;border-radius:50px;box-shadow:0 4px 20px rgba(255,107,53,.5);letter-spacing:.5px;text-shadow:0 1px 3px rgba(0,0,0,.3);">▶ PLAY NOW</div>
+                  
                 </div>
               </div>
               <div class="loading" id="loading" style="display:none;">
@@ -444,58 +532,52 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
             <div id="ad-below-iframe" style="min-height:90px;"></div>
           </div>
 
-          <!-- 8. الألعاب المقترحة -->
+          <!-- 8. الألعاب المقترحة (أسفل الصفحة) -->
           <section class="suggested-games">
             <h2>🏢 Similar City-Building Games</h2>
-            <div class="games-grid">
-              
-      <a href="miner-cat-4.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/183.webp" alt="Play Miner Cat 4 free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Miner Cat 4</h3>
-          <p class="game-card-description">The first thing you notice isn’t the treasure — it’s the silence beneath the surface. Miner Cat 4 dr...</p>
-          <span class="game-card-genre">Adventure</span>
-        </div>
-      </a>
-    
-      <a href="tank-stars.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/165.webp" alt="Play Tank Stars free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Tank Stars</h3>
-          <p class="game-card-description">Two tanks. A fractured landscape. A thin line between precision and regret.
-
-Tank Stars doesn’t rush...</p>
-          <span class="game-card-genre">Action</span>
-        </div>
-      </a>
-    
-      <a href="tank-stars.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/165.webp" alt="Play Tank Stars free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Tank Stars</h3>
-          <p class="game-card-description">Battles in Tank Stars are less about chaos and more about reading the battlefield. A single misjudge...</p>
-          <span class="game-card-genre">Action</span>
-        </div>
-      </a>
-    
-      <a href="super-star-car.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/169.webp" alt="Play Super Star Car free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Super Star Car</h3>
-          <p class="game-card-description">The engine hum builds before the lights go out. Once the race begins, every corner becomes a decisio...</p>
-          <span class="game-card-genre">Racing</span>
-        </div>
-      </a>
-    
-            </div>
+            <div class="mini-games-grid">
+  <a href="lolbeans.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/50.webp" alt="Play LOLBeans" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">LOLBeans</span>
+  </a>
+  <a href="candy-ice-cream-crush.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/75.webp" alt="Play Candy Ice Cream Crush" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Candy Ice Cream Crush</span>
+  </a>
+  <a href="stickman-challenge-2.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/35.webp" alt="Play Stickman Challenge 2" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Stickman Challenge 2</span>
+  </a>
+  <a href="poxel.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/63.webp" alt="Play Poxel" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Poxel</span>
+  </a>
+  <a href="granny-2-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/21.webp" alt="Play Granny 2 IO" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Granny 2 IO</span>
+  </a>
+  <a href="text-twist-2.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/124.webp" alt="Play Text Twist 2" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Text Twist 2</span>
+  </a></div>
           </section>
 
           <div id="ad-page-bottom" style="min-height:250px;margin-top:40px;"></div>

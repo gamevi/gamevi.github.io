@@ -216,22 +216,27 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
 .faq-divider{height:1px;background:rgba(255,255,255,.1);margin:15px 0}
 .gameplay-section{margin:40px 0}
 .zoom-btn{position:absolute;right:12px;bottom:12px;z-index:9999;background:rgba(0,0,0,.6);color:#fff;border:none;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;backdrop-filter:blur(4px)}
-.suggested-games{margin-top:60px;padding:40px 0;border-top:2px solid rgba(255,255,255,.2)}
-.suggested-games h2{text-align:center;margin-bottom:35px;font-size:2.2rem;color:#ffd700}
-.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:30px}
-.game-card{background:rgba(255,255,255,.1);border-radius:12px;overflow:hidden;transition:.3s;text-decoration:none;color:inherit}
-.game-card:hover{transform:translateY(-8px);box-shadow:0 12px 25px rgba(0,0,0,.4)}
-.game-card-image{width:100%;height:180px;overflow:hidden}
-.game-card-image img{width:100%;height:100%;object-fit:cover}
-.game-card-title{font-size:1.3rem;margin:15px;color:#ffd700}
-.game-card-description{margin:0 15px 15px;opacity:.9}
-.game-card-genre{display:inline-block;margin:0 15px 15px;background:rgba(108,92,231,.7);padding:5px 12px;border-radius:20px}
+/* ===== Mini Game Cards ===== */
+.mini-games-row{margin:30px 0;padding:20px 0;border-top:1px solid rgba(255,255,255,.15)}
+.mini-games-row h3{font-size:1rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;font-weight:600}
+.mini-games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.mini-game-card{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:#fff;transition:.25s;gap:6px}
+.mini-game-card:hover{transform:translateY(-4px)}
+.mini-card-image{position:relative;width:100%;border-radius:8px;overflow:hidden;aspect-ratio:4/3}
+.mini-card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:.3s}
+.mini-game-card:hover .mini-card-image img{transform:scale(1.08)}
+.mini-play-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;font-size:1.5rem;color:#fff}
+.mini-game-card:hover .mini-play-overlay{opacity:1}
+.mini-card-title{font-size:.72rem;font-weight:600;text-align:center;line-height:1.3;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.9)}
+/* ===== Suggested section bottom ===== */
+.suggested-games{margin-top:50px;padding:30px 0;border-top:2px solid rgba(255,255,255,.2)}
+.suggested-games h2{text-align:center;margin-bottom:25px;font-size:1.8rem;color:#ffd700}
 .page-layout{display:flex;gap:30px;margin-top:30px}
 .main-content{flex:3}
 .sidebar{flex:1;min-width:300px}
 .list-item{padding-left:10px;border-left:2px solid rgba(60,247,220,.4);margin-bottom:8px}
-@media (max-width:768px){.page-layout{flex-direction:column}.sidebar{min-width:100%}.game-frame{height:450px}.game-title{font-size:2.2rem}.features{grid-template-columns:1fr}}
-@media (max-width:480px){.game-frame{height:350px}.header-content{flex-direction:column;gap:15px}.game-title{font-size:1.8rem}.games-grid{grid-template-columns:1fr}}</style>
+@media (max-width:768px){.page-layout{flex-direction:column}.sidebar{min-width:100%}.game-frame{height:450px}.game-title{font-size:2.2rem}.features{grid-template-columns:1fr}.mini-games-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}}
+@media (max-width:480px){.game-frame{height:350px}.header-content{flex-direction:column;gap:15px}.game-title{font-size:1.8rem}.mini-games-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}}</style>
 </head>
 <body>
   <div id="interstitial-ad"></div>
@@ -284,6 +289,54 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
     <p>Precision jumps, tactical timing, and creative movement define Obby Gym Simulator Escape. Predict platform timing to avoid pitfalls.</p><p>Obby Gym Simulator Escape challenges players to navigate a vibrant obstacle course full of tricky jumps, moving platforms, and hazards that demand both timing and strategy. Test your agility, learn the rhythm of the gym’s challenges, and build confidence with each successful run as you strive to escape the sprawling fitness maze.</p>
   </div>
 
+          <!-- Mini Games Row #1 (بعد SEO) -->
+          <div class="mini-games-row">
+            
+            <div class="mini-games-grid">
+  <a href="8-ball-pool.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/82.webp" alt="Play 8 Ball Pool" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">8 Ball Pool</span>
+  </a>
+  <a href="escape-road.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/78.webp" alt="Play Escape Road" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Escape Road</span>
+  </a>
+  <a href="candy-ice-cream-crush.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/75.webp" alt="Play Candy Ice Cream Crush" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Candy Ice Cream Crush</span>
+  </a>
+  <a href="4th-and-goal-2022.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/171.webp" alt="Play 4th and Goal 2022" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">4th and Goal 2022</span>
+  </a>
+  <a href="super-tunnel-rush.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/9.webp" alt="Play Super Tunnel Rush" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Super Tunnel Rush</span>
+  </a>
+  <a href="funny-shooter-2.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/86.webp" alt="Play Funny Shooter 2" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Funny Shooter 2</span>
+  </a></div>
+          </div>
+
           <!-- 3. الفقرة الذهبية -->
           <div class="golden-paragraph"><h3>🏃 Obstacle Rhythm Breakdown</h3><p>Intricate sequences of platforms demand thoughtful timing and pacing.</p><p>Precision leaps feel satisfying with responsive movement mechanics.</p></div>
 
@@ -310,6 +363,40 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
       
     </div>
   </div>
+
+          <!-- Mini Games Row #2 (بعد المميزات) -->
+          <div class="mini-games-row">
+            
+            <div class="mini-games-grid">
+  <a href="command-strike-fps.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/85.webp" alt="Play Command Strike FPS" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Command Strike FPS</span>
+  </a>
+  <a href="disk-strike-carrom-challenge.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/155.webp" alt="Play Disk Strike Carrom Challenge" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Disk Strike Carrom Challenge</span>
+  </a>
+  <a href="paper-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/114.webp" alt="Play Paper.io" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Paper.io</span>
+  </a>
+  <a href="portal-of-doom-undead-rising.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/156.webp" alt="Play Portal of Doom: Undead Rising" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Portal of Doom: Undead Rising</span>
+  </a></div>
+          </div>
 
           <!-- 5. Guide Sections -->
           <div class="game-guide-sections">
@@ -418,13 +505,14 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
               <div id="game-facade" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:pointer;z-index:5;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;" onclick="loadGameIframe()">
                 <img src="https://gamevi.github.io/images/196.webp"
                      alt="Play Obby Gym Simulator Escape"
-                     style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.7;"
+                     style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.55;"
                      loading="lazy" width="800" height="600">
                 <div style="position:relative;z-index:2;text-align:center;">
-                  <div style="width:80px;height:80px;background:rgba(60,247,220,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 20px rgba(0,0,0,0.5);">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
+                  <div style="width:90px;height:90px;background:linear-gradient(135deg,#ff6b35,#f7c948);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 0 0 8px rgba(255,107,53,.25),0 6px 30px rgba(0,0,0,.6);transition:.3s;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
                   </div>
-                  <p style="color:#fff;font-size:1.2rem;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,0.8);">Click to Play Obby Gym Simulator Escape</p>
+                  <div style="background:linear-gradient(135deg,#ff6b35,#f7c948);color:#fff;font-size:1.15rem;font-weight:800;padding:14px 38px;border-radius:50px;box-shadow:0 4px 20px rgba(255,107,53,.5);letter-spacing:.5px;text-shadow:0 1px 3px rgba(0,0,0,.3);">▶ PLAY NOW</div>
+                  
                 </div>
               </div>
               <div class="loading" id="loading" style="display:none;">
@@ -443,56 +531,52 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
             <div id="ad-below-iframe" style="min-height:90px;"></div>
           </div>
 
-          <!-- 8. الألعاب المقترحة -->
+          <!-- 8. الألعاب المقترحة (أسفل الصفحة) -->
           <section class="suggested-games">
             <h2>🎯 Other Platform Challenges</h2>
-            <div class="games-grid">
-              
-      <a href="sort-parking.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/179.webp" alt="Play Sort Parking free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Sort Parking</h3>
-          <p class="game-card-description">At first glance, it looks simple — cars parked in tight rows, different colors mixed together. Tap o...</p>
-          <span class="game-card-genre">Puzzle</span>
-        </div>
-      </a>
-    
-      <a href="dumb-ways-to-die-2.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/182.webp" alt="Play Dumb Ways to Die 2 free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Dumb Ways to Die 2</h3>
-          <p class="game-card-description">Beneath the colorful cartoon style lies a gauntlet of rapid mini-challenges designed to test focus a...</p>
-          <span class="game-card-genre">Action</span>
-        </div>
-      </a>
-    
-      <a href="super-star-car.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/169.webp" alt="Play Super Star Car free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Super Star Car</h3>
-          <p class="game-card-description">The engine hum builds before the lights go out. Once the race begins, every corner becomes a decisio...</p>
-          <span class="game-card-genre">Racing</span>
-        </div>
-      </a>
-    
-      <a href="top-speed-racing-3d.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/170.webp" alt="Play Top Speed Racing 3D free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Top Speed Racing 3D</h3>
-          <p class="game-card-description">Instead of fixed laps and strict tracks, Top Speed Racing 3D drops you into a city built for speed. ...</p>
-          <span class="game-card-genre">Racing</span>
-        </div>
-      </a>
-    
-            </div>
+            <div class="mini-games-grid">
+  <a href="extreme-run-3d.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/87.webp" alt="Play Extreme Run 3D" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Extreme Run 3D</span>
+  </a>
+  <a href="miner-cat-4.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/183.webp" alt="Play Miner Cat 4" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Miner Cat 4</span>
+  </a>
+  <a href="iron-snout.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/128.webp" alt="Play Iron Snout" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Iron Snout</span>
+  </a>
+  <a href="tanko-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/181.webp" alt="Play Tanko.io" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Tanko.io</span>
+  </a>
+  <a href="minefun-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/15.webp" alt="Play MineFun.io" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">MineFun.io</span>
+  </a>
+  <a href="survev-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/118.webp" alt="Play Survev.io" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Survev.io</span>
+  </a></div>
           </section>
 
           <div id="ad-page-bottom" style="min-height:250px;margin-top:40px;"></div>

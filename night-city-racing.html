@@ -217,22 +217,27 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
 .faq-divider{height:1px;background:rgba(255,255,255,.1);margin:15px 0}
 .gameplay-section{margin:40px 0}
 .zoom-btn{position:absolute;right:12px;bottom:12px;z-index:9999;background:rgba(0,0,0,.6);color:#fff;border:none;width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;backdrop-filter:blur(4px)}
-.suggested-games{margin-top:60px;padding:40px 0;border-top:2px solid rgba(255,255,255,.2)}
-.suggested-games h2{text-align:center;margin-bottom:35px;font-size:2.2rem;color:#ffd700}
-.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:30px}
-.game-card{background:rgba(255,255,255,.1);border-radius:12px;overflow:hidden;transition:.3s;text-decoration:none;color:inherit}
-.game-card:hover{transform:translateY(-8px);box-shadow:0 12px 25px rgba(0,0,0,.4)}
-.game-card-image{width:100%;height:180px;overflow:hidden}
-.game-card-image img{width:100%;height:100%;object-fit:cover}
-.game-card-title{font-size:1.3rem;margin:15px;color:#ffd700}
-.game-card-description{margin:0 15px 15px;opacity:.9}
-.game-card-genre{display:inline-block;margin:0 15px 15px;background:rgba(108,92,231,.7);padding:5px 12px;border-radius:20px}
+/* ===== Mini Game Cards ===== */
+.mini-games-row{margin:30px 0;padding:20px 0;border-top:1px solid rgba(255,255,255,.15)}
+.mini-games-row h3{font-size:1rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;font-weight:600}
+.mini-games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.mini-game-card{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:#fff;transition:.25s;gap:6px}
+.mini-game-card:hover{transform:translateY(-4px)}
+.mini-card-image{position:relative;width:100%;border-radius:8px;overflow:hidden;aspect-ratio:4/3}
+.mini-card-image img{width:100%;height:100%;object-fit:cover;display:block;transition:.3s}
+.mini-game-card:hover .mini-card-image img{transform:scale(1.08)}
+.mini-play-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;font-size:1.5rem;color:#fff}
+.mini-game-card:hover .mini-play-overlay{opacity:1}
+.mini-card-title{font-size:.72rem;font-weight:600;text-align:center;line-height:1.3;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.9)}
+/* ===== Suggested section bottom ===== */
+.suggested-games{margin-top:50px;padding:30px 0;border-top:2px solid rgba(255,255,255,.2)}
+.suggested-games h2{text-align:center;margin-bottom:25px;font-size:1.8rem;color:#ffd700}
 .page-layout{display:flex;gap:30px;margin-top:30px}
 .main-content{flex:3}
 .sidebar{flex:1;min-width:300px}
 .list-item{padding-left:10px;border-left:2px solid rgba(60,247,220,.4);margin-bottom:8px}
-@media (max-width:768px){.page-layout{flex-direction:column}.sidebar{min-width:100%}.game-frame{height:450px}.game-title{font-size:2.2rem}.features{grid-template-columns:1fr}}
-@media (max-width:480px){.game-frame{height:350px}.header-content{flex-direction:column;gap:15px}.game-title{font-size:1.8rem}.games-grid{grid-template-columns:1fr}}</style>
+@media (max-width:768px){.page-layout{flex-direction:column}.sidebar{min-width:100%}.game-frame{height:450px}.game-title{font-size:2.2rem}.features{grid-template-columns:1fr}.mini-games-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}}
+@media (max-width:480px){.game-frame{height:350px}.header-content{flex-direction:column;gap:15px}.game-title{font-size:1.8rem}.mini-games-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}}</style>
 </head>
 <body>
   <div id="interstitial-ad"></div>
@@ -285,6 +290,54 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
     <p>Neon streets, precision drifts, and split-second overtakes define Night City Racing. Precise drifts maintain momentum.</p><p>Night City Racing immerses players in a fast-paced urban racing world. Navigate tight alleys, master long boulevard stretches, and outsmart AI rivals using perfect timing and smooth drifts. The neon city responds dynamically to your moves, rewarding skilled decision-making and rhythm in every race.</p>
   </div>
 
+          <!-- Mini Games Row #1 (بعد SEO) -->
+          <div class="mini-games-row">
+            
+            <div class="mini-games-grid">
+  <a href="lordz-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/119.webp" alt="Play Lordz.io" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Lordz.io</span>
+  </a>
+  <a href="snake-is-mlg-edition.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/28.webp" alt="Play Snake is MLG Edition" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Snake is MLG Edition</span>
+  </a>
+  <a href="smash-karts.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/20.webp" alt="Play Smash Karts" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Smash Karts</span>
+  </a>
+  <a href="laqueus-escape-chapter-iii.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/152.webp" alt="Play Laqueus Escape: Chapter III" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Laqueus Escape: Chapter III</span>
+  </a>
+  <a href="stickman-boxing-ko-champion.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/168.webp" alt="Play Stickman Boxing KO Champion" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Stickman Boxing KO Champion</span>
+  </a>
+  <a href="survivor-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/115.webp" alt="Play Survivor.io" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Survivor.io</span>
+  </a></div>
+          </div>
+
           <!-- 3. الفقرة الذهبية -->
           <div class="golden-paragraph"><h3>🏁 Neon Drift Insights</h3><p>Every drift sharpens reflexes and racing intuition.</p><p>Mastering drifts allows cleaner exits and faster runs.</p></div>
 
@@ -311,6 +364,40 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
       
     </div>
   </div>
+
+          <!-- Mini Games Row #2 (بعد المميزات) -->
+          <div class="mini-games-row">
+            
+            <div class="mini-games-grid">
+  <a href="lolbeans.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/50.webp" alt="Play LOLBeans" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">LOLBeans</span>
+  </a>
+  <a href="blocky-trials.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/180.webp" alt="Play Blocky Trials" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Blocky Trials</span>
+  </a>
+  <a href="last-play-ragdoll-sandbox.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/154.webp" alt="Play Last Play Ragdoll Sandbox" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Last Play Ragdoll Sandbox</span>
+  </a>
+  <a href="stickman-boxing-ko-champion.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/168.webp" alt="Play Stickman Boxing KO Champion" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Stickman Boxing KO Champion</span>
+  </a></div>
+          </div>
 
           <!-- 5. Guide Sections -->
           <div class="game-guide-sections">
@@ -419,13 +506,14 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
               <div id="game-facade" style="position:absolute;top:0;left:0;width:100%;height:100%;cursor:pointer;z-index:5;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;" onclick="loadGameIframe()">
                 <img src="https://gamevi.github.io/images/191.webp"
                      alt="Play Night City Racing"
-                     style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.7;"
+                     style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.55;"
                      loading="lazy" width="800" height="600">
                 <div style="position:relative;z-index:2;text-align:center;">
-                  <div style="width:80px;height:80px;background:rgba(60,247,220,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 20px rgba(0,0,0,0.5);">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="#000"><path d="M8 5v14l11-7z"/></svg>
+                  <div style="width:90px;height:90px;background:linear-gradient(135deg,#ff6b35,#f7c948);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 0 0 8px rgba(255,107,53,.25),0 6px 30px rgba(0,0,0,.6);transition:.3s;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
                   </div>
-                  <p style="color:#fff;font-size:1.2rem;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,0.8);">Click to Play Night City Racing</p>
+                  <div style="background:linear-gradient(135deg,#ff6b35,#f7c948);color:#fff;font-size:1.15rem;font-weight:800;padding:14px 38px;border-radius:50px;box-shadow:0 4px 20px rgba(255,107,53,.5);letter-spacing:.5px;text-shadow:0 1px 3px rgba(0,0,0,.3);">▶ PLAY NOW</div>
+                  
                 </div>
               </div>
               <div class="loading" id="loading" style="display:none;">
@@ -444,56 +532,52 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a2a6c
             <div id="ad-below-iframe" style="min-height:90px;"></div>
           </div>
 
-          <!-- 8. الألعاب المقترحة -->
+          <!-- 8. الألعاب المقترحة (أسفل الصفحة) -->
           <section class="suggested-games">
             <h2>🔥 Urban Racing Recommendations</h2>
-            <div class="games-grid">
-              
-      <a href="senya-and-oscar-vs-zombies.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/176.webp" alt="Play Senya and Oscar vs Zombies free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Senya and Oscar vs Zombies</h3>
-          <p class="game-card-description">The apocalypse here doesn’t scream — it shuffles forward. A crooked-armed zombie drags its feet towa...</p>
-          <span class="game-card-genre">Adventure</span>
-        </div>
-      </a>
-    
-      <a href="zombie-hunters-arena.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/177.webp" alt="Play Zombie Hunters Arena free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Zombie Hunters Arena</h3>
-          <p class="game-card-description">No road to walk. No gentle introduction. Just a square arena, a weapon in your hands, and shapes in ...</p>
-          <span class="game-card-genre">Action</span>
-        </div>
-      </a>
-    
-      <a href="imposter-battle-royale.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/178.webp" alt="Play Imposter Battle Royale free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Imposter Battle Royale</h3>
-          <p class="game-card-description">Drop into a tight battlefield where everyone looks almost identical — and hesitation is costly. The ...</p>
-          <span class="game-card-genre">Action</span>
-        </div>
-      </a>
-    
-      <a href="tanko-io.html" class="game-card">
-        <div class="game-card-image">
-          <img src="https://gamevi.github.io/images/181.webp" alt="Play Tanko.io free online" loading="lazy" width="280" height="180">
-        </div>
-        <div class="game-card-content">
-          <h3 class="game-card-title">Tanko.io</h3>
-          <p class="game-card-description">The battlefield looks small at first — a few walls, open lanes, a central capture zone. Then the fir...</p>
-          <span class="game-card-genre">Action</span>
-        </div>
-      </a>
-    
-            </div>
+            <div class="mini-games-grid">
+  <a href="wrestle-bros.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/73.webp" alt="Play Wrestle Bros" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Wrestle Bros</span>
+  </a>
+  <a href="tanks-arena-io-craft-and-combat.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/129.webp" alt="Play Tanks Arena io: Craft and Combat" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Tanks Arena io: Craft and Combat</span>
+  </a>
+  <a href="papas-freezeria.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/133.webp" alt="Play Papa’s Freezeria" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Papa’s Freezeria</span>
+  </a>
+  <a href="cryzen-io.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/13.webp" alt="Play Cryzen.io" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Cryzen.io</span>
+  </a>
+  <a href="moto-maniac-3.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/146.webp" alt="Play Moto Maniac 3 – Nighttime Trials Bike Challenge" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Moto Maniac 3 – Nighttime Trials Bike Challenge</span>
+  </a>
+  <a href="fortzone-battle-royale.html" class="mini-game-card">
+    <div class="mini-card-image">
+      <img src="https://gamevi.github.io/images/58.webp" alt="Play Fortzone Battle Royale" loading="lazy" width="120" height="80">
+      <div class="mini-play-overlay">▶</div>
+    </div>
+    <span class="mini-card-title">Fortzone Battle Royale</span>
+  </a></div>
           </section>
 
           <div id="ad-page-bottom" style="min-height:250px;margin-top:40px;"></div>
