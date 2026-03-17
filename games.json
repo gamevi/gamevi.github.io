@@ -1,5 +1,20 @@
 [
   {
+    "id": "jet-rush",
+    "thumbnail": "https://gamevi.github.io/images/199.webp",
+    "genre": "Arcade, Flying, Reflex, Action"
+  },
+  {
+    "id": "basketball-orbit",
+    "thumbnail": "https://gamevi.github.io/images/198.webp",
+    "genre": "Sports, Physics, Skill, Arcade"
+  },
+  {
+    "id": "merge-dragons-vs-knights",
+    "thumbnail": "https://gamevi.github.io/images/197.webp",
+    "genre": "Strategy, Merge, Defense, Fantasy"
+  },
+  {
     "id": "obby-gym-simulator-escape",
     "thumbnail": "https://gamevi.github.io/images/196.webp",
     "genre": "Platformer, Obby, Simulation, Puzzle"
