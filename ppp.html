@@ -1,112 +1,321 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>متتبع تيشيرتات أمازون | Merch Hunter</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Amazon Merch Tracker | Latest Bestselling T-Shirts</title>
+    <!-- Clean, modern font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* [نفس كود CSS السابق تمامًا، لم يتم تغييره] */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background: #f5f7fa; padding: 20px; color: #2d3748; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { font-size: 2.5rem; color: #1a202c; margin-bottom: 10px; }
-        .stats { background: white; padding: 15px 25px; border-radius: 50px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .stats span { font-weight: 700; color: #e53e3e; font-size: 1.2rem; }
-        .filters-panel { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        .filter-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
-        .filter-group { flex: 1; min-width: 200px; }
-        .filter-group label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 8px; color: #4a5568; }
-        .filter-group select, .filter-group input { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; background: white; transition: all 0.2s; }
-        .filter-group select:focus, .filter-group input:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,0.1); }
-        .bsr-range { display: flex; gap: 10px; }
-        .bsr-range input { width: 50%; }
-        .btn { padding: 12px 24px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.2s; background: #edf2f7; color: #4a5568; }
-        .btn-primary { background: #3182ce; color: white; }
-        .btn-primary:hover { background: #2b6cb0; }
-        .btn-secondary:hover { background: #e2e8f0; }
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .product-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
-        .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
-        .product-image { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #f7fafc; border-bottom: 1px solid #e2e8f0; }
-        .product-info { padding: 16px; }
-        .product-bsr { display: inline-block; background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; margin-bottom: 10px; }
-        .product-date { color: #718096; font-size: 0.85rem; margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
-        .product-link { display: block; width: 100%; padding: 10px; background: #ebf8ff; color: #3182ce; text-align: center; border-radius: 10px; text-decoration: none; font-weight: 500; font-size: 0.9rem; transition: background 0.2s; }
-        .product-link:hover { background: #bee3f8; }
-        .no-results { text-align: center; padding: 60px 20px; background: white; border-radius: 16px; color: #a0aec0; font-size: 1.2rem; }
-        .loading { text-align: center; padding: 40px; color: #718096; }
-        .footer { margin-top: 30px; text-align: center; color: #a0aec0; font-size: 0.85rem; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            padding: 20px;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #1a202c;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            display: inline-block;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stats span {
+            font-weight: 700;
+            color: #e53e3e;
+            font-size: 1.2rem;
+        }
+
+        /* Filters Panel */
+        .filters-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        .filter-group select, 
+        .filter-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .filter-group select:focus, 
+        .filter-group input:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49,130,206,0.1);
+        }
+
+        .bsr-range {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bsr-range input {
+            width: 50%;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-primary {
+            background: #3182ce;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2b6cb0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .product-image {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .product-info {
+            padding: 16px;
+        }
+
+        .product-bsr {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .product-date {
+            color: #718096;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .product-link {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #ebf8ff;
+            color: #3182ce;
+            text-align: center;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .product-link:hover {
+            background: #bee3f8;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            color: #a0aec0;
+            font-size: 1.2rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .header h1 { font-size: 1.8rem; }
-            .filter-row { flex-direction: column; align-items: stretch; }
-            .filter-group { min-width: 100%; }
-            .products-grid { grid-template-columns: 1fr; }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                min-width: 100%;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <h1>🎯 أحدث تيشيرتات أمازون مبيعاً</h1>
+            <h1>🎯 Latest Bestselling Amazon T-Shirts</h1>
             <div class="stats">
-                <span id="product-count">0</span> منتج معروض
+                <span id="product-count">0</span> products displayed
             </div>
         </div>
 
+        <!-- Filters Panel -->
         <div class="filters-panel">
             <div class="filter-row">
+                <!-- Sort Filter -->
                 <div class="filter-group">
-                    <label>📊 ترتيب حسب</label>
+                    <label>📊 Sort by</label>
                     <select id="sort-select">
-                        <option value="date-desc">الأحدث نشراً ⬇️</option>
-                        <option value="date-asc">الأقدم نشراً ⬆️</option>
-                        <option value="bsr-asc">BSR الأفضل (الأقل رقماً) ⬆️</option>
-                        <option value="bsr-desc">BSR الأسوأ (الأعلى رقماً) ⬇️</option>
+                        <option value="date-desc">Newest First ⬇️</option>
+                        <option value="date-asc">Oldest First ⬆️</option>
+                        <option value="bsr-asc">BSR Best (Lowest) ⬆️</option>
+                        <option value="bsr-desc">BSR Worst (Highest) ⬇️</option>
                     </select>
                 </div>
 
+                <!-- BSR Range Filter -->
                 <div class="filter-group">
-                    <label>🔍 فلترة حسب BSR</label>
+                    <label>🔍 Filter by BSR Range</label>
                     <div class="bsr-range">
-                        <input type="number" id="bsr-min" placeholder="من" min="0" step="1000">
-                        <input type="number" id="bsr-max" placeholder="إلى" min="0" step="1000">
+                        <input type="number" id="bsr-min" placeholder="Min" min="0" step="1000">
+                        <input type="number" id="bsr-max" placeholder="Max" min="0" step="1000">
                     </div>
                 </div>
 
+                <!-- Date Filter -->
                 <div class="filter-group">
-                    <label>📅 فلترة حسب تاريخ النشر</label>
+                    <label>📅 Filter by Date Added</label>
                     <select id="date-filter">
-                        <option value="all">كل المنتجات</option>
-                        <option value="today">اليوم</option>
-                        <option value="week">آخر 7 أيام</option>
-                        <option value="month">آخر 30 يوم</option>
+                        <option value="all">All Products</option>
+                        <option value="today">Today</option>
+                        <option value="week">Last 7 Days</option>
+                        <option value="month">Last 30 Days</option>
                     </select>
                 </div>
 
+                <!-- Action Buttons -->
                 <div class="filter-group" style="flex: 0.5;">
                     <label>&nbsp;</label>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-primary" onclick="applyFilters()">تطبيق الفلاتر</button>
-                        <button class="btn btn-secondary" onclick="resetFilters()">مسح</button>
+                        <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+                        <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Products Grid -->
         <div id="products-container">
-            <div class="loading">جاري تحميل المنتجات...</div>
+            <div class="loading">Loading products...</div>
         </div>
 
+        <!-- Footer -->
         <div class="footer">
-            <p>🔄 يتم تحديث البيانات تلقائياً من Google Sheets | آخر تحديث: <span id="last-update">الآن</span></p>
+            <p>🔄 Data updates automatically from Google Sheets | Last updated: <span id="last-update">just now</span></p>
         </div>
     </div>
 
     <script>
         // ============================================
-        // !!! هام: استبدل هذا الرابط بالرابط الصحيح بصيغة CSV !!!
+        // IMPORTANT: Replace this URL with your correct CSV URL
         // ============================================
         const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTAelnJ-cGn1yOofvOvO9WkjocXlyoF-OPya9tJwjceMsjslyWGoh-90yddQgEojlPYorOW-5q6SVys/pub?output=csv';
         
@@ -114,7 +323,7 @@
         let filteredProducts = [];
 
         // ============================================
-        // جلب البيانات من Google Sheets
+        // Fetch data from Google Sheets
         // ============================================
         async function fetchProducts() {
             try {
@@ -122,29 +331,29 @@
                 const csvText = await response.text();
                 
                 const rows = csvText.split('\n').filter(row => row.trim() !== '');
-                const dataRows = rows.slice(1); // تجاهل صف العناوين "asin,link,bsr..."
+                const dataRows = rows.slice(1); // Skip header row "asin,link,bsr..."
                 
                 allProducts = dataRows.map((row, index) => {
                     const columns = parseCSVRow(row);
                     
-                    // !!! الترتيب الجديد بناءً على ملفك: asin, link, bsr, imageUrl, dateAdded !!!
+                    // Column order based on your file: asin, link, bsr, imageUrl, dateAdded
                     const asin = columns[0] || '';
                     const productUrl = columns[1] || '#';
                     const bsrRaw = columns[2] || '';
                     const imageUrl = columns[3] || 'https://via.placeholder.com/300x300?text=No+Image';
                     const publishDate = columns[4] || '';
 
-                    // --- معالجة قيمة الـ BSR ---
-                    let bsrValue = 9999999; // قيمة افتراضية كبيرة للمنتجات بدون BSR
+                    // --- Process BSR value ---
+                    let bsrValue = 9999999; // Default high value for products without BSR
                     if (bsrRaw) {
-                        // استخراج الأرقام فقط من النص (مثل "#936,278" تصبح 936278)
+                        // Extract numbers only from text (e.g., "#936,278" becomes 936278)
                         const numberMatch = bsrRaw.replace(/,/g, '').match(/\d+/);
                         if (numberMatch) {
                             bsrValue = parseInt(numberMatch[0], 10);
                         }
                     }
 
-                    // --- معالجة التاريخ ---
+                    // --- Process date ---
                     let rawDate = parseDate(publishDate);
 
                     return {
@@ -152,28 +361,28 @@
                         asin: asin,
                         productUrl: productUrl,
                         bsr: bsrValue,
-                        bsrDisplay: bsrRaw || 'غير متوفر', // النص الأصلي للعرض
+                        bsrDisplay: bsrRaw || 'N/A', // Original text for display
                         imageUrl: imageUrl,
                         publishDate: publishDate,
                         rawDate: rawDate
                     };
-                }).filter(product => product.productUrl !== '#' && !isNaN(product.bsr)); // نتأكد من وجود رابط و BSR صالح
+                }).filter(product => product.productUrl !== '#' && !isNaN(product.bsr)); // Ensure valid URL and BSR
                 
                 applyFilters();
-                document.getElementById('last-update').textContent = new Date().toLocaleString('ar-SA');
+                document.getElementById('last-update').textContent = new Date().toLocaleString('en-US');
                 
             } catch (error) {
-                console.error('خطأ في جلب البيانات:', error);
+                console.error('Error fetching data:', error);
                 document.getElementById('products-container').innerHTML = `
                     <div class="no-results">
-                        <p>😕 حدث خطأ في تحميل البيانات</p>
-                        <p style="font-size: 0.9rem; margin-top: 10px;">تأكد من أن رابط Google Sheets صحيح ومنشور بصيغة CSV للعامة</p>
+                        <p>😕 Error loading data</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">Please ensure the Google Sheets link is correct and published as CSV</p>
                     </div>
                 `;
             }
         }
 
-        // دالة مساعدة لتحليل صف CSV بشكل صحيح (تتعامل مع علامات التنصيص)
+        // Helper function to parse CSV row correctly (handles quoted fields)
         function parseCSVRow(row) {
             const result = [];
             let current = '';
@@ -193,17 +402,17 @@
             return result;
         }
 
-        // دالة مساعدة لتحويل التاريخ النصي إلى كائن Date
+        // Helper function to parse date string to Date object
         function parseDate(dateStr) {
             if (!dateStr) return null;
-            // تنظيف النص من ":" والمسافات الزائدة في البداية
+            // Clean up leading ":" and extra spaces
             const cleanDateStr = dateStr.replace(/^:\s*/, '').trim();
             const date = new Date(cleanDateStr);
             return isNaN(date.getTime()) ? null : date;
         }
 
         // ============================================
-        // تطبيق الفلاتر والترتيب
+        // Apply filters and sorting
         // ============================================
         function applyFilters() {
             const sortBy = document.getElementById('sort-select').value;
@@ -212,12 +421,12 @@
             const dateFilter = document.getElementById('date-filter').value;
             
             filteredProducts = allProducts.filter(product => {
-                // فلتر BSR (الآن باستخدام القيمة الرقمية الصحيحة)
+                // BSR filter (using correct numeric value)
                 if (product.bsr < bsrMin || product.bsr > bsrMax) {
                     return false;
                 }
                 
-                // فلتر التاريخ
+                // Date filter
                 if (dateFilter !== 'all' && product.rawDate) {
                     const now = new Date();
                     const productDate = product.rawDate;
@@ -249,7 +458,7 @@
         }
 
         // ============================================
-        // عرض المنتجات في الصفحة
+        // Render products to the page
         // ============================================
         function renderProducts() {
             const container = document.getElementById('products-container');
@@ -260,8 +469,8 @@
             if (filteredProducts.length === 0) {
                 container.innerHTML = `
                     <div class="no-results">
-                        <p>🔍 لا توجد منتجات تطابق معايير البحث</p>
-                        <p style="font-size: 0.9rem; margin-top: 10px;">جرب تغيير نطاق BSR أو تاريخ النشر</p>
+                        <p>🔍 No products match your search criteria</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">Try adjusting the BSR range or date filter</p>
                     </div>
                 `;
                 return;
@@ -270,7 +479,7 @@
             let html = '<div class="products-grid">';
             
             filteredProducts.forEach(product => {
-                const formattedDate = product.publishDate.replace(/^:\s*/, '') || 'غير محدد';
+                const formattedDate = product.publishDate.replace(/^:\s*/, '') || 'Unknown';
                 
                 html += `
                     <div class="product-card" onclick="window.open('${product.productUrl}', '_blank')">
@@ -288,7 +497,7 @@
                                target="_blank" 
                                class="product-link"
                                onclick="event.stopPropagation()">
-                                🛒 عرض المنتج على أمازون
+                                🛒 View on Amazon
                             </a>
                         </div>
                     </div>
@@ -307,7 +516,7 @@
             applyFilters();
         }
 
-        // بدء التطبيق
+        // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
             fetchProducts();
             document.getElementById('bsr-min').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyFilters(); });
