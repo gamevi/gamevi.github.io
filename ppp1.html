@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Merch Tracker | Latest Bestselling T-Shirts</title>
+    <!-- Clean, modern font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            padding: 20px;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #1a202c;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .stats {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            display: inline-block;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stats span {
+            font-weight: 700;
+            color: #e53e3e;
+            font-size: 1.2rem;
+        }
+
+        /* Filters Panel */
+        .filters-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        .filter-group select, 
+        .filter-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .filter-group select:focus, 
+        .filter-group input:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49,130,206,0.1);
+        }
+
+        .bsr-range, .price-range, .reviews-range {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bsr-range input, .price-range input, .reviews-range input {
+            width: 50%;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #edf2f7;
+            color: #4a5568;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #3182ce;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2b6cb0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+        .btn-danger:hover {
+            background: #feb2b2;
+        }
+
+        /* Active Filters Tags */
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .filter-tag {
+            background: #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-tag i {
+            cursor: pointer;
+            color: #718096;
+        }
+        .filter-tag i:hover {
+            color: #e53e3e;
+        }
+
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .product-image {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .product-info {
+            padding: 16px;
+        }
+
+        .product-badge {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .product-bsr {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .product-sales {
+            display: inline-block;
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .product-trend {
+            display: inline-block;
+            background: #bee3f8;
+            color: #2c5282;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .product-price {
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .product-date {
+            color: #718096;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .product-link {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #ebf8ff;
+            color: #3182ce;
+            text-align: center;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .product-link:hover {
+            background: #bee3f8;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #a0aec0;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s;
+            border: none;
+        }
+        .favorite-btn:hover {
+            color: #e53e3e;
+        }
+        .favorite-btn.active {
+            color: #e53e3e;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            color: #a0aec0;
+            font-size: 1.2rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                min-width: 100%;
+            }
+            
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-tshirt" style="color: #3182ce;"></i> 
+                Amazon Merch Tracker
+            </h1>
+            <div class="stats">
+                <span id="product-count">0</span> products displayed
+            </div>
+        </div>
+
+        <!-- Filters Panel -->
+        <div class="filters-panel">
+            <!-- Row 1: Search & Sort -->
+            <div class="filter-row">
+                <!-- 🔥 KEYWORD SEARCH (Podly Style) -->
+                <div class="filter-group">
+                    <label><i class="fas fa-search"></i> Keyword Search</label>
+                    <input type="text" id="keyword-search" placeholder="e.g. gym, mom, funny...">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-sort-amount-down"></i> Sort by</label>
+                    <select id="sort-select">
+                        <option value="date-desc">Newest First ⬇️</option>
+                        <option value="date-asc">Oldest First ⬆️</option>
+                        <option value="bsr-asc">BSR Best (Lowest) ⬆️</option>
+                        <option value="bsr-desc">BSR Worst (Highest) ⬇️</option>
+                        <option value="sales-desc">Sales (High to Low) ⬇️</option>
+                        <option value="price-asc">Price (Low to High) ⬆️</option>
+                        <option value="price-desc">Price (High to Low) ⬇️</option>
+                        <option value="reviews-desc">Reviews (Most First) ⬇️</option>
+                    </select>
+                </div>
+                <!-- 📊 BSR Range -->
+                <div class="filter-group">
+                    <label><i class="fas fa-chart-line"></i> BSR Range</label>
+                    <div class="bsr-range">
+                        <input type="number" id="bsr-min" placeholder="Min" min="0" step="1000">
+                        <input type="number" id="bsr-max" placeholder="Max" min="0" step="1000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Advanced Filters -->
+            <div class="filter-row">
+                <!-- 💰 Price Filter -->
+                <div class="filter-group">
+                    <label><i class="fas fa-dollar-sign"></i> Price Range</label>
+                    <div class="price-range">
+                        <input type="number" id="price-min" placeholder="Min $" step="1">
+                        <input type="number" id="price-max" placeholder="Max $" step="1">
+                    </div>
+                </div>
+                <!-- ⭐ Reviews -->
+                <div class="filter-group">
+                    <label><i class="fas fa-star"></i> Reviews</label>
+                    <div class="reviews-range">
+                        <input type="number" id="reviews-min" placeholder="Min" step="10">
+                        <input type="number" id="reviews-max" placeholder="Max" step="10">
+                    </div>
+                </div>
+                <!-- 📅 Date Filter -->
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> Date Added</label>
+                    <select id="date-filter">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">Last 7 Days</option>
+                        <option value="month">Last 30 Days</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 3: Action Buttons & Trends -->
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-filter"></i> Apply Filters
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetFilters()">
+                            <i class="fas fa-redo-alt"></i> Reset
+                        </button>
+                        <button class="btn btn-danger" onclick="clearAllFilters()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                        <button class="btn btn-secondary" onclick="showFavorites()">
+                            <i class="fas fa-heart"></i> Favorites
+                        </button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-fire"></i> Trending</label>
+                    <select id="trend-filter">
+                        <option value="all">All Products</option>
+                        <option value="trending">🔥 Trending Now (Sales > 500)</option>
+                        <option value="rising">📈 Rising Stars (New + Good BSR)</option>
+                        <option value="stable">✅ Stable Performers (Consistent BSR)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Active Filters Display -->
+            <div class="active-filters" id="active-filters-container"></div>
+        </div>
+
+        <!-- Products Grid -->
+        <div id="products-container">
+            <div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading products...</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><i class="far fa-clock"></i> Data updates automatically from Google Sheets | Last updated: <span id="last-update">just now</span></p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION - Replace with your correct CSV URL
+        // ============================================
+        const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTAelnJ-cGn1yOofvOvO9WkjocXlyoF-OPya9tJwjceMsjslyWGoh-90yddQgEojlPYorOW-5q6SVys/pub?output=csv';
+        
+        let allProducts = [];
+        let filteredProducts = [];
+        let favorites = JSON.parse(localStorage.getItem('merchFavorites')) || [];
+        let currentFilters = {};
+
+        // ============================================
+        // Fetch data from Google Sheets
+        // ============================================
+        async function fetchProducts() {
+            try {
+                const response = await fetch(GOOGLE_SHEET_CSV_URL);
+                const csvText = await response.text();
+                
+                const rows = csvText.split('\n').filter(row => row.trim() !== '');
+                const dataRows = rows.slice(1); // Skip header row
+                
+                allProducts = dataRows.map((row, index) => {
+                    const columns = parseCSVRow(row);
+                    
+                    // Enhanced data processing with mock data for missing fields (for demonstration)
+                    const asin = columns[0] || '';
+                    const productUrl = columns[1] || '#';
+                    const bsrRaw = columns[2] || '';
+                    const imageUrl = columns[3] || 'https://via.placeholder.com/300x300?text=No+Image';
+                    const publishDate = columns[4] || '';
+
+                    // Process BSR
+                    let bsrValue = 9999999;
+                    if (bsrRaw) {
+                        const numberMatch = bsrRaw.replace(/,/g, '').match(/\d+/);
+                        if (numberMatch) bsrValue = parseInt(numberMatch[0], 10);
+                    }
+
+                    // Process date
+                    let rawDate = parseDate(publishDate);
+                    
+                    // Mock data for demonstration (sales, price, reviews, title)
+                    // In production, these should come from your sheet
+                    const mockSales = Math.floor(Math.random() * 2000) + 100;
+                    const mockPrice = (Math.random() * 15 + 14.99).toFixed(2);
+                    const mockReviews = Math.floor(Math.random() * 500);
+                    const mockTitle = `T-Shirt Design ${index}`;
+
+                    return {
+                        id: index,
+                        asin: asin,
+                        productUrl: productUrl,
+                        bsr: bsrValue,
+                        bsrDisplay: bsrRaw || 'N/A',
+                        imageUrl: imageUrl,
+                        publishDate: publishDate,
+                        rawDate: rawDate,
+                        sales: mockSales,
+                        price: parseFloat(mockPrice),
+                        reviews: mockReviews,
+                        title: mockTitle,
+                        // Calculate trend score
+                        trendScore: (mockSales / 100) + (1000000 / (bsrValue + 1)),
+                        isNew: rawDate && (new Date() - rawDate) < (7 * 24 * 60 * 60 * 1000)
+                    };
+                }).filter(product => product.productUrl !== '#'); 
+                
+                // 🎯 IMPORTANT: Show ALL products initially without any filters
+                filteredProducts = [...allProducts];
+                sortProducts('date-desc'); // Default sort
+                renderProducts();
+                updateActiveFilters();
+                document.getElementById('last-update').textContent = new Date().toLocaleString('en-US');
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('products-container').innerHTML = `
+                    <div class="no-results">
+                        <p><i class="fas fa-exclamation-triangle"></i> Error loading data</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">Please ensure the Google Sheets link is correct and published as CSV</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Helper functions
+        function parseCSVRow(row) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < row.length; i++) {
+                const char = row[i];
+                if (char === '"') inQuotes = !inQuotes;
+                else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else current += char;
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            const cleanDateStr = dateStr.replace(/^:\s*/, '').trim();
+            const date = new Date(cleanDateStr);
+            return isNaN(date.getTime()) ? null : date;
+        }
+
+        // ============================================
+        // 🔥 Enhanced Filter System (Podly Style)
+        // ============================================
+        function applyFilters() {
+            const keyword = document.getElementById('keyword-search').value.toLowerCase().trim();
+            const sortBy = document.getElementById('sort-select').value;
+            const bsrMin = parseFloat(document.getElementById('bsr-min').value) || 0;
+            const bsrMax = parseFloat(document.getElementById('bsr-max').value) || Infinity;
+            const dateFilter = document.getElementById('date-filter').value;
+            const priceMin = parseFloat(document.getElementById('price-min').value) || 0;
+            const priceMax = parseFloat(document.getElementById('price-max').value) || Infinity;
+            const reviewsMin = parseFloat(document.getElementById('reviews-min').value) || 0;
+            const reviewsMax = parseFloat(document.getElementById('reviews-max').value) || Infinity;
+            const trendFilter = document.getElementById('trend-filter').value;
+            
+            // Store current filters for display
+            currentFilters = {
+                keyword, bsrMin, bsrMax, dateFilter, priceMin, priceMax, reviewsMin, reviewsMax, trendFilter
+            };
+            
+            filteredProducts = allProducts.filter(product => {
+                // 🔎 Keyword Search (Most Important - Podly Style)
+                if (keyword && !product.title.toLowerCase().includes(keyword)) {
+                    return false;
+                }
+                
+                // BSR filter
+                if (product.bsr < bsrMin || product.bsr > bsrMax) return false;
+                
+                // Price filter
+                if (product.price < priceMin || product.price > priceMax) return false;
+                
+                // Reviews filter
+                if (product.reviews < reviewsMin || product.reviews > reviewsMax) return false;
+                
+                // Date filter
+                if (dateFilter !== 'all' && product.rawDate) {
+                    const now = new Date();
+                    const productDate = product.rawDate;
+                    const diffTime = now - productDate;
+                    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                    
+                    if (dateFilter === 'today' && diffDays > 1) return false;
+                    if (dateFilter === 'week' && diffDays > 7) return false;
+                    if (dateFilter === 'month' && diffDays > 30) return false;
+                }
+                
+                // 🚀 Trending Filters
+                if (trendFilter === 'trending' && product.sales < 500) return false;
+                if (trendFilter === 'rising' && (!product.isNew || product.bsr > 500000)) return false;
+                if (trendFilter === 'stable' && (product.bsr > 100000 || product.bsr < 1000)) return false;
+                
+                return true;
+            });
+            
+            sortProducts(sortBy);
+            renderProducts();
+            updateActiveFilters();
+        }
+
+        function sortProducts(sortBy) {
+            filteredProducts.sort((a, b) => {
+                switch(sortBy) {
+                    case 'date-desc': return (b.rawDate || 0) - (a.rawDate || 0);
+                    case 'date-asc': return (a.rawDate || 0) - (b.rawDate || 0);
+                    case 'bsr-asc': return a.bsr - b.bsr;
+                    case 'bsr-desc': return b.bsr - a.bsr;
+                    case 'sales-desc': return b.sales - a.sales;
+                    case 'price-asc': return a.price - b.price;
+                    case 'price-desc': return b.price - a.price;
+                    case 'reviews-desc': return b.reviews - a.reviews;
+                    default: return 0;
+                }
+            });
+        }
+
+        function updateActiveFilters() {
+            const container = document.getElementById('active-filters-container');
+            let html = '';
+            
+            if (currentFilters.keyword) {
+                html += `<span class="filter-tag"><i class="fas fa-search"></i> "${currentFilters.keyword}" <i class="fas fa-times" onclick="removeFilter('keyword')"></i></span>`;
+            }
+            if (currentFilters.bsrMin > 0 || currentFilters.bsrMax < Infinity) {
+                html += `<span class="filter-tag"><i class="fas fa-chart-line"></i> BSR: ${currentFilters.bsrMin}-${currentFilters.bsrMax === Infinity ? '∞' : currentFilters.bsrMax} <i class="fas fa-times" onclick="removeFilter('bsr')"></i></span>`;
+            }
+            if (currentFilters.priceMin > 0 || currentFilters.priceMax < Infinity) {
+                html += `<span class="filter-tag"><i class="fas fa-dollar-sign"></i> $${currentFilters.priceMin}-$${currentFilters.priceMax === Infinity ? '∞' : currentFilters.priceMax} <i class="fas fa-times" onclick="removeFilter('price')"></i></span>`;
+            }
+            if (currentFilters.dateFilter !== 'all') {
+                const dateLabels = {today: 'Today', week: 'Last 7 Days', month: 'Last 30 Days'};
+                html += `<span class="filter-tag"><i class="fas fa-calendar"></i> ${dateLabels[currentFilters.dateFilter]} <i class="fas fa-times" onclick="removeFilter('date')"></i></span>`;
+            }
+            
+            container.innerHTML = html || '<span style="color: #a0aec0; font-size: 0.9rem;">No active filters - showing all products</span>';
+        }
+
+        function removeFilter(type) {
+            switch(type) {
+                case 'keyword': document.getElementById('keyword-search').value = ''; break;
+                case 'bsr': 
+                    document.getElementById('bsr-min').value = '';
+                    document.getElementById('bsr-max').value = '';
+                    break;
+                case 'price':
+                    document.getElementById('price-min').value = '';
+                    document.getElementById('price-max').value = '';
+                    break;
+                case 'date':
+                    document.getElementById('date-filter').value = 'all';
+                    break;
+            }
+            applyFilters();
+        }
+
+        // ============================================
+        // Render products with enhanced features
+        // ============================================
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            const countSpan = document.getElementById('product-count');
+            
+            countSpan.textContent = filteredProducts.length;
+            
+            if (filteredProducts.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <p><i class="fas fa-search"></i> No products match your filters</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">Try adjusting your search criteria or clear filters</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '<div class="products-grid">';
+            
+            filteredProducts.forEach(product => {
+                const formattedDate = product.publishDate.replace(/^:\s*/, '') || 'Unknown';
+                const isFavorite = favorites.includes(product.id);
+                const trendIndicator = product.sales > 500 ? '🔥' : (product.isNew ? '🆕' : '');
+                
+                html += `
+                    <div class="product-card" onclick="window.open('${product.productUrl}', '_blank')">
+                        <button class="favorite-btn ${isFavorite ? 'active' : ''}" onclick="toggleFavorite(event, ${product.id})">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                        <img class="product-image" 
+                             src="${product.imageUrl}" 
+                             alt="Product" 
+                             onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'">
+                        <div class="product-info">
+                            <div class="product-badge">
+                                <span class="product-bsr"><i class="fas fa-chart-line"></i> BSR ${product.bsrDisplay}</span>
+                                ${product.sales > 300 ? `<span class="product-sales"><i class="fas fa-fire"></i> ${product.sales}+ sold</span>` : ''}
+                                ${trendIndicator ? `<span class="product-trend">${trendIndicator} ${product.sales > 500 ? 'Hot' : 'New'}</span>` : ''}
+                            </div>
+                            <div class="product-price">$${product.price.toFixed(2)}</div>
+                            <div class="product-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <span>${formattedDate}</span>
+                            </div>
+                            <div style="font-size: 0.85rem; margin-bottom: 10px; color: #718096;">
+                                <i class="fas fa-star" style="color: #f6ad55;"></i> ${product.reviews} reviews
+                            </div>
+                            <a href="${product.productUrl}" 
+                               target="_blank" 
+                               class="product-link"
+                               onclick="event.stopPropagation()">
+                                <i class="fab fa-amazon"></i> View on Amazon
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Favorites Management
+        function toggleFavorite(event, productId) {
+            event.stopPropagation();
+            const index = favorites.indexOf(productId);
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(productId);
+            }
+            localStorage.setItem('merchFavorites', JSON.stringify(favorites));
+            renderProducts();
+        }
+
+        function showFavorites() {
+            filteredProducts = allProducts.filter(p => favorites.includes(p.id));
+            sortProducts('date-desc');
+            renderProducts();
+            updateActiveFilters();
+        }
+
+        function resetFilters() {
+            document.getElementById('sort-select').value = 'date-desc';
+            document.getElementById('bsr-min').value = '';
+            document.getElementById('bsr-max').value = '';
+            document.getElementById('date-filter').value = 'all';
+            document.getElementById('keyword-search').value = '';
+            document.getElementById('price-min').value = '';
+            document.getElementById('price-max').value = '';
+            document.getElementById('reviews-min').value = '';
+            document.getElementById('reviews-max').value = '';
+            document.getElementById('trend-filter').value = 'all';
+            
+            filteredProducts = [...allProducts];
+            sortProducts('date-desc');
+            renderProducts();
+            currentFilters = {};
+            updateActiveFilters();
+        }
+
+        function clearAllFilters() {
+            resetFilters();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchProducts();
+            // Add enter key support for search
+            document.getElementById('keyword-search').addEventListener('keypress', (e) => { 
+                if (e.key === 'Enter') applyFilters(); 
+            });
+        });
+
+        // Make functions globally available
+        window.applyFilters = applyFilters;
+        window.resetFilters = resetFilters;
+        window.clearAllFilters = clearAllFilters;
+        window.showFavorites = showFavorites;
+        window.toggleFavorite = toggleFavorite;
+        window.removeFilter = removeFilter;
+    </script>
+</body>
+</html>
