@@ -358,8 +358,7 @@
         container.innerHTML = niches.map(niche => `
             <div class="niche-card" onclick="searchByKeyword('${escapeHtml(niche.keyword)}')">
                 <strong>📖 "${escapeHtml(niche.keyword)}"</strong>
-                <span class="word-badge">${currentWordLength} كلمات</span><br>
-                <span style="font-size:0.7rem;">×${niche.count} منتج | متوسط BSR: ${niche.avgBSR.toLocaleString()} 🔥</span>
+                
             </div>
         `).join('');
     }
