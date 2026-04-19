@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>MerchScope | BSR Tracker + Keyword Intelligence</title>
+    <!-- Google Fonts + Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js CDN (for future trend chart, but included) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f6f9fe;
+            font-family: 'Inter', sans-serif;
+            color: #0a1e2f;
+            padding: 24px 20px 50px;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        /* header & badges */
+        .hero-badge {
+            background: linear-gradient(135deg, #0b2b3b, #154e6b);
+            color: white;
+            border-radius: 80px;
+            padding: 12px 28px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+        }
+
+        .live-counter {
+            background: #fff5e6;
+            border-left: 4px solid #f97316;
+            padding: 12px 20px;
+            border-radius: 28px;
+            margin: 16px 0 24px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        /* Hot Niches Panel (merch intelligence) */
+        .hot-niches-panel {
+            background: white;
+            border-radius: 32px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02), 0 2px 6px rgba(0,0,0,0.05);
+            border: 1px solid #eef2fa;
+        }
+
+        .niche-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .niche-card {
+            background: #f8fafd;
+            border-radius: 40px;
+            padding: 8px 18px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid #e2edf7;
+            transition: all 0.1s ease;
+            cursor: default;
+        }
+
+        .niche-card strong {
+            color: #0f3b5c;
+        }
+
+        .badge-hot {
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.7rem;
+            border-radius: 20px;
+            padding: 2px 8px;
+            margin-left: 6px;
+        }
+
+        /* filters row */
+        .filters-card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            border: 1px solid #eef2fa;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .filter-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .filter-group label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #5b6e8c;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 60px;
+            border: 1.5px solid #e2eaf2;
+            background: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background: #1e4a76;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #eef3fc;
+            color: #2c5a7a;
+            border: 1px solid #cfdfef;
+        }
+
+        /* product grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 10px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid #eef2f8;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.12);
+        }
+
+        .product-img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            background: #fefefe;
+            padding: 12px;
+            border-bottom: 1px solid #f0f4fa;
+        }
+
+        .card-info {
+            padding: 16px 18px 20px;
+        }
+
+        .bsr-chip {
+            display: inline-block;
+            background: #fef7e0;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 60px;
+            color: #b45309;
+            margin-bottom: 12px;
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            line-height: 1.35;
+            margin-bottom: 8px;
+            color: #0b2a3e;
+        }
+
+        .meta-date {
+            font-size: 0.7rem;
+            color: #6c7e9e;
+            margin-bottom: 12px;
+        }
+
+        .badge-new, .badge-trend {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .badge-new {
+            background: #d9f0ec;
+            color: #1f6e5c;
+        }
+
+        .badge-trend {
+            background: #ffede3;
+            color: #c2410c;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .amazon-link, .analyze-btn {
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+            padding: 8px 0;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            transition: 0.1s;
+        }
+
+        .amazon-link {
+            background: #eef2ff;
+            color: #1f4a76;
+        }
+
+        .analyze-btn {
+            background: #1f2e3f;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .watchlist-star {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #cbd5e1;
+        }
+
+        .watchlist-star.active {
+            color: #f5b042;
+        }
+
+        /* modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: white;
+            max-width: 750px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border-radius: 40px;
+            padding: 28px 30px;
+            position: relative;
+        }
+
+        .keyword-badge {
+            background: #eef3ff;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .opportunity-badge {
+            background: #1f3b4c;
+            color: white;
+            font-weight: bold;
+            border-radius: 60px;
+            padding: 5px 14px;
+            display: inline-block;
+        }
+
+        footer {
+            margin-top: 48px;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #8ba0bc;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 16px; }
+            .filter-group { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero-badge">
+        <i class="fas fa-chart-line fa-fw"></i> <span>MerchScope — Real BSR Intelligence</span>
+    </div>
+    <div class="live-counter">
+        <span><i class="fas fa-database"></i> <strong id="totalCount">0</strong> active products · Last 48h: <span id="fresh48h">0</span> new BSR items</span>
+        <span><i class="fas fa-clock"></i> Last update: <span id="updateTime">Today</span></span>
+    </div>
+
+    <!-- HOT NICHES PANEL (calculated from designTitle frequency last 7 days) -->
+    <div class="hot-niches-panel">
+        <div><i class="fas fa-fire-flame-curved" style="color:#e95e2e;"></i> <strong>🔥 Hot Niches (last 7 days)</strong> — most repeated keywords in DesignTitle</div>
+        <div id="hotNichesContainer" class="niche-badges">Loading intelligence...</div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters-card">
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label>🔍 Keyword (Title/Brand/Bullets)</label>
+                <input type="text" id="keywordSearchInput" placeholder="e.g., raccoon, teacher, lab week">
+            </div>
+            <div class="filter-group">
+                <label>📊 BSR range</label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="number" id="bsrMin" placeholder="Min">
+                    <input type="number" id="bsrMax" placeholder="Max">
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>📅 Added</label>
+                <select id="dateRangeSelect">
+                    <option value="all">All time</option>
+                    <option value="week">Last 7 days</option>
+                    <option value="month">Last 30 days</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Sort by</label>
+                <select id="sortSelect">
+                    <option value="newest">Newest first</option>
+                    <option value="bsr_asc">BSR (lowest best)</option>
+                    <option value="bsr_desc">BSR (highest)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button class="btn btn-primary" id="applyFiltersBtn"><i class="fas fa-sliders-h"></i> Apply</button>
+                <button class="btn btn-secondary" id="resetFiltersBtn">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products grid -->
+    <div id="productsGridContainer"><div class="loading" style="text-align:center; padding:60px;"><i class="fas fa-spinner fa-pulse"></i> Fetching exclusive BSR data...</div></div>
+    <footer>⚡ Data source: Merch BRS feed (updated bi-daily) · Opportunity Score & Hot niches computed live</footer>
+</div>
+
+<!-- Modal -->
+<div id="analysisModal" class="modal">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+            <h3><i class="fas fa-chart-pie"></i> Product deep analysis</h3>
+            <button id="closeModalBtn" style="background:none; border:none; font-size:28px; cursor:pointer;">&times;</button>
+        </div>
+        <div id="modalDynamicContent"></div>
+    </div>
+</div>
+
+<script>
+    // -------- GLOBAL STATE ----------
+    let allProducts = [];        // master array
+    let filteredProducts = [];
+    let watchlist = new Set();    // ASINs stored in localStorage
+    
+    // load watchlist from local storage
+    function loadWatchlist() {
+        const stored = localStorage.getItem('merch_watchlist');
+        if(stored) {
+            try {
+                const arr = JSON.parse(stored);
+                watchlist = new Set(arr);
+            } catch(e) {}
+        }
+    }
+    function saveWatchlist() {
+        localStorage.setItem('merch_watchlist', JSON.stringify([...watchlist]));
+        renderProducts(); // refresh star icons
+    }
+    function toggleWatchlist(asin) {
+        if(watchlist.has(asin)) watchlist.delete(asin);
+        else watchlist.add(asin);
+        saveWatchlist();
+    }
+    
+    // Helper: clean BSR string from category noise
+    function cleanBsrText(raw) {
+        if(!raw) return 'N/A';
+        let cleaned = raw.replace(/ in Clothing, Shoes & Jewelry/gi, '');
+        cleaned = cleaned.replace(/ in .+$/i, '');
+        return cleaned.trim();
+    }
+    function extractBsrNumber(bsrStr) {
+        if(!bsrStr) return 99999999;
+        const match = bsrStr.replace(/,/g, '').match(/\d+/);
+        return match ? parseInt(match[0],10) : 99999999;
+    }
+    function parseCustomDate(dateStr) {
+        if(!dateStr) return null;
+        let clean = dateStr.replace(/^:\s*/, '').replace(/‎/g,'').trim();
+        const d = new Date(clean);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    
+    // ---------- HOT NICHES (last 7 days, keyword frequency from DesignTitle) ----------
+    function computeHotNiches(products) {
+        const sevenDaysAgo = Date.now() - 7 * 86400000;
+        const recent = products.filter(p => p.parsedDate && p.parsedDate.getTime() > sevenDaysAgo);
+        const wordMap = new Map(); // word -> {count, totalBSR}
+        recent.forEach(p => {
+            const title = (p.designTitle || '').toLowerCase();
+            const words = title.split(/\s+/).filter(w => w.length > 2 && !['the','and','for','with','this','that','from','have','are','you','your'].includes(w));
+            const uniqueInTitle = [...new Set(words)];
+            uniqueInTitle.forEach(word => {
+                if(!wordMap.has(word)) wordMap.set(word, {count:0, sumBSR:0});
+                const entry = wordMap.get(word);
+                entry.count += 1;
+                entry.sumBSR += p.bsrNumber;
+            });
+        });
+        const sorted = Array.from(wordMap.entries()).map(([word, data]) => ({
+            word,
+            count: data.count,
+            avgBSR: Math.round(data.sumBSR / data.count)
+        })).sort((a,b) => b.count - a.count).slice(0, 12);
+        return sorted;
+    }
+    
+    // Opportunity Score (based on BSR + freshness + niche rarity)
+    function computeOpportunityScore(product, allProds) {
+        let score = 0;
+        const bsr = product.bsrNumber;
+        if(bsr < 10000) score += 40;
+        else if(bsr < 50000) score += 30;
+        else if(bsr < 100000) score += 20;
+        else if(bsr < 200000) score += 10;
+        
+        const daysOld = product.parsedDate ? (Date.now() - product.parsedDate.getTime()) / 86400000 : 99;
+        if(daysOld < 2) score += 30;
+        else if(daysOld < 7) score += 20;
+        else if(daysOld < 14) score += 10;
+        
+        // niche rarity: count occurrences of primary keyword (first noun-ish from title)
+        const titleWords = (product.designTitle || '').toLowerCase().split(/\s+/);
+        let primaryNiche = titleWords.find(w => w.length > 3) || (titleWords[0] || '');
+        if(primaryNiche) {
+            let nicheOccurrences = allProds.filter(p => (p.designTitle || '').toLowerCase().includes(primaryNiche)).length;
+            if(nicheOccurrences <= 2) score += 30;
+            else if(nicheOccurrences <= 5) score += 20;
+            else if(nicheOccurrences <= 10) score += 10;
+        } else score += 10;
+        return Math.min(10, Math.max(1, Math.round(score / 10)));
+    }
+    
+    // extract keywords from product title+brand for modal
+    function extractSmartKeywords(product) {
+        let text = `${product.designTitle} ${product.brand}`.toLowerCase();
+        let words = text.split(/\s+/).filter(w => w.length > 2 && !['the','and','for','with','this','that','have','from','gift','funny','cool','men','women'].includes(w));
+        let unique = [...new Set(words)].slice(0, 10);
+        let longTail = [];
+        let titleParts = (product.designTitle || '').toLowerCase().split(/\s+/);
+        for(let i=0; i<titleParts.length-2; i++) {
+            let phrase = titleParts.slice(i, i+3).join(' ');
+            if(phrase.length > 6 && !longTail.includes(phrase)) longTail.push(phrase);
+            if(longTail.length >= 5) break;
+        }
+        return { keywords: unique, longTail: longTail.slice(0,4) };
+    }
+    
+    // Render products grid (with NEW badge <48h, TRENDING if niche freq high)
+    function renderProducts() {
+        const container = document.getElementById('productsGridContainer');
+        if(!filteredProducts.length) {
+            container.innerHTML = `<div class="no-results" style="background:white; border-radius:40px; padding:60px; text-align:center;">🔍 No products match. Try broader filters.</div>`;
+            document.getElementById('totalCount').innerText = allProducts.length;
+            return;
+        }
+        // compute trending niches (niche repeated > 5 times this week)
+        const lastWeekProducts = allProducts.filter(p => p.parsedDate && (Date.now() - p.parsedDate.getTime()) < 7*86400000);
+        const nicheFrequency = new Map();
+        lastWeekProducts.forEach(p => {
+            let firstWord = (p.designTitle || '').split(/\s+/)[0]?.toLowerCase();
+            if(firstWord && firstWord.length>2) nicheFrequency.set(firstWord, (nicheFrequency.get(firstWord)||0)+1);
+        });
+        const isTrendingNiche = (title) => {
+            let first = (title || '').split(/\s+/)[0]?.toLowerCase();
+            return first && (nicheFrequency.get(first) || 0) > 5;
+        };
+        
+        let html = `<div class="products-grid">`;
+        filteredProducts.forEach(p => {
+            const daysOld = p.parsedDate ? (Date.now() - p.parsedDate.getTime())/86400000 : 99;
+            const isNew = daysOld < 2;
+            const trending = isTrendingNiche(p.designTitle);
+            const oppScore = computeOpportunityScore(p, allProducts);
+            const inWatch = watchlist.has(p.asin);
+            html += `
+                <div class="product-card">
+                    <img class="product-img" src="${p.imageUrl || 'https://via.placeholder.com/300?text=No+Image'}" onerror="this.src='https://via.placeholder.com/300?text=no+img'">
+                    <div class="card-info">
+                        <div class="bsr-chip"><i class="fas fa-chart-line"></i> BSR: ${p.bsrDisplay}</div>
+                        <div class="title">${escapeHtml(p.designTitle.substring(0,75))}${p.designTitle.length>75?'...':''}</div>
+                        <div class="meta-date">
+                            ${isNew ? '<span class="badge-new">✨ NEW (<48h)</span>' : ''}
+                            ${trending ? '<span class="badge-trend">🔥 TRENDING</span>' : ''}
+                            <span style="margin-left:6px;"><i class="far fa-calendar"></i> ${p.dateAddedRaw ? p.dateAddedRaw.substring(0,16) : 'recent'}</span>
+                        </div>
+                        <div style="font-size:0.7rem; margin-bottom:8px;"><strong>Opportunity Score:</strong> <span style="background:#1a3a4f; color:white; padding:2px 12px; border-radius:40px;">${oppScore}/10</span></div>
+                        <div class="card-actions">
+                            <a href="${p.link}" target="_blank" class="amazon-link"><i class="fab fa-amazon"></i> Amazon</a>
+                            <button class="analyze-btn" data-asin="${p.asin}"><i class="fas fa-chart-simple"></i> Analyze</button>
+                            <button class="watchlist-star ${inWatch ? 'active' : ''}" data-asin="${p.asin}"><i class="fa${inWatch ? 's' : 'r'} fa-star"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+        container.innerHTML = html;
+        document.getElementById('totalCount').innerText = allProducts.length;
+        // attach analyze & watchlist events
+        document.querySelectorAll('.analyze-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const asin = btn.getAttribute('data-asin');
+                const product = allProducts.find(p => p.asin === asin);
+                if(product) openModal(product);
+            });
+        });
+        document.querySelectorAll('.watchlist-star').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const asin = btn.getAttribute('data-asin');
+                toggleWatchlist(asin);
+                renderProducts(); // refresh stars
+            });
+        });
+    }
+    
+    function openModal(product) {
+        const modal = document.getElementById('analysisModal');
+        const modalContent = document.getElementById('modalDynamicContent');
+        const { keywords, longTail } = extractSmartKeywords(product);
+        const oppScore = computeOpportunityScore(product, allProducts);
+        const daysOld = product.parsedDate ? Math.floor((Date.now() - product.parsedDate.getTime())/86400000) : '?';
+        modalContent.innerHTML = `
+            <div style="display:flex; flex-wrap:wrap; gap:16px;">
+                <img src="${product.imageUrl || 'https://via.placeholder.com/140'}" style="width:120px; border-radius:20px; background:#f2f5f9;" onerror="this.src='https://via.placeholder.com/140'">
+                <div><span class="opportunity-badge"><i class="fas fa-chart-line"></i> Opportunity Score: ${oppScore}/10</span><br><strong>${escapeHtml(product.designTitle)}</strong><br>Brand: ${escapeHtml(product.brand)}</div>
+            </div>
+            <hr>
+            <div><strong>📊 BSR:</strong> ${product.bsrDisplay}<br><strong>📅 Added:</strong> ${product.dateAddedRaw || 'unknown'} (${daysOld} days old)<br><strong>🔗 ASIN:</strong> ${product.asin}</div>
+            <div style="margin-top:16px;"><strong>🎯 Keywords (title/brand)</strong><div class="niche-badges" style="margin-top:6px;">${keywords.map(k => `<span class="keyword-badge">${escapeHtml(k)}</span>`).join('') || '—'}</div></div>
+            <div><strong>📖 Long-tail ideas</strong><div class="niche-badges">${longTail.map(lt => `<span class="keyword-badge">${escapeHtml(lt)}</span>`).join('') || '—'}</div></div>
+            <div style="margin-top:20px;"><button id="copyKeywordsBtn" class="btn btn-primary" style="background:#2c5a7a;"><i class="fas fa-copy"></i> Copy Keywords for Listing</button></div>
+            <div style="margin-top:12px;"><a href="${product.link}" target="_blank" class="amazon-link" style="display:inline-block; background:#232f3e; color:white; padding:8px 20px;">Open on Amazon <i class="fab fa-amazon"></i></a></div>
+        `;
+        document.getElementById('copyKeywordsBtn')?.addEventListener('click', () => {
+            const allKeys = [...keywords, ...longTail].join(', ');
+            navigator.clipboard.writeText(allKeys);
+            alert('Keywords copied!');
+        });
+        modal.classList.add('active');
+    }
+    
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    
+    // apply all filters (including keyword)
+    function applyFilters() {
+        const keywordRaw = document.getElementById('keywordSearchInput').value.toLowerCase().trim();
+        const bsrMin = parseFloat(document.getElementById('bsrMin').value) || 0;
+        const bsrMax = parseFloat(document.getElementById('bsrMax').value) || Infinity;
+        const dateRange = document.getElementById('dateRangeSelect').value;
+        const sortType = document.getElementById('sortSelect').value;
+        let filtered = allProducts.filter(p => {
+            if(keywordRaw) {
+                const haystack = `${p.designTitle} ${p.brand} ${p.featureBullet1} ${p.featureBullet2}`.toLowerCase();
+                if(!haystack.includes(keywordRaw)) return false;
+            }
+            if(p.bsrNumber < bsrMin || p.bsrNumber > bsrMax) return false;
+            if(dateRange !== 'all' && p.parsedDate) {
+                const diffDays = (Date.now() - p.parsedDate.getTime()) / 86400000;
+                if(dateRange === 'week' && diffDays > 7) return false;
+                if(dateRange === 'month' && diffDays > 30) return false;
+            }
+            return true;
+        });
+        if(sortType === 'newest') filtered.sort((a,b) => (b.parsedDate||0) - (a.parsedDate||0));
+        else if(sortType === 'bsr_asc') filtered.sort((a,b) => a.bsrNumber - b.bsrNumber);
+        else if(sortType === 'bsr_desc') filtered.sort((a,b) => b.bsrNumber - a.bsrNumber);
+        filteredProducts = filtered;
+        renderProducts();
+        // update fresh 48h count
+        const freshCount = allProducts.filter(p => p.parsedDate && (Date.now() - p.parsedDate.getTime()) < 48*3600000).length;
+        document.getElementById('fresh48h').innerText = freshCount;
+        document.getElementById('updateTime').innerText = new Date().toLocaleDateString();
+    }
+    
+    // render hot niches panel after data loaded
+    function updateHotNiches() {
+        const hot = computeHotNiches(allProducts);
+        const container = document.getElementById('hotNichesContainer');
+        if(!hot.length) { container.innerHTML = '<span>No enough data yet</span>'; return; }
+        container.innerHTML = hot.map(h => `<div class="niche-card"><strong>${escapeHtml(h.word)}</strong> ×${h.count} | avg BSR: ${h.avgBSR.toLocaleString()} 🔥</div>`).join('');
+    }
+    
+    // fetch Google Sheets CSV
+    async function loadData() {
+        const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQVrn6075kqg24vaviW6G1IyBP33taBfrVd4dttvCTNJFQmeCBaRO0Yh8O2w0oushpzF7Vd1uLC1JXc/pub?output=csv';
+        try {
+            const response = await fetch(url);
+            const csvText = await response.text();
+            const rows = csvText.split(/\r?\n/).filter(r => r.trim().length > 0);
+            const products = [];
+            for(let i=1; i<rows.length; i++) {
+                const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+                if(cols.length < 5) continue;
+                const asin = cols[0] || '';
+                const link = cols[1] || '#';
+                const bsrRaw = cols[2] || '';
+                const imageUrl = cols[3] || '';
+                const dateAddedRaw = cols[4] || '';
+                const designTitle = cols[5] || '';
+                const brand = cols[6] || '';
+                const featureBullet1 = cols[7] || '';
+                const featureBullet2 = cols[8] || '';
+                const bsrNumber = extractBsrNumber(bsrRaw);
+                const bsrDisplay = cleanBsrText(bsrRaw);
+                const parsedDate = parseCustomDate(dateAddedRaw);
+                products.push({ asin, link, bsrRaw, bsrNumber, bsrDisplay, imageUrl, dateAddedRaw, parsedDate, designTitle, brand, featureBullet1, featureBullet2 });
+            }
+            allProducts = products;
+            updateHotNiches();
+            applyFilters();
+        } catch(err) {
+            console.error(err);
+            document.getElementById('productsGridContainer').innerHTML = `<div class="no-results" style="background:white; border-radius:40px; padding:50px;">⚠️ Failed to load data. Ensure CSV is public and CORS friendly.</div>`;
+        }
+    }
+    
+    // event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        loadWatchlist();
+        loadData();
+        document.getElementById('applyFiltersBtn').addEventListener('click', () => applyFilters());
+        document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+            document.getElementById('keywordSearchInput').value = '';
+            document.getElementById('bsrMin').value = '';
+            document.getElementById('bsrMax').value = '';
+            document.getElementById('dateRangeSelect').value = 'all';
+            document.getElementById('sortSelect').value = 'newest';
+            applyFilters();
+        });
+        document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('analysisModal').classList.remove('active'));
+        document.getElementById('analysisModal').addEventListener('click', (e) => { if(e.target === document.getElementById('analysisModal')) document.getElementById('analysisModal').classList.remove('active'); });
+    });
+</script>
+</body>
+</html>
