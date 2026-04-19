@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merch Analyzer | Amazon BSR Keyword Research</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #f5f7fc; padding: 24px 20px; color: #1e293b; }
+        .container { max-width: 1500px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 28px; }
+        .header h1 { font-size: 2rem; background: linear-gradient(135deg, #0f2b3d, #1e4a76); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .stats { background: white; padding: 8px 24px; border-radius: 40px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stats span { font-weight: 800; color: #e53e3e; font-size: 1.2rem; }
+        
+        /* Panels */
+        .filters-panel, .keyword-panel { background: white; border-radius: 24px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #eef2f8; }
+        .keyword-panel { background: #fafcff; border-left: 4px solid #3b82f6; }
+        .keyword-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .keyword-row input { flex: 3; min-width: 240px; padding: 12px 18px; border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 1rem; }
+        .keyword-row input:focus { outline: none; border-color: #3b82f6; }
+        .keyword-row button { padding: 10px 24px; border-radius: 40px; border: none; font-weight: 500; cursor: pointer; background: #1e293b; color: white; }
+        .keyword-row button.outline { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
+        .filter-group { flex: 1; min-width: 160px; }
+        .filter-group label { font-size: 0.75rem; font-weight: 600; margin-bottom: 6px; display: block; color: #475569; }
+        .filter-group select, .filter-group input { width: 100%; padding: 10px 12px; border-radius: 14px; border: 1px solid #cfdfed; }
+        .bsr-range { display: flex; gap: 8px; }
+        .btn { padding: 10px 20px; border-radius: 40px; border: none; font-weight: 500; cursor: pointer; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-secondary { background: #eef2ff; color: #1e293b; }
+        
+        /* Hot Niches Panel */
+        .hot-niches-panel {
+            background: linear-gradient(135deg, #fff5eb 0%, #fff 100%);
+            border-radius: 24px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border: 1px solid #ffe0b5;
+        }
+        .panel-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: #1e293b;
+        }
+        .niche-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .niche-card {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            border: 1px solid #ffe0b5;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .niche-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            background: #fff9f0;
+        }
+        .niche-card strong {
+            color: #e95e2e;
+        }
+        
+        /* Trend Chart Panel */
+        .trend-chart-panel {
+            background: white;
+            border-radius: 24px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border: 1px solid #eef2f8;
+        }
+        .trend-chart-panel .panel-title {
+            margin-bottom: 16px;
+        }
+        canvas#trendChart {
+            max-height: 250px;
+            width: 100%;
+        }
+        
+        /* Grid */
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 22px; }
+        .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 14px rgba(0,0,0,0.05); transition: transform 0.2s; border: 1px solid #edf2f7; }
+        .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .product-image { width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 12px; border-bottom: 1px solid #f0f2f5; }
+        .product-info { padding: 14px 16px 18px; }
+        .bsr-tag { display: inline-block; background: #fef3c7; color: #b45309; font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 30px; margin-bottom: 10px; }
+        .product-title { font-weight: 600; font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px; color: #0f172a; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .product-date { font-size: 0.7rem; color: #6c7a91; margin-bottom: 12px; }
+        .card-actions { display: flex; gap: 10px; margin-top: 12px; }
+        .amazon-btn { background: #eef2ff; text-decoration: none; text-align: center; padding: 8px; border-radius: 40px; font-size: 0.75rem; font-weight: 500; color: #2563eb; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .analyze-btn { background: #1f2b3c; color: white; border: none; padding: 8px 12px; border-radius: 40px; font-weight: 500; font-size: 0.7rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .no-results { text-align: center; padding: 60px; background: white; border-radius: 28px; color: #94a3b8; }
+        .loading { text-align: center; padding: 50px; }
+        
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: 0.2s; }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+        .modal-content { background: white; width: 90%; max-width: 750px; max-height: 85vh; overflow-y: auto; padding: 28px 30px; position: relative; border-radius: 32px; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 1.5rem; }
+        .close-modal { background: none; border: none; font-size: 28px; cursor: pointer; }
+        .modal-img { max-width: 180px; margin-bottom: 20px; border-radius: 20px; background: #f9fafb; padding: 8px; }
+        .detail-block { background: #f8fafc; padding: 16px; border-radius: 20px; margin-bottom: 18px; }
+        .keyword-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .keyword-badge { background: #e6f0ff; padding: 6px 14px; border-radius: 40px; font-size: 0.75rem; font-weight: 500; }
+        .longtail-badge { background: #e0f2fe; color: #0369a1; }
+        hr { margin: 16px 0; }
+        footer { text-align: center; margin-top: 30px; font-size: 0.7rem; color: #7c8ba0; }
+        @media (max-width: 640px) { .products-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1><i class="fas fa-chart-simple"></i> Amazon BSR Tracker + Keyword Research</h1>
+        <div class="stats"><span id="product-count">0</span> products · BSR cleaned (no category text)</div>
+    </div>
+
+    <!-- Hot Niches Panel - Real keyword frequency from products -->
+    <div class="hot-niches-panel">
+        <div class="panel-title"><i class="fas fa-fire-flame-curved" style="color:#e95e2e;"></i> 🔥 Hot Niches (last 7 days) — real keyword frequency</div>
+        <div id="hotNichesContainer" class="niche-badges"><div class="loading" style="padding:20px">Analyzing keywords...</div></div>
+    </div>
+
+    <!-- BSR Activity Trend Chart -->
+    <div class="trend-chart-panel" id="trendChartPanel">
+        <div class="panel-title"><i class="fas fa-chart-area"></i> 📈 BSR Activity — Last 14 Days (by product count)</div>
+        <canvas id="trendChart" height="120" style="width:100%; max-height:250px"></canvas>
+    </div>
+
+    <!-- Keyword Research Box -->
+    <div class="keyword-panel">
+        <div style="font-weight: 600; margin-bottom: 12px;"><i class="fas fa-magnifying-glass-chart"></i> 🔎 Keyword Research (search inside Title, Brand, Features)</div>
+        <div class="keyword-row">
+            <input type="text" id="keywordSearch" placeholder="Example: Pope Leo, test day, raccoon, paramore, lab week..." autocomplete="off">
+            <button id="searchKeywordBtn"><i class="fas fa-search"></i> Search</button>
+            <button id="clearKeywordBtn" class="outline"><i class="fas fa-eraser"></i> Clear</button>
+        </div>
+        <div style="font-size: 0.7rem; margin-top: 10px; color: #4b5563;"><i class="fas fa-info-circle"></i> يبحث بالضبط داخل: designTitle, brand, featureBullet1, featureBullet2</div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filters-panel">
+        <div class="filter-row">
+            <div class="filter-group"><label>📊 Sort by</label><select id="sortSelect"><option value="date-desc">Newest First</option><option value="date-asc">Oldest First</option><option value="bsr-asc">BSR (Lowest best)</option><option value="bsr-desc">BSR (Highest worst)</option></select></div>
+            <div class="filter-group"><label>🔢 BSR Range</label><div class="bsr-range"><input type="number" id="bsrMin" placeholder="Min"><input type="number" id="bsrMax" placeholder="Max"></div></div>
+            <div class="filter-group"><label>📅 Date added</label><select id="dateFilter"><option value="all">All</option><option value="today">Today</option><option value="week">Last 7 days</option><option value="month">Last 30 days</option></select></div>
+            <div class="filter-group"><label>&nbsp;</label><div style="display: flex; gap: 8px;"><button class="btn btn-primary" onclick="applyAllFilters()">Apply</button><button class="btn btn-secondary" onclick="resetAll()">Reset</button></div></div>
+        </div>
+    </div>
+
+    <div id="productsContainer"><div class="loading">Loading data from Google Sheets...</div></div>
+    <footer>🔄 البيانات تجلب مباشرة من Google Sheets | BSR cleaned automatically | زر التحليل يعرض كلمات مفتاحية حقيقية + Long-tail | Hot Niches تحسب تكرار الكلمات من المنتجات</footer>
+</div>
+
+<!-- Modal Structure -->
+<div id="analysisModal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h2><i class="fas fa-chart-line"></i> Product Analysis</h2><button class="close-modal" id="closeModalBtn">&times;</button></div><div id="modalBody"></div></div></div>
+
+<script>
+    // ======================== CONFIG ========================
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQVrn6075kqg24vaviW6G1IyBP33taBfrVd4dttvCTNJFQmeCBaRO0Yh8O2w0oushpzF7Vd1uLC1JXc/pub?output=csv';
+    
+    let masterProducts = [];
+    let filteredProducts = [];
+    let trendChart = null;
+
+    // Helper: parse CSV row
+    function parseCSVRow(row) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < row.length; i++) {
+            const ch = row[i];
+            if (ch === '"') inQuotes = !inQuotes;
+            else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+            else current += ch;
+        }
+        result.push(current.trim());
+        return result;
+    }
+
+    // Clean BSR
+    function cleanBsrDisplay(raw) {
+        if (!raw) return 'N/A';
+        let cleaned = raw.replace(/ in Clothing, Shoes & Jewelry/gi, '');
+        cleaned = cleaned.replace(/ in .+$/i, '');
+        return cleaned.trim();
+    }
+
+    function extractBsrNumber(bsrStr) {
+        if (!bsrStr) return 99999999;
+        const match = bsrStr.replace(/,/g, '').match(/\d+/);
+        return match ? parseInt(match[0], 10) : 99999999;
+    }
+
+    function parseDateFromString(dateStr) {
+        if (!dateStr) return null;
+        let cleaned = dateStr.replace(/^:\s*/, '').replace(/‎/g, '').trim();
+        const dateObj = new Date(cleaned);
+        return isNaN(dateObj.getTime()) ? null : dateObj;
+    }
+
+    // Extract all keywords from product for Hot Niches analysis
+    function extractAllKeywordsFromProduct(product) {
+        let sourceText = `${product.designTitle} ${product.brand}`.toLowerCase();
+        const stopWords = ['a', 'an', 'the', 'and', 'or', 'but', 'for', 'of', 'with', 'without', 'by', 'to', 'in', 'on', 'at', 'for', 'from', 'up', 'down', 'top', 'brand', 'funny', 'gift', 'for men', 'women', 'kids', 'side', 'see', 'ya', 'soon', 'quote', 't-shirt', 'tshirt', 'tee', 'clothing', 'shoes', 'jewelry', 'cool', 'vintage', '›'];
+        let words = sourceText.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
+        return [...new Set(words)];
+    }
+
+    // Calculate Hot Niches from products (last 7 days only)
+    function calculateHotNiches() {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const recentProducts = masterProducts.filter(p => {
+            if (!p.parsedDate) return false;
+            return p.parsedDate >= sevenDaysAgo;
+        });
+        
+        const keywordFrequency = new Map();
+        const keywordBSRMap = new Map(); // Store BSR values for each keyword
+        
+        recentProducts.forEach(product => {
+            const keywords = extractAllKeywordsFromProduct(product);
+            keywords.forEach(kw => {
+                keywordFrequency.set(kw, (keywordFrequency.get(kw) || 0) + 1);
+                if (!keywordBSRMap.has(kw)) keywordBSRMap.set(kw, []);
+                keywordBSRMap.get(kw).push(product.bsrNumber);
+            });
+        });
+        
+        // Convert to array and sort by frequency
+        const sortedNiches = Array.from(keywordFrequency.entries())
+            .map(([keyword, count]) => {
+                const bsrs = keywordBSRMap.get(keyword) || [];
+                const avgBSR = bsrs.reduce((a,b) => a+b, 0) / bsrs.length;
+                return { keyword, count, avgBSR: Math.round(avgBSR) };
+            })
+            .sort((a,b) => b.count - a.count)
+            .slice(0, 25);
+        
+        return sortedNiches;
+    }
+
+    // Render Hot Niches
+    function renderHotNiches() {
+        const container = document.getElementById('hotNichesContainer');
+        const niches = calculateHotNiches();
+        
+        if (niches.length === 0) {
+            container.innerHTML = '<div class="niche-card">No data available for last 7 days</div>';
+            return;
+        }
+        
+        container.innerHTML = niches.map(niche => `
+            <div class="niche-card" onclick="searchByKeyword('${escapeHtml(niche.keyword)}')">
+                <strong>${escapeHtml(niche.keyword)}</strong> ×${niche.count} | avg BSR: ${niche.avgBSR.toLocaleString()} 🔥
+            </div>
+        `).join('');
+    }
+
+    // Search by clicking on hot niche
+    window.searchByKeyword = function(keyword) {
+        const searchInput = document.getElementById('keywordSearch');
+        if (searchInput) {
+            searchInput.value = keyword;
+            applyAllFilters();
+            // Scroll to keyword panel
+            document.querySelector('.keyword-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    // Calculate BSR trend data for last 14 days
+    function calculateTrendData() {
+        const today = new Date();
+        const last14Days = [];
+        for (let i = 13; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(today.getDate() - i);
+            date.setHours(0,0,0,0);
+            last14Days.push(date);
+        }
+        
+        const dailyCounts = new Array(14).fill(0);
+        const dailyAvgBSR = new Array(14).fill(0);
+        const dailyBSRSum = new Array(14).fill(0);
+        
+        masterProducts.forEach(product => {
+            if (!product.parsedDate) return;
+            const productDate = new Date(product.parsedDate);
+            productDate.setHours(0,0,0,0);
+            
+            for (let i = 0; i < last14Days.length; i++) {
+                if (productDate.getTime() === last14Days[i].getTime()) {
+                    dailyCounts[i]++;
+                    dailyBSRSum[i] += product.bsrNumber;
+                    break;
+                }
+            }
+        });
+        
+        for (let i = 0; i < 14; i++) {
+            if (dailyCounts[i] > 0) {
+                dailyAvgBSR[i] = Math.round(dailyBSRSum[i] / dailyCounts[i]);
+            } else {
+                dailyAvgBSR[i] = 0;
+            }
+        }
+        
+        return {
+            labels: last14Days.map(d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+            counts: dailyCounts,
+            avgBSR: dailyAvgBSR
+        };
+    }
+
+    // Render Trend Chart
+    function renderTrendChart() {
+        const canvas = document.getElementById('trendChart');
+        if (!canvas) return;
+        
+        const trendData = calculateTrendData();
+        
+        if (trendChart) {
+            trendChart.destroy();
+        }
+        
+        const ctx = canvas.getContext('2d');
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: trendData.labels,
+                datasets: [
+                    {
+                        label: 'Products Added',
+                        data: trendData.counts,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y',
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    },
+                    {
+                        label: 'Avg BSR (x1000)',
+                        data: trendData.avgBSR.map(v => v / 1000),
+                        borderColor: '#e95e2e',
+                        backgroundColor: 'rgba(233, 94, 46, 0.05)',
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y1',
+                        pointBackgroundColor: '#e95e2e',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    tooltip: { mode: 'index', intersect: false },
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Number of Products', color: '#3b82f6' },
+                        beginAtZero: true,
+                        grid: { color: '#e2e8f0' }
+                    },
+                    y1: {
+                        position: 'right',
+                        title: { display: true, text: 'Avg BSR (thousands)', color: '#e95e2e' },
+                        grid: { drawOnChartArea: false },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Smart keyword extraction from Title and Brand
+    function extractSmartKeywords(product) {
+        let sourceText = `${product.designTitle} ${product.brand}`.toLowerCase();
+        const stopWords = ['a', 'an', 'the', 'and', 'or', 'but', 'for', 'of', 'with', 'without', 'by', 'to', 'in', 'on', 'at', 'for', 'from', 'up', 'down', 'top', 'brand', 'funny', 'gift', 'for men', 'women', 'kids', '2', 'side', 'see', 'ya', 'soon', 'quote', 't-shirt', 'tshirt', 'tee', '›', 'clothing', 'shoes', 'jewelry', 'cool', 'team', 'vintage'];
+        
+        let words = sourceText.split(/\s+/).filter(w => w.length > 2 && !stopWords.includes(w));
+        let uniqueWords = [];
+        for (let w of words) {
+            if (!uniqueWords.includes(w)) uniqueWords.push(w);
+        }
+        
+        let titlePhrases = [];
+        let titleWords = product.designTitle.toLowerCase().split(/\s+/);
+        for (let i = 0; i < titleWords.length - 2; i++) {
+            let phrase = titleWords.slice(i, i+3).join(' ');
+            if (phrase.length > 8 && !stopWords.some(sw => phrase === sw) && phrase.split(' ').length >= 2) {
+                if (!titlePhrases.includes(phrase)) titlePhrases.push(phrase);
+            }
+        }
+        titlePhrases = titlePhrases.slice(0, 5);
+        
+        return { keywords: uniqueWords.slice(0, 10), longTail: titlePhrases };
+    }
+
+    // Fetch and process CSV
+    async function fetchAndBuildProducts() {
+        try {
+            const resp = await fetch(CSV_URL);
+            const csvText = await resp.text();
+            const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+            if (lines.length < 2) throw new Error("Empty data");
+            const headers = parseCSVRow(lines[0]);
+            const products = [];
+            for (let i = 1; i < lines.length; i++) {
+                const cols = parseCSVRow(lines[i]);
+                if (cols.length < 5) continue;
+                const asin = cols[0] || '';
+                const link = cols[1] || '#';
+                const bsrRaw = cols[2] || '';
+                const imageUrl = cols[3] || 'https://via.placeholder.com/300?text=No+Image';
+                const dateAddedRaw = cols[4] || '';
+                const designTitle = cols[5] || '';
+                const brand = cols[6] || '';
+                const feature1 = cols[7] || '';
+                const feature2 = cols[8] || '';
+                
+                const bsrNumber = extractBsrNumber(bsrRaw);
+                const bsrDisplayClean = cleanBsrDisplay(bsrRaw);
+                const parsedDate = parseDateFromString(dateAddedRaw);
+                products.push({
+                    asin, link, bsrRaw, bsrNumber, bsrDisplay: bsrDisplayClean,
+                    imageUrl, dateAddedRaw, parsedDate,
+                    designTitle, brand, featureBullet1: feature1, featureBullet2: feature2
+                });
+            }
+            masterProducts = products;
+            renderHotNiches();
+            renderTrendChart();
+            applyAllFilters();
+        } catch(err) {
+            console.error(err);
+            document.getElementById('productsContainer').innerHTML = `<div class="no-results">⚠️ Error loading data. Check CORS or sheet visibility. Make sure CSV is public.</div>`;
+        }
+    }
+
+    // Keyword research filter
+    function keywordMatch(product, keyword) {
+        if (!keyword.trim()) return true;
+        const kw = keyword.trim().toLowerCase();
+        const searchable = [
+            product.designTitle, product.brand, product.featureBullet1, product.featureBullet2
+        ].join(' ').toLowerCase();
+        return searchable.includes(kw);
+    }
+
+    function applyAllFilters() {
+        const keyword = document.getElementById('keywordSearch')?.value || '';
+        const bsrMin = parseFloat(document.getElementById('bsrMin')?.value) || 0;
+        const bsrMax = parseFloat(document.getElementById('bsrMax')?.value) || Infinity;
+        const dateFilterVal = document.getElementById('dateFilter')?.value || 'all';
+        const sortVal = document.getElementById('sortSelect')?.value || 'date-desc';
+        
+        let filtered = masterProducts.filter(p => {
+            if (!keywordMatch(p, keyword)) return false;
+            if (p.bsrNumber < bsrMin || p.bsrNumber > bsrMax) return false;
+            if (dateFilterVal !== 'all' && p.parsedDate) {
+                const now = new Date();
+                const diffDays = (now - p.parsedDate) / (1000*3600*24);
+                if (dateFilterVal === 'today' && diffDays > 1) return false;
+                if (dateFilterVal === 'week' && diffDays > 7) return false;
+                if (dateFilterVal === 'month' && diffDays > 30) return false;
+            }
+            return true;
+        });
+        
+        filtered.sort((a,b) => {
+            if (sortVal === 'date-desc') return (b.parsedDate||0) - (a.parsedDate||0);
+            if (sortVal === 'date-asc') return (a.parsedDate||0) - (b.parsedDate||0);
+            if (sortVal === 'bsr-asc') return a.bsrNumber - b.bsrNumber;
+            if (sortVal === 'bsr-desc') return b.bsrNumber - a.bsrNumber;
+            return 0;
+        });
+        filteredProducts = filtered;
+        renderProducts();
+    }
+    
+    function renderProducts() {
+        const container = document.getElementById('productsContainer');
+        const countSpan = document.getElementById('product-count');
+        countSpan.innerText = filteredProducts.length;
+        if (filteredProducts.length === 0) {
+            container.innerHTML = `<div class="no-results"><i class="fas fa-search"></i> No products match your filters/keyword.</div>`;
+            return;
+        }
+        let html = `<div class="products-grid">`;
+        filteredProducts.forEach(p => {
+            const displayDate = p.dateAddedRaw ? p.dateAddedRaw.replace(/^:\s*/, '') : 'Unknown';
+            html += `
+                <div class="product-card">
+                    <img class="product-image" src="${p.imageUrl}" onerror="this.src='https://via.placeholder.com/300?text=No+Img'">
+                    <div class="product-info">
+                        <div class="bsr-tag"><i class="fas fa-chart-line"></i> ${p.bsrDisplay}</div>
+                        <div class="product-title">${escapeHtml(p.designTitle.substring(0, 80))}${p.designTitle.length>80?'...':''}</div>
+                        <div class="product-date"><i class="far fa-calendar-alt"></i> ${displayDate}</div>
+                        <div class="card-actions">
+                            <a href="${p.link}" target="_blank" class="amazon-btn"><i class="fab fa-amazon"></i> View</a>
+                            <button class="analyze-btn" data-asin="${p.asin}"><i class="fas fa-chart-simple"></i> Analyze</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+        container.innerHTML = html;
+        
+        document.querySelectorAll('.analyze-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const asin = btn.getAttribute('data-asin');
+                const product = masterProducts.find(p => p.asin === asin);
+                if (product) openAnalysisModal(product);
+            });
+        });
+    }
+    
+    function openAnalysisModal(product) {
+        const modal = document.getElementById('analysisModal');
+        const modalBody = document.getElementById('modalBody');
+        const { keywords, longTail } = extractSmartKeywords(product);
+        const displayDate = product.dateAddedRaw ? product.dateAddedRaw.replace(/^:\s*/, '') : 'Not specified';
+        
+        modalBody.innerHTML = `
+            <div style="text-align: center;"><img class="modal-img" src="${product.imageUrl}" onerror="this.src='https://via.placeholder.com/180?text=No+Image'"></div>
+            <div class="detail-block"><strong>📌 Product Title:</strong><br>${escapeHtml(product.designTitle)}</div>
+            <div class="detail-block"><strong>🏷️ Brand:</strong><br>${escapeHtml(product.brand)}</div>
+            <div class="detail-block"><strong>✨ Feature Bullet 1:</strong><br>${escapeHtml(product.featureBullet1)}</div>
+            <div class="detail-block"><strong>✨ Feature Bullet 2:</strong><br>${escapeHtml(product.featureBullet2)}</div>
+            <div class="detail-block"><strong>📊 BSR (cleaned):</strong> ${product.bsrDisplay}<br><strong>📅 Date added:</strong> ${displayDate}<br><strong>🔗 ASIN:</strong> ${product.asin}</div>
+            <div class="keyword-section">
+                <strong>🔑 Short-tail Keywords:</strong>
+                <div class="keyword-list">${keywords.map(k => `<span class="keyword-badge">${escapeHtml(k)}</span>`).join('') || '<span>—</span>'}</div>
+            </div>
+            <div class="keyword-section">
+                <strong>📖 Long-tail Keywords (phrases):</strong>
+                <div class="keyword-list">${longTail.map(lt => `<span class="keyword-badge longtail-badge">${escapeHtml(lt)}</span>`).join('') || '<span>No long-tail detected</span>'}</div>
+            </div>
+            <hr>
+            <div style="display:flex; justify-content:center;"><a href="${product.link}" target="_blank" class="amazon-btn" style="background:#232f3e; color:white;"><i class="fab fa-amazon"></i> Open on Amazon</a></div>
+        `;
+        modal.classList.add('active');
+    }
+    
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    
+    function resetAll() {
+        document.getElementById('keywordSearch').value = '';
+        document.getElementById('bsrMin').value = '';
+        document.getElementById('bsrMax').value = '';
+        document.getElementById('dateFilter').value = 'all';
+        document.getElementById('sortSelect').value = 'date-desc';
+        applyAllFilters();
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchAndBuildProducts();
+        document.getElementById('searchKeywordBtn')?.addEventListener('click', () => applyAllFilters());
+        document.getElementById('clearKeywordBtn')?.addEventListener('click', () => { document.getElementById('keywordSearch').value = ''; applyAllFilters(); });
+        document.getElementById('closeModalBtn')?.addEventListener('click', () => document.getElementById('analysisModal').classList.remove('active'));
+        document.getElementById('analysisModal')?.addEventListener('click', (e) => { if(e.target === document.getElementById('analysisModal')) document.getElementById('analysisModal').classList.remove('active'); });
+        document.getElementById('bsrMin')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') applyAllFilters(); });
+        document.getElementById('bsrMax')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') applyAllFilters(); });
+    });
+    window.applyAllFilters = applyAllFilters;
+    window.resetAll = resetAll;
+</script>
+</body>
+</html>
