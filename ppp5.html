@@ -46,10 +46,54 @@
             margin-bottom: 16px;
             color: #1e293b;
         }
+        .word-length-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #fff8f0;
+            border-radius: 60px;
+            flex-wrap: wrap;
+        }
+        .word-length-control label {
+            font-weight: 600;
+            color: #e95e2e;
+        }
+        .word-length-control input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 1.5px solid #ffe0b5;
+            border-radius: 40px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .word-length-control button {
+            background: #e95e2e;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .word-length-control button:hover {
+            background: #d44a1a;
+        }
+        .current-filter {
+            background: #e95e2e20;
+            padding: 5px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            color: #e95e2e;
+        }
         .niche-badges {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
         }
         .niche-card {
             background: white;
@@ -74,6 +118,14 @@
         .niche-card .longtail {
             color: #2563eb;
             font-style: italic;
+        }
+        .word-badge {
+            display: inline-block;
+            background: #e95e2e20;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-left: 8px;
         }
         
         .trend-chart-panel {
@@ -126,9 +178,18 @@
         <div class="stats"><span id="product-count">0</span> products · BSR cleaned (no category text)</div>
     </div>
 
-    <!-- Hot Niches Panel - LONG-TAIL KEYWORDS فقط -->
+    <!-- Hot Niches Panel - LONG-TAIL KEYWORDS مع تحكم بعدد الكلمات -->
     <div class="hot-niches-panel">
         <div class="panel-title"><i class="fas fa-fire-flame-curved" style="color:#e95e2e;"></i> 🔥 Hot Long-Tail Niches (last 7 days) — real keyword phrases from products</div>
+        
+        <!-- أدوات التحكم بعدد الكلمات -->
+        <div class="word-length-control">
+            <label><i class="fas fa-sliders-h"></i> عدد الكلمات في العبارة:</label>
+            <input type="number" id="wordLengthInput" min="2" max="6" value="3" step="1">
+            <button id="applyWordLengthBtn"><i class="fas fa-sync-alt"></i> تطبيق</button>
+            <span class="current-filter" id="currentWordLengthFilter">عبارات من 3 كلمات</span>
+        </div>
+        
         <div id="hotNichesContainer" class="niche-badges"><div class="loading" style="padding:20px">Analyzing long-tail keywords...</div></div>
     </div>
 
@@ -160,7 +221,7 @@
     </div>
 
     <div id="productsContainer"><div class="loading">Loading data from Google Sheets...</div></div>
-    <footer>🔄 البيانات تجلب مباشرة من Google Sheets | BSR cleaned automatically | Hot Niches تستهدف الكلمات المفتاحية الطويلة (2-5 كلمات) من عناوين المنتجات</footer>
+    <footer>🔄 البيانات تجلب مباشرة من Google Sheets | يمكنك التحكم بعدد الكلمات في العبارات المفتاحية (2-6 كلمات) | اضغط على أي عبارة للبحث عنها</footer>
 </div>
 
 <!-- Modal Structure -->
@@ -173,6 +234,7 @@
     let masterProducts = [];
     let filteredProducts = [];
     let trendChart = null;
+    let currentWordLength = 3; // العدد الافتراضي للكلمات
 
     function parseCSVRow(row) {
         const result = [];
@@ -208,11 +270,11 @@
         return isNaN(dateObj.getTime()) ? null : dateObj;
     }
 
-    // استخراج الكلمات المفتاحية الطويلة ONLY (2-5 كلمات متتالية)
-    function extractLongTailKeywords(title) {
-        if (!title) return [];
+    // استخراج الكلمات المفتاحية الطويلة بعدد كلمات محدد
+    function extractLongTailKeywordsByLength(title, wordCount) {
+        if (!title || wordCount < 2) return [];
         
-        // تنظيف العنوان من الرموز غير المرغوب فيها
+        // تنظيف العنوان
         let cleanTitle = title.toLowerCase()
             .replace(/[^\w\s]/g, ' ')
             .replace(/\s+/g, ' ')
@@ -220,34 +282,28 @@
         
         const words = cleanTitle.split(' ');
         const longTailPhrases = [];
-        const stopWords = ['a', 'an', 'the', 'and', 'or', 'but', 'for', 'of', 'with', 'without', 'by', 'to', 'in', 'on', 'at', 'for', 'from', 'up', 'down', 'top', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'but', 'so', 'if', 'then', 'else', 'when', 'where', 'which', 'while', 'who', 'whom', 'this', 'that', 'these', 'those', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'that', 'then', 'these', 'those', 'through', 'too', 'very', 'just', 'but', 'do', 'does', 'did', 'doing'];
+        const stopWords = ['a', 'an', 'the', 'and', 'or', 'but', 'for', 'of', 'with', 'without', 'by', 'to', 'in', 'on', 'at', 'for', 'from', 'up', 'down', 'top', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'but', 'so', 'if', 'then', 'else', 'when', 'where', 'which', 'while', 'who', 'whom', 'this', 'that', 'these', 'those', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'then', 'these', 'those', 'through', 'too', 'very', 'just'];
         
-        // استخراج عبارات من 2-5 كلمات
-        for (let len = 2; len <= 5; len++) {
-            for (let i = 0; i <= words.length - len; i++) {
-                let phrase = words.slice(i, i + len).join(' ');
-                
-                // التحقق من أن العبارة ليست كلها كلمات توقف
-                const phraseWords = phrase.split(' ');
-                const allStopWords = phraseWords.every(w => stopWords.includes(w));
-                
-                // التحقق من أن العبارة ذات معنى (طولها مناسب)
-                if (!allStopWords && phrase.length > 5 && phrase.length < 40) {
-                    // تجنب العبارات التي تبدأ أو تنتهي بكلمات توقف شائعة جداً
-                    if (!stopWords.includes(phraseWords[0]) || phraseWords.length > 2) {
-                        if (!longTailPhrases.includes(phrase)) {
-                            longTailPhrases.push(phrase);
-                        }
-                    }
+        // استخراج عبارات بعدد الكلمات المطلوب
+        for (let i = 0; i <= words.length - wordCount; i++) {
+            let phrase = words.slice(i, i + wordCount).join(' ');
+            
+            // التحقق من أن العبارة ذات معنى
+            const phraseWords = phrase.split(' ');
+            const allStopWords = phraseWords.every(w => stopWords.includes(w));
+            
+            if (!allStopWords && phrase.length > 5 && phrase.length < 50) {
+                if (!longTailPhrases.includes(phrase)) {
+                    longTailPhrases.push(phrase);
                 }
             }
         }
         
-        return longTailPhrases.slice(0, 15); // الحد الأقصى 15 عبارة لكل منتج
+        return longTailPhrases;
     }
 
-    // حساب Hot Niches من الكلمات الطويلة فقط
-    function calculateHotNiches() {
+    // حساب Hot Niches بعدد كلمات محدد
+    function calculateHotNiches(wordLength) {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         
@@ -260,8 +316,8 @@
         const keywordBSRMap = new Map();
         
         recentProducts.forEach(product => {
-            // استخراج الكلمات الطويلة من العنوان فقط
-            const longTailKeywords = extractLongTailKeywords(product.designTitle);
+            // استخراج العبارات بعدد الكلمات المحدد
+            const longTailKeywords = extractLongTailKeywordsByLength(product.designTitle, wordLength);
             
             longTailKeywords.forEach(kw => {
                 keywordFrequency.set(kw, (keywordFrequency.get(kw) || 0) + 1);
@@ -270,7 +326,7 @@
             });
         });
         
-        // ترتيب حسب التكرار وأخذ الأكثر شيوعاً
+        // ترتيب حسب التكرار
         const sortedNiches = Array.from(keywordFrequency.entries())
             .map(([keyword, count]) => {
                 const bsrs = keywordBSRMap.get(keyword) || [];
@@ -278,7 +334,7 @@
                 return { keyword, count, avgBSR: Math.round(avgBSR) };
             })
             .sort((a,b) => b.count - a.count)
-            .slice(0, 30); // عرض أفضل 30 عبارة
+            .slice(0, 35);
         
         return sortedNiches;
     }
@@ -286,19 +342,42 @@
     // عرض Hot Niches
     function renderHotNiches() {
         const container = document.getElementById('hotNichesContainer');
-        const niches = calculateHotNiches();
+        const niches = calculateHotNiches(currentWordLength);
         
         if (niches.length === 0) {
-            container.innerHTML = '<div class="niche-card">No long-tail keywords found in last 7 days</div>';
+            container.innerHTML = `<div class="niche-card">No ${currentWordLength}-word keywords found in last 7 days</div>`;
             return;
+        }
+        
+        // تحديث النص المعروض
+        const filterSpan = document.getElementById('currentWordLengthFilter');
+        if (filterSpan) {
+            filterSpan.innerHTML = `عبارات من ${currentWordLength} ${currentWordLength === 2 ? 'كلمتين' : currentWordLength === 3 ? 'كلمات' : currentWordLength === 4 ? 'كلمات' : 'كلمات'}`;
         }
         
         container.innerHTML = niches.map(niche => `
             <div class="niche-card" onclick="searchByKeyword('${escapeHtml(niche.keyword)}')">
-                <strong>📖 "${escapeHtml(niche.keyword)}"</strong><br>
-                <span style="font-size:0.7rem;">×${niche.count} products | avg BSR: ${niche.avgBSR.toLocaleString()} 🔥</span>
+                <strong>📖 "${escapeHtml(niche.keyword)}"</strong>
+                <span class="word-badge">${currentWordLength} كلمات</span><br>
+                <span style="font-size:0.7rem;">×${niche.count} منتج | متوسط BSR: ${niche.avgBSR.toLocaleString()} 🔥</span>
             </div>
         `).join('');
+    }
+
+    // تغيير عدد الكلمات
+    function setWordLength() {
+        const input = document.getElementById('wordLengthInput');
+        let newLength = parseInt(input.value);
+        
+        if (isNaN(newLength)) newLength = 3;
+        if (newLength < 2) newLength = 2;
+        if (newLength > 6) newLength = 6;
+        
+        currentWordLength = newLength;
+        input.value = newLength;
+        
+        // إعادة حساب وعرض Hot Niches
+        renderHotNiches();
     }
 
     window.searchByKeyword = function(keyword) {
@@ -425,10 +504,13 @@
             if (!uniqueWords.includes(w)) uniqueWords.push(w);
         }
         
-        // كلمات طويلة من العنوان
-        let longTailPhrases = extractLongTailKeywords(product.designTitle);
+        // كلمات طويلة بمختلف الأطوال
+        let longTail2 = extractLongTailKeywordsByLength(product.designTitle, 2);
+        let longTail3 = extractLongTailKeywordsByLength(product.designTitle, 3);
+        let longTail4 = extractLongTailKeywordsByLength(product.designTitle, 4);
+        let allLongTail = [...longTail2, ...longTail3, ...longTail4].slice(0, 10);
         
-        return { keywords: uniqueWords.slice(0, 10), longTail: longTailPhrases.slice(0, 8) };
+        return { keywords: uniqueWords.slice(0, 10), longTail: allLongTail };
     }
 
     // جلب البيانات
@@ -569,7 +651,7 @@
                 <div class="keyword-list">${keywords.map(k => `<span class="keyword-badge">${escapeHtml(k)}</span>`).join('') || '<span>—</span>'}</div>
             </div>
             <div class="keyword-section">
-                <strong>📖 Long-tail Keywords (phrases 2-5 words):</strong>
+                <strong>📖 Long-tail Keywords (2-4 words phrases):</strong>
                 <div class="keyword-list">${longTail.map(lt => `<span class="keyword-badge longtail-badge">📖 "${escapeHtml(lt)}"</span>`).join('') || '<span>No long-tail detected</span>'}</div>
             </div>
             <hr>
@@ -597,6 +679,8 @@
         document.getElementById('analysisModal')?.addEventListener('click', (e) => { if(e.target === document.getElementById('analysisModal')) document.getElementById('analysisModal').classList.remove('active'); });
         document.getElementById('bsrMin')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') applyAllFilters(); });
         document.getElementById('bsrMax')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') applyAllFilters(); });
+        document.getElementById('applyWordLengthBtn')?.addEventListener('click', () => setWordLength());
+        document.getElementById('wordLengthInput')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') setWordLength(); });
     });
     window.applyAllFilters = applyAllFilters;
     window.resetAll = resetAll;
