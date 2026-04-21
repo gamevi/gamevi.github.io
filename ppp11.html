@@ -484,22 +484,25 @@ function keywordMatchNormal(product, keyword) {
 }
 
 /* ================================================================
-   KEYWORD SEARCH — EXACT MATCH MODE
+   KEYWORD SEARCH — EXACT MATCH MODE (FIXED)
    The full phrase must appear verbatim (case-insensitive) in
-   the searchable text — punctuation is normalised to spaces.
+   the searchable text as a whole word / phrase — NOT as substring.
+   Uses word boundary check (regex).
 ================================================================ */
 function keywordMatchExact(product, keyword) {
     if (!keyword || keyword.trim() === '') return true;
 
+    // Clean the search needle
     const needle = keyword.trim()
         .toLowerCase()
-        .replace(/[^\w\s]/g, ' ')
-        .replace(/\s+/g, ' ')
+        .replace(/[^\w\s]/g, ' ')  // replace punctuation with space
+        .replace(/\s+/g, ' ')      // collapse multiple spaces
         .trim();
 
     if (needle === '') return true;
 
-    const searchableText = [
+    // Clean the haystack (same normalization)
+    const haystack = [
         product.designTitle,
         product.brand,
         product.featureBullet1,
@@ -507,9 +510,14 @@ function keywordMatchExact(product, keyword) {
     ].join(' ')
      .toLowerCase()
      .replace(/[^\w\s]/g, ' ')
-     .replace(/\s+/g, ' ');
+     .replace(/\s+/g, ' ')
+     .trim();
 
-    return searchableText.includes(needle);
+    // --- FIX: Use word boundary regex to ensure "cat" doesn't match "catalog" ---
+    // Escape regex special characters in needle (though punctuation already removed)
+    const escapedNeedle = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedNeedle}\\b`, 'i');
+    return regex.test(haystack);
 }
 
 /* ================================================================
@@ -826,7 +834,7 @@ function applyAllFilters() {
             if (searchMode === 'exact') {
                 feedbackDiv.className = 'search-feedback exact-mode';
                 explainSpan.innerHTML =
-                    `🎯 Exact Match: <strong>"${escapeHtml(keyword.trim())}"</strong> — the full phrase must appear verbatim.`;
+                    `🎯 Exact Match: <strong>"${escapeHtml(keyword.trim())}"</strong> — the full phrase must appear as a whole word/phrase.`;
             } else {
                 feedbackDiv.className = 'search-feedback';
                 const tokens = keyword.trim().toLowerCase()
@@ -838,7 +846,7 @@ function applyAllFilters() {
         } else {
             feedbackDiv.className = 'search-feedback';
             explainSpan.textContent = searchMode === 'exact'
-                ? '🎯 Exact Match mode active — type a phrase to find exact matches.'
+                ? '🎯 Exact Match mode active — type a phrase to find exact whole-word matches.'
                 : 'Searches for ALL words (ignores punctuation and case).';
         }
     }
