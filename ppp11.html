@@ -37,26 +37,15 @@
         .keyword-row button.outline {
             background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
         }
-        .search-type-select {
-            padding: 10px 18px;
-            border-radius: 40px;
-            border: 1.5px solid #e2e8f0;
-            background: white;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #1e293b;
-            cursor: pointer;
-            transition: all 0.2s;
+        /* ===== SEARCH MODE SELECT ===== */
+        .search-mode-select {
+            padding: 10px 16px; border-radius: 40px; border: 1.5px solid #e2e8f0;
+            font-size: 0.9rem; font-weight: 600; background: white; color: #1e293b;
+            cursor: pointer; outline: none; transition: border-color 0.2s;
         }
-        .search-type-select:hover {
-            border-color: #3b82f6;
-            background: #f8fafc;
-        }
-        .search-type-select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
+        .search-mode-select:focus { border-color: #3b82f6; }
+        .search-mode-select option[value="exact"] { color: #7c3aed; }
+
         .filter-row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
         .filter-group { flex: 1; min-width: 160px; }
         .filter-group label { font-size: 0.75rem; font-weight: 600; margin-bottom: 6px; display: block; color: #475569; }
@@ -199,14 +188,17 @@
             background: #f0f9ff; padding: 8px 16px; border-radius: 40px; display: inline-block;
         }
         .search-feedback i { color: #3b82f6; }
+        /* Exact match feedback style */
+        .search-feedback.exact-mode {
+            background: #f5f3ff; color: #5b21b6;
+        }
+        .search-feedback.exact-mode i { color: #7c3aed; }
         hr { margin: 16px 0; }
         footer { text-align: center; margin-top: 30px; font-size: 0.7rem; color: #7c8ba0; }
 
         @media (max-width: 640px) {
             .products-grid { grid-template-columns: 1fr; }
             .niches-controls { flex-direction: column; align-items: flex-start; }
-            .keyword-row { flex-direction: column; align-items: stretch; }
-            .search-type-select { width: 100%; }
         }
     </style>
 </head>
@@ -261,20 +253,21 @@
             <i class="fas fa-magnifying-glass-chart"></i> 🔎 Keyword Research (search inside Title, Brand, Features)
         </div>
         <div class="keyword-row">
+            <!-- SEARCH MODE DROPDOWN (NEW) -->
+            <select id="searchMode" class="search-mode-select" title="Search mode">
+                <option value="normal">🔍 Normal Search</option>
+                <option value="exact">🎯 Exact Match</option>
+            </select>
+
             <input type="text" id="keywordSearch"
                 placeholder="e.g. pope leo shirt, funny lab week gift, nurse life..."
                 autocomplete="off">
-            <select id="searchTypeSelect" class="search-type-select">
-                <option value="exact">🎯 Exact Match - Find EXACT word/phrase only (whole word)</option>
-                <option value="close" selected>🔄 Close Match - Find ALL words in ANY order</option>
-                <option value="partial">✨ Partial Match - Find ANY words in ANY order</option>
-            </select>
             <button id="searchKeywordBtn"><i class="fas fa-search"></i> Search</button>
             <button id="clearKeywordBtn" class="outline"><i class="fas fa-eraser"></i> Clear</button>
         </div>
         <div id="searchFeedback" class="search-feedback">
             <i class="fas fa-info-circle"></i>
-            <span id="searchExplanation">Searches for ALL words in ANY order (Close Match).</span>
+            <span id="searchExplanation">Searches for ALL words (ignores punctuation and case).</span>
         </div>
     </div>
 
@@ -322,7 +315,7 @@
         🔄 Data fetched live from Google Sheets &nbsp;|&nbsp;
         Smart keyword extraction with stemming + stop-word filtering &nbsp;|&nbsp;
         Click any niche phrase to search for it &nbsp;|&nbsp;
-        Search modes: Exact Match (whole word only) | Close Match (all words any order) | Partial Match (any words)
+        Search ignores punctuation and case
     </footer>
 </div>
 
@@ -395,6 +388,7 @@ function stem(word) {
         .replace(/ies$/, 'y')          // babies  → baby
         .replace(/([^aeiou])s$/, '$1') // nurses  → nurse, dogs → dog
         .replace(/ing$/, '')           // running → runn (good enough for matching)
+        .replace(/edly$/, '')          // markedly
         .replace(/edly$/, '')
         .replace(/ed$/, '')            // marked  → mark
         .replace(/er$/, '');           // runner  → runn
@@ -423,11 +417,47 @@ function cleanTokens(text) {
 }
 
 /* ================================================================
-   ENHANCED KEYWORD SEARCH with Multiple Modes
-   Modes: 'exact', 'close', 'partial'
-   FIXED: Exact match now uses word boundaries (whole word matching)
+   CSV PARSER
 ================================================================ */
-function keywordMatch(product, keyword, searchMode) {
+function parseCSVRow(row) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < row.length; i++) {
+        const ch = row[i];
+        if (ch === '"') inQuotes = !inQuotes;
+        else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+        else current += ch;
+    }
+    result.push(current.trim());
+    return result;
+}
+
+/* ================================================================
+   BSR HELPERS
+================================================================ */
+function cleanBsrDisplay(raw) {
+    if (!raw) return 'N/A';
+    return raw.replace(/ in Clothing, Shoes & Jewelry/gi, '').replace(/ in .+$/i, '').trim();
+}
+
+function extractBsrNumber(bsrStr) {
+    if (!bsrStr) return 99999999;
+    const match = bsrStr.replace(/,/g, '').match(/\d+/);
+    return match ? parseInt(match[0], 10) : 99999999;
+}
+
+function parseDateFromString(dateStr) {
+    if (!dateStr) return null;
+    const cleaned = dateStr.replace(/^:\s*/, '').replace(/\u200e/g, '').trim();
+    const d = new Date(cleaned);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+/* ================================================================
+   KEYWORD SEARCH — NORMAL MODE (all tokens must appear)
+================================================================ */
+function keywordMatchNormal(product, keyword) {
     if (!keyword || keyword.trim() === '') return true;
 
     const searchTokens = keyword.trim()
@@ -448,51 +478,47 @@ function keywordMatch(product, keyword, searchMode) {
     ].join(' ')
      .toLowerCase()
      .replace(/[^\w\s]/g, ' ')
-     .replace(/\s+/g, ' ')
-     .trim();
+     .replace(/\s+/g, ' ');
 
-    if (searchMode === 'exact') {
-        // Exact Match: Find EXACT phrase as whole words (not partial matches)
-        // If single word: search for whole word using boundaries
-        // If multiple words: search for exact phrase with word boundaries
-        const searchPhrase = searchTokens.join(' ');
-        
-        if (searchTokens.length === 1) {
-            // Single word: use regex with word boundaries
-            const regex = new RegExp('\\b' + escapeRegex(searchTokens[0]) + '\\b', 'i');
-            return regex.test(searchableText);
-        } else {
-            // Multiple words: check if exact phrase exists with word boundaries
-            // Create regex that ensures each word is a whole word
-            const phraseRegex = new RegExp('\\b' + searchTokens.map(t => escapeRegex(t)).join('\\s+') + '\\b', 'i');
-            return phraseRegex.test(searchableText);
-        }
-    } 
-    else if (searchMode === 'close') {
-        // Close Match: Find ALL words in ANY order (original behavior)
-        return searchTokens.every(token => {
-            const regex = new RegExp('\\b' + escapeRegex(token) + '\\b', 'i');
-            return regex.test(searchableText);
-        });
-    } 
-    else if (searchMode === 'partial') {
-        // Partial Match: Find ANY words in ANY order
-        return searchTokens.some(token => {
-            const regex = new RegExp('\\b' + escapeRegex(token) + '\\b', 'i');
-            return regex.test(searchableText);
-        });
-    }
-    
-    // Default to close match
-    return searchTokens.every(token => {
-        const regex = new RegExp('\\b' + escapeRegex(token) + '\\b', 'i');
-        return regex.test(searchableText);
-    });
+    return searchTokens.every(token => searchableText.includes(token));
 }
 
-// Helper function to escape regex special characters
-function escapeRegex(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/* ================================================================
+   KEYWORD SEARCH — EXACT MATCH MODE
+   The full phrase must appear verbatim (case-insensitive) in
+   the searchable text — punctuation is normalised to spaces.
+================================================================ */
+function keywordMatchExact(product, keyword) {
+    if (!keyword || keyword.trim() === '') return true;
+
+    const needle = keyword.trim()
+        .toLowerCase()
+        .replace(/[^\w\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (needle === '') return true;
+
+    const searchableText = [
+        product.designTitle,
+        product.brand,
+        product.featureBullet1,
+        product.featureBullet2
+    ].join(' ')
+     .toLowerCase()
+     .replace(/[^\w\s]/g, ' ')
+     .replace(/\s+/g, ' ');
+
+    return searchableText.includes(needle);
+}
+
+/* ================================================================
+   UNIFIED MATCH (reads search mode dropdown)
+================================================================ */
+function keywordMatch(product, keyword) {
+    const mode = document.getElementById('searchMode')?.value || 'normal';
+    if (mode === 'exact') return keywordMatchExact(product, keyword);
+    return keywordMatchNormal(product, keyword);
 }
 
 /* ================================================================
@@ -786,45 +812,39 @@ async function fetchAndBuildProducts() {
 ================================================================ */
 function applyAllFilters() {
     const keyword      = document.getElementById('keywordSearch')?.value || '';
-    const searchMode   = document.getElementById('searchTypeSelect')?.value || 'close';
     const bsrMin       = parseFloat(document.getElementById('bsrMin')?.value)  || 0;
     const bsrMax       = parseFloat(document.getElementById('bsrMax')?.value)  || Infinity;
     const dateFilterV  = document.getElementById('dateFilter')?.value  || 'all';
     const sortVal      = document.getElementById('sortSelect')?.value  || 'date-desc';
+    const searchMode   = document.getElementById('searchMode')?.value  || 'normal';
 
-    // Update search feedback based on mode
+    // Update search feedback
+    const feedbackDiv = document.getElementById('searchFeedback');
     const explainSpan = document.getElementById('searchExplanation');
-    const searchTokens = keyword.trim() ? keyword.trim().toLowerCase()
-        .replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()
-        .split(' ').filter(Boolean) : [];
-    
     if (explainSpan) {
         if (keyword.trim()) {
-            let modeDescription = '';
             if (searchMode === 'exact') {
-                if (searchTokens.length === 1) {
-                    modeDescription = `🎯 EXACT MATCH: "${searchTokens[0]}" (whole word only - no partial matches like "catcher" for "cat")`;
-                } else {
-                    modeDescription = `🎯 EXACT MATCH: "${searchTokens.join(' ')}" (exact phrase with whole words only)`;
-                }
-            } else if (searchMode === 'close') {
-                modeDescription = `🔄 CLOSE MATCH: ${searchTokens.map(t => `<strong>"${escapeHtml(t)}"</strong>`).join(' + ')} (all words must appear as whole words in ANY order)`;
-            } else if (searchMode === 'partial') {
-                modeDescription = `✨ PARTIAL MATCH: ${searchTokens.map(t => `<strong>"${escapeHtml(t)}"</strong>`).join(' OR ')} (at least ONE word must appear as whole word)`;
+                feedbackDiv.className = 'search-feedback exact-mode';
+                explainSpan.innerHTML =
+                    `🎯 Exact Match: <strong>"${escapeHtml(keyword.trim())}"</strong> — the full phrase must appear verbatim.`;
+            } else {
+                feedbackDiv.className = 'search-feedback';
+                const tokens = keyword.trim().toLowerCase()
+                    .replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()
+                    .split(' ').filter(Boolean);
+                explainSpan.innerHTML =
+                    `🔍 Searching for: ${tokens.map(t => `<strong>"${escapeHtml(t)}"</strong>`).join(' + ')} (all must be present)`;
             }
-            explainSpan.innerHTML = modeDescription;
         } else {
-            const modeNames = {
-                'exact': 'Exact Match (whole word/phrase only)',
-                'close': 'Close Match (all words as whole words, any order)',
-                'partial': 'Partial Match (any word as whole word)'
-            };
-            explainSpan.textContent = `Current mode: ${modeNames[searchMode] || 'Close Match'} — Enter keywords to search`;
+            feedbackDiv.className = 'search-feedback';
+            explainSpan.textContent = searchMode === 'exact'
+                ? '🎯 Exact Match mode active — type a phrase to find exact matches.'
+                : 'Searches for ALL words (ignores punctuation and case).';
         }
     }
 
     let filtered = masterProducts.filter(p => {
-        if (!keywordMatch(p, keyword, searchMode)) return false;
+        if (!keywordMatch(p, keyword)) return false;
         if (p.bsrNumber < bsrMin || p.bsrNumber > bsrMax) return false;
         if (dateFilterV !== 'all' && p.parsedDate) {
             const diffDays = (Date.now() - p.parsedDate) / (1000 * 3600 * 24);
@@ -940,38 +960,6 @@ function openAnalysisModal(product) {
 /* ================================================================
    UTILS
 ================================================================ */
-function parseCSVRow(row) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < row.length; i++) {
-        const ch = row[i];
-        if (ch === '"') inQuotes = !inQuotes;
-        else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
-        else current += ch;
-    }
-    result.push(current.trim());
-    return result;
-}
-
-function cleanBsrDisplay(raw) {
-    if (!raw) return 'N/A';
-    return raw.replace(/ in Clothing, Shoes & Jewelry/gi, '').replace(/ in .+$/i, '').trim();
-}
-
-function extractBsrNumber(bsrStr) {
-    if (!bsrStr) return 99999999;
-    const match = bsrStr.replace(/,/g, '').match(/\d+/);
-    return match ? parseInt(match[0], 10) : 99999999;
-}
-
-function parseDateFromString(dateStr) {
-    if (!dateStr) return null;
-    const cleaned = dateStr.replace(/^:\s*/, '').replace(/\u200e/g, '').trim();
-    const d = new Date(cleaned);
-    return isNaN(d.getTime()) ? null : d;
-}
-
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -981,7 +969,7 @@ function resetAll() {
     ['keywordSearch','bsrMin','bsrMax'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('dateFilter').value = 'all';
     document.getElementById('sortSelect').value = 'date-desc';
-    document.getElementById('searchTypeSelect').value = 'close';
+    document.getElementById('searchMode').value = 'normal';
     applyAllFilters();
 }
 
@@ -991,18 +979,18 @@ function resetAll() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchAndBuildProducts();
 
-    // Keyword search with mode
+    // Keyword search
     document.getElementById('searchKeywordBtn')?.addEventListener('click', applyAllFilters);
     document.getElementById('clearKeywordBtn')?.addEventListener('click', () => {
         document.getElementById('keywordSearch').value = '';
         applyAllFilters();
     });
     document.getElementById('keywordSearch')?.addEventListener('keypress', e => { if (e.key === 'Enter') applyAllFilters(); });
-    document.getElementById('searchTypeSelect')?.addEventListener('change', () => {
-        applyAllFilters();
-    });
     document.getElementById('bsrMin')?.addEventListener('keypress', e => { if (e.key === 'Enter') applyAllFilters(); });
     document.getElementById('bsrMax')?.addEventListener('keypress', e => { if (e.key === 'Enter') applyAllFilters(); });
+
+    // Search mode change → re-run filters + update feedback
+    document.getElementById('searchMode')?.addEventListener('change', applyAllFilters);
 
     // Niches controls
     document.getElementById('applyWordLengthBtn')?.addEventListener('click', applyNicheControls);
