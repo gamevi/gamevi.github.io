@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merch Analyzer | Amazon BSR Keyword Research</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #f5f7fc; padding: 24px 20px; color: #1e293b; }
+        .container { max-width: 1500px; margin: 0 auto; }
+
+        /* ===== HEADER ===== */
+        .header { text-align: center; margin-bottom: 28px; }
+        .header h1 { font-size: 2rem; background: linear-gradient(135deg, #0f2b3d, #1e4a76); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .stats { background: white; padding: 8px 24px; border-radius: 40px; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-top: 10px; }
+        .stats span { font-weight: 800; color: #e53e3e; font-size: 1.2rem; }
+
+        /* ===== PANELS ===== */
+        .filters-panel, .keyword-panel {
+            background: white; border-radius: 24px; padding: 20px 24px;
+            margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #eef2f8;
+        }
+        .keyword-panel { background: #fafcff; border-left: 4px solid #3b82f6; }
+        .keyword-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .keyword-row input {
+            flex: 3; min-width: 240px; padding: 12px 18px;
+            border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 1rem;
+        }
+        .keyword-row input:focus { outline: none; border-color: #3b82f6; }
+        .keyword-row button {
+            padding: 10px 24px; border-radius: 40px; border: none;
+            font-weight: 500; cursor: pointer; background: #1e293b; color: white;
+        }
+        .keyword-row button.outline {
+            background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
+        }
+        .search-type-select {
+            padding: 10px 18px;
+            border-radius: 40px;
+            border: 1.5px solid #e2e8f0;
+            background: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .search-type-select:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+        .search-type-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
+        .filter-group { flex: 1; min-width: 160px; }
+        .filter-group label { font-size: 0.75rem; font-weight: 600; margin-bottom: 6px; display: block; color: #475569; }
+        .filter-group select, .filter-group input {
+            width: 100%; padding: 10px 12px; border-radius: 14px; border: 1px solid #cfdfed;
+        }
+        .bsr-range { display: flex; gap: 8px; }
+        .btn { padding: 10px 20px; border-radius: 40px; border: none; font-weight: 500; cursor: pointer; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-secondary { background: #eef2ff; color: #1e293b; }
+
+        /* ===== HOT NICHES PANEL ===== */
+        .hot-niches-panel {
+            background: linear-gradient(135deg, #fff5eb 0%, #fff 100%);
+            border-radius: 24px; padding: 20px 24px; margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #ffe0b5;
+        }
+        .panel-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 16px; color: #1e293b; }
+        .niches-controls {
+            display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+            margin-bottom: 20px; padding: 14px 18px;
+            background: #fff8f0; border-radius: 20px; border: 1px solid #ffe0b5;
+        }
+        .niches-controls label { font-weight: 600; color: #e95e2e; font-size: 0.9rem; }
+        .niches-controls input[type="number"] {
+            width: 70px; padding: 8px 10px; border: 1.5px solid #ffe0b5;
+            border-radius: 40px; text-align: center; font-size: 1rem; font-weight: 600;
+        }
+        .niches-controls select {
+            padding: 8px 14px; border: 1.5px solid #ffe0b5;
+            border-radius: 40px; font-size: 0.85rem; background: white; color: #1e293b;
+        }
+        .niches-controls button {
+            background: #e95e2e; color: white; border: none;
+            padding: 8px 20px; border-radius: 40px; cursor: pointer; font-weight: 500;
+        }
+        .niches-controls button:hover { background: #d44a1a; }
+        .niche-badges {
+            display: flex; flex-direction: column; gap: 8px;
+            max-height: 520px; overflow-y: auto; padding-right: 4px;
+        }
+        .niche-badges::-webkit-scrollbar { width: 5px; }
+        .niche-badges::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .niche-item {
+            background: white; border: 1px solid #ffe0b5; border-radius: 16px;
+            padding: 10px 16px; cursor: pointer; transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .niche-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateX(3px); }
+        .niche-item-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .niche-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .niche-rank {
+            font-weight: 700; font-size: 0.8rem; min-width: 30px; text-align: center;
+            padding: 2px 6px; border-radius: 8px;
+        }
+        .niche-keyword {
+            font-weight: 600; font-size: 0.9rem;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .niche-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .niche-count {
+            color: white; font-weight: 700; font-size: 0.85rem;
+            padding: 3px 12px; border-radius: 20px;
+        }
+        .niche-bsr { font-size: 0.7rem; color: #6c7a91; white-space: nowrap; }
+        .niche-bar-bg {
+            background: #f1f5f9; border-radius: 10px; height: 4px;
+            overflow: hidden; margin-top: 7px;
+        }
+        .niche-bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s ease; }
+
+        /* ===== TREND CHART ===== */
+        .trend-chart-panel {
+            background: white; border-radius: 24px; padding: 20px 24px;
+            margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #eef2f8;
+        }
+        canvas#trendChart { max-height: 250px; width: 100%; }
+
+        /* ===== PRODUCTS GRID ===== */
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 22px; }
+        .product-card {
+            background: white; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.05); transition: transform 0.2s; border: 1px solid #edf2f7;
+        }
+        .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .product-image {
+            width: 100%; aspect-ratio: 1 / 1; object-fit: contain;
+            background: #fff; padding: 12px; border-bottom: 1px solid #f0f2f5;
+        }
+        .product-info { padding: 14px 16px 18px; }
+        .bsr-tag {
+            display: inline-block; background: #fef3c7; color: #b45309;
+            font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 30px; margin-bottom: 10px;
+        }
+        .product-title {
+            font-weight: 600; font-size: 0.85rem; line-height: 1.4; margin-bottom: 8px; color: #0f172a;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .product-date { font-size: 0.7rem; color: #6c7a91; margin-bottom: 12px; }
+        .card-actions { display: flex; gap: 10px; margin-top: 12px; }
+        .amazon-btn {
+            background: #eef2ff; text-decoration: none; text-align: center; padding: 8px;
+            border-radius: 40px; font-size: 0.75rem; font-weight: 500; color: #2563eb;
+            flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .analyze-btn {
+            background: #1f2b3c; color: white; border: none; padding: 8px 12px;
+            border-radius: 40px; font-weight: 500; font-size: 0.7rem; cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .no-results {
+            text-align: center; padding: 60px; background: white;
+            border-radius: 28px; color: #94a3b8;
+        }
+        .loading { text-align: center; padding: 50px; color: #94a3b8; }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            visibility: hidden; opacity: 0; transition: 0.2s;
+        }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+        .modal-content {
+            background: white; width: 90%; max-width: 750px; max-height: 85vh;
+            overflow-y: auto; padding: 28px 30px; position: relative; border-radius: 32px;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 1.5rem; }
+        .close-modal { background: none; border: none; font-size: 28px; cursor: pointer; }
+        .modal-img { max-width: 180px; margin-bottom: 20px; border-radius: 20px; background: #f9fafb; padding: 8px; }
+        .detail-block { background: #f8fafc; padding: 16px; border-radius: 20px; margin-bottom: 18px; }
+        .keyword-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .keyword-badge { background: #e6f0ff; padding: 6px 14px; border-radius: 40px; font-size: 0.75rem; font-weight: 500; }
+        .longtail-badge { background: #e0f2fe; color: #0369a1; }
+        .search-feedback {
+            font-size: 0.8rem; margin-top: 10px; color: #4b5563;
+            background: #f0f9ff; padding: 8px 16px; border-radius: 40px; display: inline-block;
+        }
+        .search-feedback i { color: #3b82f6; }
+        hr { margin: 16px 0; }
+        footer { text-align: center; margin-top: 30px; font-size: 0.7rem; color: #7c8ba0; }
+
+        @media (max-width: 640px) {
+            .products-grid { grid-template-columns: 1fr; }
+            .niches-controls { flex-direction: column; align-items: flex-start; }
+            .keyword-row { flex-direction: column; align-items: stretch; }
+            .search-type-select { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1><i class="fas fa-chart-simple"></i> Amazon BSR Tracker + Keyword Research</h1>
+        <div class="stats"><span id="product-count">0</span> products · BSR cleaned (no category text)</div>
+    </div>
+
+    <!-- HOT NICHES PANEL -->
+    <div class="hot-niches-panel">
+        <div class="panel-title">
+            <i class="fas fa-fire-flame-curved" style="color:#e95e2e;"></i>
+            🔥 Hot Long-Tail Niches — real keyword phrases from products
+        </div>
+
+        <div class="niches-controls">
+            <label><i class="fas fa-sliders-h"></i> Words per phrase:</label>
+            <input type="number" id="wordLengthInput" min="2" max="6" value="3" step="1">
+
+            <label style="margin-left:8px;"><i class="fas fa-calendar-alt"></i> Period:</label>
+            <select id="nichesPeriod">
+                <option value="7">Last 7 days</option>
+                <option value="14">Last 14 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="0">All time</option>
+            </select>
+
+            <label style="margin-left:8px;"><i class="fas fa-sort-amount-down"></i> Min repeats:</label>
+            <input type="number" id="minRepeats" min="1" max="20" value="2" step="1" style="width:60px;">
+
+            <button id="applyWordLengthBtn"><i class="fas fa-sync-alt"></i> Apply</button>
+        </div>
+
+        <div id="hotNichesContainer" class="niche-badges">
+            <div class="loading">Analyzing long-tail keywords...</div>
+        </div>
+    </div>
+
+    <!-- BSR TREND CHART -->
+    <div class="trend-chart-panel">
+        <div class="panel-title"><i class="fas fa-chart-area"></i> 📈 BSR Activity — Last 14 Days (by product count)</div>
+        <canvas id="trendChart" height="120" style="width:100%; max-height:250px;"></canvas>
+    </div>
+
+    <!-- KEYWORD RESEARCH BOX -->
+    <div class="keyword-panel">
+        <div style="font-weight: 600; margin-bottom: 12px;">
+            <i class="fas fa-magnifying-glass-chart"></i> 🔎 Keyword Research (search inside Title, Brand, Features)
+        </div>
+        <div class="keyword-row">
+            <input type="text" id="keywordSearch"
+                placeholder="e.g. pope leo shirt, funny lab week gift, nurse life..."
+                autocomplete="off">
+            <select id="searchTypeSelect" class="search-type-select">
+                <option value="exact">🎯 Exact Match - Find EXACT word/phrase only (whole word)</option>
+                <option value="close" selected>🔄 Close Match - Find ALL words in ANY order</option>
+                <option value="partial">✨ Partial Match - Find ANY words in ANY order</option>
+            </select>
+            <button id="searchKeywordBtn"><i class="fas fa-search"></i> Search</button>
+            <button id="clearKeywordBtn" class="outline"><i class="fas fa-eraser"></i> Clear</button>
+        </div>
+        <div id="searchFeedback" class="search-feedback">
+            <i class="fas fa-info-circle"></i>
+            <span id="searchExplanation">Searches for ALL words in ANY order (Close Match).</span>
+        </div>
+    </div>
+
+    <!-- FILTERS PANEL -->
+    <div class="filters-panel">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>📊 Sort by</label>
+                <select id="sortSelect">
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="bsr-asc">BSR (Lowest = best)</option>
+                    <option value="bsr-desc">BSR (Highest = worst)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>🔢 BSR Range</label>
+                <div class="bsr-range">
+                    <input type="number" id="bsrMin" placeholder="Min">
+                    <input type="number" id="bsrMax" placeholder="Max">
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>📅 Date added</label>
+                <select id="dateFilter">
+                    <option value="all">All time</option>
+                    <option value="today">Today</option>
+                    <option value="week">Last 7 days</option>
+                    <option value="month">Last 30 days</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>&nbsp;</label>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-primary" onclick="applyAllFilters()">Apply</button>
+                    <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="productsContainer"><div class="loading">Loading data from Google Sheets...</div></div>
+
+    <footer>
+        🔄 Data fetched live from Google Sheets &nbsp;|&nbsp;
+        Smart keyword extraction with stemming + stop-word filtering &nbsp;|&nbsp;
+        Click any niche phrase to search for it &nbsp;|&nbsp;
+        Search modes: Exact Match (whole word only) | Close Match (all words any order) | Partial Match (any words)
+    </footer>
+</div>
+
+<!-- ANALYSIS MODAL -->
+<div id="analysisModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-chart-line"></i> Product Analysis</h2>
+            <button class="close-modal" id="closeModalBtn">&times;</button>
+        </div>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+/* ================================================================
+   CONFIG
+================================================================ */
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS2hjt8nWcFPfIrW0I4u5ezZV0uU0KGEyzIzjO6mobxN1MIapw0U45X_RVcFU35u9gkoKxWMoHsUvud/pub?output=csv';
+
+let masterProducts = [];
+let filteredProducts = [];
+let trendChart = null;
+let currentWordLength = 3;
+
+/* ================================================================
+   STOP WORDS — expanded for Merch on Demand
+================================================================ */
+const STOP_WORDS = new Set([
+    // English function words
+    'a','an','the','and','or','but','for','of','with','without','by','to',
+    'in','on','at','from','up','down','is','are','was','were','be','been',
+    'being','have','has','had','do','does','did','so','if','then','when',
+    'where','which','while','who','whom','this','that','these','those',
+    'no','not','just','very','too','than','over','more','out','as',
+    'its','it','i','my','your','our','their','his','her','we','they',
+    'me','him','us','them','what','how','all','any','each','few','some',
+    'such','into','about','after','before','between','during','off',
+    // Merch / Amazon product words (no keyword value)
+    'shirt','shirts','tshirt','tshirts','tee','tees','tank','top','tops',
+    'hoodie','hoodies','pullover','sweatshirt','crewneck','vneck',
+    'sleeve','sleeves','short','long','graphic','design','printed','print',
+    'men','women','man','woman','male','female','boy','girl','boys','girls',
+    'kids','adult','adults','unisex','youth','toddler','infant','baby',
+    'clothing','wear','apparel','fashion','style','outfit',
+    'product','item','merchandise','merch',
+    'gift','gifts','present','presents','idea','ideas',
+    'great','perfect','best','good','nice','beautiful','pretty',
+    'funny','cool','cute','awesome','amazing','unique','original',
+    'vintage','retro','classic','new','old','modern','trendy',
+    'brand','made','quality','premium','official','licensed',
+    '100','cotton','polyester','blend','machine','wash','dry',
+    'lightweight','comfortable','comfort','soft','casual','fit','fitted',
+    'novelty','humor','humorous','sarcastic','sarcasm',
+    'quote','saying','slogan','text','word','words',
+    'team','group','crew','squad','club','family','member','members',
+    'love','lover','lovers','fan','fans','enthusiast','enthusiasts',
+    'life','lifestyle','living',
+    'co','inc','llc','ltd','us','uk','ca','usa','america',
+    'side','see','soon','day','days','year','years','time',
+]);
+
+/* ================================================================
+   LIGHTWEIGHT STEMMER
+   Handles: plural -s/-ies, -ing, -ed, -er
+================================================================ */
+function stem(word) {
+    if (!word || word.length < 4) return word;
+    word = word
+        .replace(/ies$/, 'y')          // babies  → baby
+        .replace(/([^aeiou])s$/, '$1') // nurses  → nurse, dogs → dog
+        .replace(/ing$/, '')           // running → runn (good enough for matching)
+        .replace(/edly$/, '')
+        .replace(/ed$/, '')            // marked  → mark
+        .replace(/er$/, '');           // runner  → runn
+    return word.length >= 2 ? word : word + 'e'; // safety
+}
+
+/* ================================================================
+   CLEAN & TOKENISE
+================================================================ */
+function cleanTokens(text) {
+    if (!text) return [];
+    return text
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .filter(w => {
+            if (w.length < 2) return false;         // drop single chars
+            if (/^\d+$/.test(w)) return false;      // drop pure numbers
+            if (STOP_WORDS.has(w)) return false;    // drop stop words
+            if (STOP_WORDS.has(stem(w))) return false; // drop stemmed stop words
+            return true;
+        })
+        .map(w => stem(w));                         // stem remaining tokens
+}
+
+/* ================================================================
+   ENHANCED KEYWORD SEARCH with Multiple Modes
+   Modes: 'exact', 'close', 'partial'
+   FIXED: Exact match now uses word boundaries (whole word matching)
+================================================================ */
+function keywordMatch(product, keyword, searchMode) {
+    if (!keyword || keyword.trim() === '') return true;
+
+    const searchTokens = keyword.trim()
+        .toLowerCase()
+        .replace(/[^\w\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .filter(t => t.length > 0);
+
+    if (searchTokens.length === 0) return true;
+
+    const searchableText = [
+        product.designTitle,
+        product.brand,
+        product.featureBullet1,
+        product.featureBullet2
+    ].join(' ')
+     .toLowerCase()
+     .replace(/[^\w\s]/g, ' ')
+     .replace(/\s+/g, ' ')
+     .trim();
+
+    if (searchMode === 'exact') {
+        // Exact Match: Find EXACT phrase as whole words (not partial matches)
+        // If single word: search for whole word using boundaries
+        // If multiple words: search for exact phrase with word boundaries
+        const searchPhrase = searchTokens.join(' ');
+        
+        if (searchTokens.length === 1) {
+            // Single word: use regex with word boundaries
+            const regex = new RegExp('\\b' + escapeRegex(searchTokens[0]) + '\\b', 'i');
+            return regex.test(searchableText);
+        } else {
+            // Multiple words: check if exact phrase exists with word boundaries
+            // Create regex that ensures each word is a whole word
+            const phraseRegex = new RegExp('\\b' + searchTokens.map(t => escapeRegex(t)).join('\\s+') + '\\b', 'i');
+            return phraseRegex.test(searchableText);
+        }
+    } 
+    else if (searchMode === 'close') {
+        // Close Match: Find ALL words in ANY order (original behavior)
+        return searchTokens.every(token => {
+            const regex = new RegExp('\\b' + escapeRegex(token) + '\\b', 'i');
+            return regex.test(searchableText);
+        });
+    } 
+    else if (searchMode === 'partial') {
+        // Partial Match: Find ANY words in ANY order
+        return searchTokens.some(token => {
+            const regex = new RegExp('\\b' + escapeRegex(token) + '\\b', 'i');
+            return regex.test(searchableText);
+        });
+    }
+    
+    // Default to close match
+    return searchTokens.every(token => {
+        const regex = new RegExp('\\b' + escapeRegex(token) + '\\b', 'i');
+        return regex.test(searchableText);
+    });
+}
+
+// Helper function to escape regex special characters
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/* ================================================================
+   LONG-TAIL PHRASE EXTRACTOR (uses cleaned + stemmed tokens)
+================================================================ */
+function extractLongTailByLength(title, wordCount) {
+    if (!title || wordCount < 2) return [];
+    const tokens = cleanTokens(title);
+    if (tokens.length < wordCount) return [];
+
+    const phrases = new Set();
+    for (let i = 0; i <= tokens.length - wordCount; i++) {
+        phrases.add(tokens.slice(i, i + wordCount).join(' '));
+    }
+    return Array.from(phrases);
+}
+
+/* ================================================================
+   HOT NICHES CALCULATOR
+================================================================ */
+function calculateHotNiches(wordLength, periodDays, minRepeats) {
+    let recentProducts = masterProducts;
+
+    if (periodDays > 0) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - periodDays);
+        recentProducts = masterProducts.filter(p => p.parsedDate && p.parsedDate >= cutoff);
+    }
+
+    const freqMap  = new Map();
+    const bsrMap   = new Map();
+    const titleMap = new Map(); // store one raw example title per phrase
+
+    recentProducts.forEach(product => {
+        const phrases = extractLongTailByLength(product.designTitle, wordLength);
+        const seen = new Set();
+
+        phrases.forEach(phrase => {
+            if (seen.has(phrase)) return;
+            seen.add(phrase);
+            freqMap.set(phrase, (freqMap.get(phrase) || 0) + 1);
+            if (!bsrMap.has(phrase)) bsrMap.set(phrase, []);
+            bsrMap.get(phrase).push(product.bsrNumber);
+            if (!titleMap.has(phrase)) titleMap.set(phrase, product.designTitle);
+        });
+    });
+
+    return Array.from(freqMap.entries())
+        .map(([keyword, count]) => {
+            const bsrs   = bsrMap.get(keyword) || [];
+            const avgBSR = Math.round(bsrs.reduce((a, b) => a + b, 0) / bsrs.length);
+            const minBSR = Math.min(...bsrs);
+            return { keyword, count, avgBSR, minBSR, exampleTitle: titleMap.get(keyword) || '' };
+        })
+        .filter(n => n.count >= minRepeats)
+        .sort((a, b) => b.count - a.count || a.avgBSR - b.avgBSR) // secondary sort: lower BSR first
+        .slice(0, 50);
+}
+
+/* ================================================================
+   RENDER HOT NICHES
+================================================================ */
+function renderHotNiches() {
+    const container  = document.getElementById('hotNichesContainer');
+    const periodDays = parseInt(document.getElementById('nichesPeriod')?.value || '7');
+    const minRepeats = Math.max(1, parseInt(document.getElementById('minRepeats')?.value || '2'));
+    const niches     = calculateHotNiches(currentWordLength, periodDays, minRepeats);
+
+    if (niches.length === 0) {
+        const pLabel = periodDays === 0 ? 'all time' : `last ${periodDays} days`;
+        container.innerHTML = `
+            <div class="niche-item" style="text-align:center; color:#94a3b8;">
+                No ${currentWordLength}-word phrases found (repeated ≥${minRepeats}×) in ${pLabel}
+            </div>`;
+        return;
+    }
+
+    const maxCount = niches[0].count;
+
+    container.innerHTML = niches.map((niche, idx) => {
+        const barWidth  = Math.round((niche.count / maxCount) * 100);
+        const rankColor = idx === 0 ? '#e95e2e' : idx < 3 ? '#f59e0b' : idx < 10 ? '#3b82f6' : '#64748b';
+
+        return `
+        <div class="niche-item" onclick="searchByKeyword('${escapeHtml(niche.keyword)}')">
+            <div class="niche-item-row">
+                <div class="niche-left">
+                    <span class="niche-rank" style="background:${rankColor}22; color:${rankColor};">#${idx + 1}</span>
+                    <span class="niche-keyword" title="${escapeHtml(niche.exampleTitle)}">${escapeHtml(niche.keyword)}</span>
+                </div>
+                <div class="niche-right">
+                    <span class="niche-count" style="background:${rankColor};">${niche.count}×</span>
+                    <span class="niche-bsr">avg BSR: ${niche.avgBSR.toLocaleString()}</span>
+                    <span class="niche-bsr" title="Best BSR in this niche">🏆 ${niche.minBSR.toLocaleString()}</span>
+                </div>
+            </div>
+            <div class="niche-bar-bg">
+                <div class="niche-bar-fill" style="width:${barWidth}%; background:${rankColor};"></div>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+/* ================================================================
+   UPDATE CONTROLS & RE-RENDER
+================================================================ */
+function applyNicheControls() {
+    const input = document.getElementById('wordLengthInput');
+    let len = parseInt(input.value);
+    if (isNaN(len)) len = 3;
+    len = Math.max(2, Math.min(6, len));
+    input.value = len;
+    currentWordLength = len;
+    renderHotNiches();
+}
+
+/* ================================================================
+   CLICK A NICHE → SEARCH
+================================================================ */
+window.searchByKeyword = function(keyword) {
+    const input = document.getElementById('keywordSearch');
+    if (input) {
+        input.value = keyword;
+        applyAllFilters();
+        document.querySelector('.keyword-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
+
+/* ================================================================
+   TREND CHART
+================================================================ */
+function calculateTrendData() {
+    const today = new Date();
+    const last14 = Array.from({ length: 14 }, (_, i) => {
+        const d = new Date();
+        d.setDate(today.getDate() - (13 - i));
+        d.setHours(0, 0, 0, 0);
+        return d;
+    });
+
+    const counts   = new Array(14).fill(0);
+    const bsrSums  = new Array(14).fill(0);
+    const avgBSR   = new Array(14).fill(0);
+
+    masterProducts.forEach(p => {
+        if (!p.parsedDate) return;
+        const pd = new Date(p.parsedDate);
+        pd.setHours(0, 0, 0, 0);
+        for (let i = 0; i < 14; i++) {
+            if (pd.getTime() === last14[i].getTime()) {
+                counts[i]++;
+                bsrSums[i] += p.bsrNumber;
+                break;
+            }
+        }
+    });
+
+    for (let i = 0; i < 14; i++) {
+        avgBSR[i] = counts[i] > 0 ? Math.round(bsrSums[i] / counts[i]) : 0;
+    }
+
+    return {
+        labels: last14.map(d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+        counts,
+        avgBSR,
+    };
+}
+
+function renderTrendChart() {
+    const canvas = document.getElementById('trendChart');
+    if (!canvas) return;
+    const data = calculateTrendData();
+    if (trendChart) trendChart.destroy();
+
+    trendChart = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [
+                {
+                    label: 'Products Added',
+                    data: data.counts,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,0.1)',
+                    fill: true, tension: 0.3, yAxisID: 'y',
+                    pointBackgroundColor: '#3b82f6', pointBorderColor: '#fff',
+                    pointBorderWidth: 2, pointRadius: 4,
+                },
+                {
+                    label: 'Avg BSR (÷1000)',
+                    data: data.avgBSR.map(v => +(v / 1000).toFixed(1)),
+                    borderColor: '#e95e2e',
+                    backgroundColor: 'rgba(233,94,46,0.05)',
+                    borderDash: [5, 5],
+                    fill: false, tension: 0.3, yAxisID: 'y1',
+                    pointBackgroundColor: '#e95e2e', pointBorderColor: '#fff',
+                    pointBorderWidth: 2, pointRadius: 3,
+                },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                tooltip: { mode: 'index', intersect: false },
+                legend: { position: 'top' },
+            },
+            scales: {
+                y: {
+                    title: { display: true, text: 'Number of Products', color: '#3b82f6' },
+                    beginAtZero: true, grid: { color: '#e2e8f0' },
+                },
+                y1: {
+                    position: 'right',
+                    title: { display: true, text: 'Avg BSR (thousands)', color: '#e95e2e' },
+                    grid: { drawOnChartArea: false }, beginAtZero: true,
+                },
+            },
+        },
+    });
+}
+
+/* ================================================================
+   SMART KEYWORD EXTRACTOR (for modal)
+================================================================ */
+function extractSmartKeywords(product) {
+    // Short-tail: individual stemmed tokens (not in stop list)
+    const tokens = cleanTokens(`${product.designTitle} ${product.brand}`);
+    const uniqueTokens = [...new Set(tokens)].slice(0, 12);
+
+    // Long-tail: 2, 3, 4-word phrases
+    const lt2 = extractLongTailByLength(product.designTitle, 2);
+    const lt3 = extractLongTailByLength(product.designTitle, 3);
+    const lt4 = extractLongTailByLength(product.designTitle, 4);
+    const longTail = [...lt2, ...lt3, ...lt4].slice(0, 12);
+
+    return { keywords: uniqueTokens, longTail };
+}
+
+/* ================================================================
+   FETCH DATA
+================================================================ */
+async function fetchAndBuildProducts() {
+    try {
+        const resp    = await fetch(CSV_URL);
+        const csvText = await resp.text();
+        const lines   = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+        if (lines.length < 2) throw new Error('Empty data');
+
+        const products = [];
+        for (let i = 1; i < lines.length; i++) {
+            const cols = parseCSVRow(lines[i]);
+            if (cols.length < 5) continue;
+
+            const asin         = cols[0] || '';
+            const link         = cols[1] || '#';
+            const bsrRaw       = cols[2] || '';
+            const imageUrl     = cols[3] || 'https://via.placeholder.com/300?text=No+Image';
+            const dateAddedRaw = cols[4] || '';
+            const designTitle  = cols[5] || '';
+            const brand        = cols[6] || '';
+            const feature1     = cols[7] || '';
+            const feature2     = cols[8] || '';
+
+            products.push({
+                asin, link, bsrRaw,
+                bsrNumber:    extractBsrNumber(bsrRaw),
+                bsrDisplay:   cleanBsrDisplay(bsrRaw),
+                imageUrl, dateAddedRaw,
+                parsedDate:   parseDateFromString(dateAddedRaw),
+                designTitle, brand,
+                featureBullet1: feature1,
+                featureBullet2: feature2,
+            });
+        }
+
+        masterProducts = products;
+        renderHotNiches();
+        renderTrendChart();
+        applyAllFilters();
+    } catch (err) {
+        console.error(err);
+        document.getElementById('productsContainer').innerHTML =
+            `<div class="no-results">⚠️ Error loading data. Make sure the CSV is public.</div>`;
+    }
+}
+
+/* ================================================================
+   APPLY ALL FILTERS + SORT
+================================================================ */
+function applyAllFilters() {
+    const keyword      = document.getElementById('keywordSearch')?.value || '';
+    const searchMode   = document.getElementById('searchTypeSelect')?.value || 'close';
+    const bsrMin       = parseFloat(document.getElementById('bsrMin')?.value)  || 0;
+    const bsrMax       = parseFloat(document.getElementById('bsrMax')?.value)  || Infinity;
+    const dateFilterV  = document.getElementById('dateFilter')?.value  || 'all';
+    const sortVal      = document.getElementById('sortSelect')?.value  || 'date-desc';
+
+    // Update search feedback based on mode
+    const explainSpan = document.getElementById('searchExplanation');
+    const searchTokens = keyword.trim() ? keyword.trim().toLowerCase()
+        .replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()
+        .split(' ').filter(Boolean) : [];
+    
+    if (explainSpan) {
+        if (keyword.trim()) {
+            let modeDescription = '';
+            if (searchMode === 'exact') {
+                if (searchTokens.length === 1) {
+                    modeDescription = `🎯 EXACT MATCH: "${searchTokens[0]}" (whole word only - no partial matches like "catcher" for "cat")`;
+                } else {
+                    modeDescription = `🎯 EXACT MATCH: "${searchTokens.join(' ')}" (exact phrase with whole words only)`;
+                }
+            } else if (searchMode === 'close') {
+                modeDescription = `🔄 CLOSE MATCH: ${searchTokens.map(t => `<strong>"${escapeHtml(t)}"</strong>`).join(' + ')} (all words must appear as whole words in ANY order)`;
+            } else if (searchMode === 'partial') {
+                modeDescription = `✨ PARTIAL MATCH: ${searchTokens.map(t => `<strong>"${escapeHtml(t)}"</strong>`).join(' OR ')} (at least ONE word must appear as whole word)`;
+            }
+            explainSpan.innerHTML = modeDescription;
+        } else {
+            const modeNames = {
+                'exact': 'Exact Match (whole word/phrase only)',
+                'close': 'Close Match (all words as whole words, any order)',
+                'partial': 'Partial Match (any word as whole word)'
+            };
+            explainSpan.textContent = `Current mode: ${modeNames[searchMode] || 'Close Match'} — Enter keywords to search`;
+        }
+    }
+
+    let filtered = masterProducts.filter(p => {
+        if (!keywordMatch(p, keyword, searchMode)) return false;
+        if (p.bsrNumber < bsrMin || p.bsrNumber > bsrMax) return false;
+        if (dateFilterV !== 'all' && p.parsedDate) {
+            const diffDays = (Date.now() - p.parsedDate) / (1000 * 3600 * 24);
+            if (dateFilterV === 'today' && diffDays > 1) return false;
+            if (dateFilterV === 'week'  && diffDays > 7) return false;
+            if (dateFilterV === 'month' && diffDays > 30) return false;
+        }
+        return true;
+    });
+
+    filtered.sort((a, b) => {
+        if (sortVal === 'date-desc') return (b.parsedDate || 0) - (a.parsedDate || 0);
+        if (sortVal === 'date-asc')  return (a.parsedDate || 0) - (b.parsedDate || 0);
+        if (sortVal === 'bsr-asc')   return a.bsrNumber - b.bsrNumber;
+        if (sortVal === 'bsr-desc')  return b.bsrNumber - a.bsrNumber;
+        return 0;
+    });
+
+    filteredProducts = filtered;
+    renderProducts();
+}
+
+/* ================================================================
+   RENDER PRODUCT CARDS
+================================================================ */
+function renderProducts() {
+    const container = document.getElementById('productsContainer');
+    document.getElementById('product-count').innerText = filteredProducts.length;
+
+    if (filteredProducts.length === 0) {
+        container.innerHTML = `<div class="no-results"><i class="fas fa-search"></i> No products match your filters.</div>`;
+        return;
+    }
+
+    let html = '<div class="products-grid">';
+    filteredProducts.forEach(p => {
+        const displayDate = p.dateAddedRaw ? p.dateAddedRaw.replace(/^:\s*/, '') : 'Unknown';
+        html += `
+        <div class="product-card">
+            <img class="product-image" src="${p.imageUrl}"
+                 onerror="this.src='https://via.placeholder.com/300?text=No+Img'">
+            <div class="product-info">
+                <div class="bsr-tag"><i class="fas fa-chart-line"></i> ${p.bsrDisplay}</div>
+                <div class="product-title">${escapeHtml(p.designTitle.substring(0, 80))}${p.designTitle.length > 80 ? '…' : ''}</div>
+                <div class="product-date"><i class="far fa-calendar-alt"></i> ${displayDate}</div>
+                <div class="card-actions">
+                    <a href="${p.link}" target="_blank" class="amazon-btn"><i class="fab fa-amazon"></i> View</a>
+                    <button class="analyze-btn" data-asin="${p.asin}">
+                        <i class="fas fa-chart-simple"></i> Analyze
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+
+    document.querySelectorAll('.analyze-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const product = masterProducts.find(p => p.asin === btn.dataset.asin);
+            if (product) openAnalysisModal(product);
+        });
+    });
+}
+
+/* ================================================================
+   MODAL
+================================================================ */
+function openAnalysisModal(product) {
+    const modal = document.getElementById('analysisModal');
+    const body  = document.getElementById('modalBody');
+    const { keywords, longTail } = extractSmartKeywords(product);
+    const displayDate = product.dateAddedRaw ? product.dateAddedRaw.replace(/^:\s*/, '') : 'Not specified';
+
+    body.innerHTML = `
+        <div style="text-align:center;">
+            <img class="modal-img" src="${product.imageUrl}"
+                 onerror="this.src='https://via.placeholder.com/180?text=No+Image'">
+        </div>
+        <div class="detail-block"><strong>📌 Product Title:</strong><br>${escapeHtml(product.designTitle)}</div>
+        <div class="detail-block"><strong>🏷️ Brand:</strong><br>${escapeHtml(product.brand)}</div>
+        <div class="detail-block"><strong>✨ Feature Bullet 1:</strong><br>${escapeHtml(product.featureBullet1)}</div>
+        <div class="detail-block"><strong>✨ Feature Bullet 2:</strong><br>${escapeHtml(product.featureBullet2)}</div>
+        <div class="detail-block">
+            <strong>📊 BSR (cleaned):</strong> ${product.bsrDisplay}<br>
+            <strong>📅 Date added:</strong> ${displayDate}<br>
+            <strong>🔗 ASIN:</strong> ${product.asin}
+        </div>
+        <div class="keyword-section" style="margin-bottom:14px;">
+            <strong>🔑 Short-tail Keywords (stemmed):</strong>
+            <div class="keyword-list">
+                ${keywords.map(k => `<span class="keyword-badge">${escapeHtml(k)}</span>`).join('') || '<span>—</span>'}
+            </div>
+        </div>
+        <div class="keyword-section" style="margin-bottom:14px;">
+            <strong>📖 Long-tail Keywords (2–4 word phrases):</strong>
+            <div class="keyword-list">
+                ${longTail.map(lt => `<span class="keyword-badge longtail-badge">📖 "${escapeHtml(lt)}"</span>`).join('') || '<span>No long-tail detected</span>'}
+            </div>
+        </div>
+        <hr>
+        <div style="display:flex; justify-content:center;">
+            <a href="${product.link}" target="_blank" class="amazon-btn"
+               style="background:#232f3e; color:white; max-width:200px;">
+                <i class="fab fa-amazon"></i> Open on Amazon
+            </a>
+        </div>`;
+
+    modal.classList.add('active');
+}
+
+/* ================================================================
+   UTILS
+================================================================ */
+function parseCSVRow(row) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < row.length; i++) {
+        const ch = row[i];
+        if (ch === '"') inQuotes = !inQuotes;
+        else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+        else current += ch;
+    }
+    result.push(current.trim());
+    return result;
+}
+
+function cleanBsrDisplay(raw) {
+    if (!raw) return 'N/A';
+    return raw.replace(/ in Clothing, Shoes & Jewelry/gi, '').replace(/ in .+$/i, '').trim();
+}
+
+function extractBsrNumber(bsrStr) {
+    if (!bsrStr) return 99999999;
+    const match = bsrStr.replace(/,/g, '').match(/\d+/);
+    return match ? parseInt(match[0], 10) : 99999999;
+}
+
+function parseDateFromString(dateStr) {
+    if (!dateStr) return null;
+    const cleaned = dateStr.replace(/^:\s*/, '').replace(/\u200e/g, '').trim();
+    const d = new Date(cleaned);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function resetAll() {
+    ['keywordSearch','bsrMin','bsrMax'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('dateFilter').value = 'all';
+    document.getElementById('sortSelect').value = 'date-desc';
+    document.getElementById('searchTypeSelect').value = 'close';
+    applyAllFilters();
+}
+
+/* ================================================================
+   BOOT
+================================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    fetchAndBuildProducts();
+
+    // Keyword search with mode
+    document.getElementById('searchKeywordBtn')?.addEventListener('click', applyAllFilters);
+    document.getElementById('clearKeywordBtn')?.addEventListener('click', () => {
+        document.getElementById('keywordSearch').value = '';
+        applyAllFilters();
+    });
+    document.getElementById('keywordSearch')?.addEventListener('keypress', e => { if (e.key === 'Enter') applyAllFilters(); });
+    document.getElementById('searchTypeSelect')?.addEventListener('change', () => {
+        applyAllFilters();
+    });
+    document.getElementById('bsrMin')?.addEventListener('keypress', e => { if (e.key === 'Enter') applyAllFilters(); });
+    document.getElementById('bsrMax')?.addEventListener('keypress', e => { if (e.key === 'Enter') applyAllFilters(); });
+
+    // Niches controls
+    document.getElementById('applyWordLengthBtn')?.addEventListener('click', applyNicheControls);
+    document.getElementById('wordLengthInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') applyNicheControls(); });
+    document.getElementById('nichesPeriod')?.addEventListener('change', renderHotNiches);
+    document.getElementById('minRepeats')?.addEventListener('keypress', e => { if (e.key === 'Enter') applyNicheControls(); });
+
+    // Modal
+    document.getElementById('closeModalBtn')?.addEventListener('click', () =>
+        document.getElementById('analysisModal').classList.remove('active'));
+    document.getElementById('analysisModal')?.addEventListener('click', e => {
+        if (e.target === document.getElementById('analysisModal'))
+            document.getElementById('analysisModal').classList.remove('active');
+    });
+});
+
+window.applyAllFilters = applyAllFilters;
+window.resetAll = resetAll;
+</script>
+</body>
+</html>
