@@ -1165,11 +1165,15 @@ async function getSecureToken(action, code) {
 async function secureFetch(action, code, sessionId) {
   const ua = encodeURIComponent(navigator.userAgent);
  
+  // الكود الصحيح لكل action
+  // checkSession و logout لا يحتاجان code في الـ payload
+  const codeForToken = (action === 'verifyCode') ? (code || '') : '';
+ 
   try {
     // ── الخطوة 1: اطلب token من السيرفر ──
     const tokenUrl = `${APPS_SCRIPT_URL}?action=getToken`
       + `&for=${encodeURIComponent(action)}`
-      + `&code=${encodeURIComponent(code || '')}`
+      + `&code=${encodeURIComponent(codeForToken)}`
       + `&ua=${ua}`;
  
     const tokenResp = await fetch(tokenUrl);
@@ -1179,6 +1183,29 @@ async function secureFetch(action, code, sessionId) {
       console.error('Failed to get token:', tokenData.message);
       return { success: false, message: 'Token request failed' };
     }
+ 
+    const { token, timestamp } = tokenData;
+ 
+    // ── الخطوة 2: أرسل الطلب الحقيقي مع الـ token ──
+    const params = new URLSearchParams({
+      action    : action,
+      t         : timestamp,
+      ua        : ua,
+      token     : token
+    });
+ 
+    // أضف code و sessionId فقط إذا موجودين
+    if (codeForToken) params.append('code', codeForToken);
+    if (sessionId)    params.append('sessionId', sessionId);
+ 
+    const response = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
+    return await response.json();
+ 
+  } catch (e) {
+    console.error('secureFetch error:', e);
+    return { success: false, message: 'Connection error' };
+  }
+}
  
     const { token, timestamp } = tokenData;
  
