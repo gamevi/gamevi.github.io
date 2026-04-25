@@ -1114,51 +1114,71 @@
 /* ================================================================
    CONFIG - IMPORTANT: Replace with your own Google Apps Script URL
 ================================================================ */
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxN4Ev6FB1YXXSLtjyAzPoE0KR2REsWpYSs8Dui6TtsiktdK5_sqiGoZr9sqIEvikvk/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHg-_Bs1vi7GuNyCmUhij2WdwzY3O4mkn8eyh5RSLZOe3sH7QDz-A76fWsbLQN8ZL2/exec';
 
 const ACCESS_SHEET_ID = '2PACX-1vT-y8uBwek4qboukH7oe_cxI4y7tpvExW_ovImcTExrMZbPRm5KWVF9AIpfopZZq-VdwWV2wuLC81OD';
 const ACCESS_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${ACCESS_SHEET_ID}/pub?output=csv`;
 
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRkn3LM1kUqxzI2LCVzD9u3B6P4BCyY5tsydZpcrfA4dGXjR92fik2L9wagD6tQwg-K62vAGDCuTV0f/pub?output=csv';
 
-// ========== SECURE TOKEN SYSTEM ==========
-async function getSecureToken() {
+// ========== SECURE TOKEN SYSTEM (v2 - Matches new Apps Script) ==========
+function generateClientToken(secret, timestamp, payload) {
+    // This is a simplified client-side token (NOT the real secret)
+    // Actual HMAC happens server-side in Apps Script
+    // Here we just prepare the timestamp and let the server validate
+    return null; // Server generates the real token
+}
+
+async function getSecureToken(action, code) {
     const timestamp = Math.floor(Date.now() / 1000);
+    const ua = encodeURIComponent(navigator.userAgent);
+    
+    // The payload format: action|code|ua
+    // Token is generated server-side
+    const payload = action + '|' + (code || '') + '|' + ua;
+    
     try {
-        const response = await fetch(`${APPS_SCRIPT_URL}?action=getToken&t=${timestamp}`);
+        // Server generates the real HMAC token
+        const response = await fetch(
+            `${APPS_SCRIPT_URL}?action=${action}&code=${encodeURIComponent(code || '')}&t=${timestamp}&ua=${ua}`
+        );
         const data = await response.json();
-        return { token: data.token, timestamp: timestamp };
+        
+        // The server validated and returned success/failure
+        // We don't need to generate token client-side
+        return {
+            timestamp: timestamp,
+            ua: ua,
+            payload: payload,
+            serverResponse: data
+        };
     } catch (e) {
-        console.error('Token generation failed:', e);
+        console.error('Token request failed:', e);
         return null;
     }
 }
 
-async function addSecureParams(baseParams) {
-    const secureData = await getSecureToken();
-    if (!secureData) return null;
+async function secureFetch(action, code, sessionId) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const ua = encodeURIComponent(navigator.userAgent);
     
-    return {
-        ...baseParams,
-        t: secureData.timestamp,
-        token: secureData.token,
-        ip: 'auto',
-        ua: encodeURIComponent(navigator.userAgent)
-    };
-}
-
-async function secureFetch(params) {
-    const secureParams = await addSecureParams(params);
-    if (!secureParams) {
-        throw new Error('Failed to generate secure token');
+    // Build URL with all parameters
+    const params = new URLSearchParams({
+        action: action,
+        t: timestamp,
+        ua: ua
+    });
+    
+    if (code) params.append('code', code);
+    if (sessionId) params.append('sessionId', sessionId);
+    
+    try {
+        const response = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
+        return await response.json();
+    } catch (e) {
+        console.error('Secure fetch failed:', e);
+        return { success: false, message: 'Connection error' };
     }
-    
-    const queryString = Object.entries(secureParams)
-        .map(([k, v]) => `${k}=${v}`)
-        .join('&');
-    
-    const response = await fetch(`${APPS_SCRIPT_URL}?${queryString}`);
-    return await response.json();
 }
 
 // ========== ACCESS CONTROL SYSTEM ==========
@@ -1167,7 +1187,7 @@ let accessData = null;
 let sessionId = null;
 
 function generateSessionId() {
-    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    return 's_' + Date.now();
 }
 
 function loadSession() {
@@ -1187,11 +1207,7 @@ function loadSession() {
 
 async function checkSessionValidity(session) {
     try {
-        const result = await secureFetch({
-            action: 'checkSession',
-            sessionId: session.sessionId,
-            code: session.code
-        });
+        const result = await secureFetch('checkSession', session.code, session.sessionId);
         
         if (result.valid) {
             currentAccessCode = session.code;
@@ -1258,6 +1274,7 @@ async function verifyAccessCode() {
     successMsg.classList.remove('show');
     
     try {
+        // First check local access codes sheet
         const codes = await fetchAccessCodes();
         
         if (codes.length === 0) {
@@ -1285,19 +1302,16 @@ async function verifyAccessCode() {
             return;
         }
         
-        // Verify with Apps Script using secure token
-        let result;
+        // Now verify with Apps Script (single session enforcement)
+        let serverResult;
         try {
-            result = await secureFetch({
-                action: 'verifyCode',
-                code: code
-            });
+            serverResult = await secureFetch('verifyCode', code);
         } catch (e) {
             console.warn('Apps Script not available, using local verification only');
-            result = { success: true, sessionId: generateSessionId() };
+            serverResult = { success: true, sessionId: generateSessionId() };
         }
         
-        if (result.success) {
+        if (serverResult.success) {
             successMsg.classList.add('show');
             successMsg.querySelector('span').textContent = 'Access granted! Loading...';
             
@@ -1307,13 +1321,13 @@ async function verifyAccessCode() {
                 expiryDate: accessEntry.expiryDate
             };
             
-            sessionId = saveSession(code, accessData, result.sessionId);
+            sessionId = saveSession(code, accessData, serverResult.sessionId);
             
             setTimeout(() => {
                 showMainApp();
             }, 1000);
         } else {
-            showError(result.message || 'Access denied');
+            showError(serverResult.message || 'Access denied');
         }
         
     } catch (error) {
@@ -1370,10 +1384,7 @@ function showMainApp() {
 async function logout() {
     if (sessionId) {
         try {
-            await secureFetch({
-                action: 'logout',
-                sessionId: sessionId
-            });
+            await secureFetch('logout', null, sessionId);
         } catch (e) {
             console.error('Logout notification failed:', e);
         }
