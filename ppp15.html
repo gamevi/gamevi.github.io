@@ -1207,29 +1207,7 @@ async function secureFetch(action, code, sessionId) {
   }
 }
  
-    const { token, timestamp } = tokenData;
- 
-    // ── الخطوة 2: أرسل الطلب الحقيقي مع الـ token ──
-    const params = new URLSearchParams({
-      action    : action,
-      t         : timestamp,
-      ua        : ua,
-      token     : token
-    });
- 
-    if (code)      params.append('code',      code);
-    if (sessionId) params.append('sessionId', sessionId);
- 
-    const response = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
-    return await response.json();
- 
-  } catch (e) {
-    console.error('secureFetch error:', e);
-    return { success: false, message: 'Connection error' };
-  }
-}
-
-
+    
 // ========== ACCESS CONTROL SYSTEM ==========
 let currentAccessCode = null;
 let accessData = null;
