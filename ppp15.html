@@ -1114,7 +1114,7 @@
 /* ================================================================
    CONFIG - IMPORTANT: Replace with your own Google Apps Script URL
 ================================================================ */
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyHg-_Bs1vi7GuNyCmUhij2WdwzY3O4mkn8eyh5RSLZOe3sH7QDz-A76fWsbLQN8ZL2/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz29T3Umh1vxi8NsvSFX6rU-UTJWDkZ6UgNMcHPzM2svchCzCSLGql3M1RBlX_6ITeN/exec';
 
 const ACCESS_SHEET_ID = '2PACX-1vT-y8uBwek4qboukH7oe_cxI4y7tpvExW_ovImcTExrMZbPRm5KWVF9AIpfopZZq-VdwWV2wuLC81OD';
 const ACCESS_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${ACCESS_SHEET_ID}/pub?output=csv`;
@@ -1158,28 +1158,50 @@ async function getSecureToken(action, code) {
     }
 }
 
+// ============================================================
+// ضع هذا الكود في HTML بدلاً من secureFetch الموجود حالياً
+// ============================================================
+ 
 async function secureFetch(action, code, sessionId) {
-    const timestamp = Math.floor(Date.now() / 1000);
-    const ua = encodeURIComponent(navigator.userAgent);
-    
-    // Build URL with all parameters
-    const params = new URLSearchParams({
-        action: action,
-        t: timestamp,
-        ua: ua
-    });
-    
-    if (code) params.append('code', code);
-    if (sessionId) params.append('sessionId', sessionId);
-    
-    try {
-        const response = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
-        return await response.json();
-    } catch (e) {
-        console.error('Secure fetch failed:', e);
-        return { success: false, message: 'Connection error' };
+  const ua = encodeURIComponent(navigator.userAgent);
+ 
+  try {
+    // ── الخطوة 1: اطلب token من السيرفر ──
+    const tokenUrl = `${APPS_SCRIPT_URL}?action=getToken`
+      + `&for=${encodeURIComponent(action)}`
+      + `&code=${encodeURIComponent(code || '')}`
+      + `&ua=${ua}`;
+ 
+    const tokenResp = await fetch(tokenUrl);
+    const tokenData = await tokenResp.json();
+ 
+    if (!tokenData.success) {
+      console.error('Failed to get token:', tokenData.message);
+      return { success: false, message: 'Token request failed' };
     }
+ 
+    const { token, timestamp } = tokenData;
+ 
+    // ── الخطوة 2: أرسل الطلب الحقيقي مع الـ token ──
+    const params = new URLSearchParams({
+      action    : action,
+      t         : timestamp,
+      ua        : ua,
+      token     : token
+    });
+ 
+    if (code)      params.append('code',      code);
+    if (sessionId) params.append('sessionId', sessionId);
+ 
+    const response = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
+    return await response.json();
+ 
+  } catch (e) {
+    console.error('secureFetch error:', e);
+    return { success: false, message: 'Connection error' };
+  }
 }
+
 
 // ========== ACCESS CONTROL SYSTEM ==========
 let currentAccessCode = null;
