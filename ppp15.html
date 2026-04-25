@@ -1163,50 +1163,44 @@ async function getSecureToken(action, code) {
 // ============================================================
  
 async function secureFetch(action, code, sessionId) {
-  const ua = encodeURIComponent(navigator.userAgent);
- 
-  // الكود الصحيح لكل action
-  // checkSession و logout لا يحتاجان code في الـ payload
+  const ua = navigator.userAgent;
+
   const codeForToken = (action === 'verifyCode') ? (code || '') : '';
- 
+
   try {
-    // ── الخطوة 1: اطلب token من السيرفر ──
+    // الخطوة 1: اطلب token
     const tokenUrl = `${APPS_SCRIPT_URL}?action=getToken`
       + `&for=${encodeURIComponent(action)}`
       + `&code=${encodeURIComponent(codeForToken)}`
-      + `&ua=${ua}`;
- 
+      + `&ua=${encodeURIComponent(ua)}`;
+
     const tokenResp = await fetch(tokenUrl);
     const tokenData = await tokenResp.json();
- 
+
     if (!tokenData.success) {
-      console.error('Failed to get token:', tokenData.message);
+      console.error('Token failed:', tokenData);
       return { success: false, message: 'Token request failed' };
     }
- 
-    const { token, timestamp } = tokenData;
- 
-    // ── الخطوة 2: أرسل الطلب الحقيقي مع الـ token ──
+
+    // الخطوة 2: أرسل الطلب الحقيقي
     const params = new URLSearchParams({
-      action    : action,
-      t         : timestamp,
-      ua        : ua,
-      token     : token
+      action : action,
+      t      : tokenData.timestamp,
+      ua     : ua,        // بدون encodeURIComponent هنا — URLSearchParams تتكفل بذلك
+      token  : tokenData.token
     });
- 
-    // أضف code و sessionId فقط إذا موجودين
+
     if (codeForToken) params.append('code', codeForToken);
     if (sessionId)    params.append('sessionId', sessionId);
- 
+
     const response = await fetch(`${APPS_SCRIPT_URL}?${params.toString()}`);
     return await response.json();
- 
+
   } catch (e) {
     console.error('secureFetch error:', e);
     return { success: false, message: 'Connection error' };
   }
 }
- 
     
 // ========== ACCESS CONTROL SYSTEM ==========
 let currentAccessCode = null;
