@@ -1114,7 +1114,6 @@
 /* ================================================================
    CONFIG - IMPORTANT: Replace with your own Google Apps Script URL
 ================================================================ */
-// Use Google Apps Script Web App URL for tracking usage
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwD0qE029pKgh_1LrGl9gHMveHuGEomu06sqFGef-RRDyq9-67MZPSVUJkFuNBay1cm/exec';
 
 const ACCESS_SHEET_ID = '2PACX-1vT-y8uBwek4qboukH7oe_cxI4y7tpvExW_ovImcTExrMZbPRm5KWVF9AIpfopZZq-VdwWV2wuLC81OD';
@@ -1122,24 +1121,61 @@ const ACCESS_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${ACCESS_SHEE
 
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRkn3LM1kUqxzI2LCVzD9u3B6P4BCyY5tsydZpcrfA4dGXjR92fik2L9wagD6tQwg-K62vAGDCuTV0f/pub?output=csv';
 
+// ========== SECURE TOKEN SYSTEM ==========
+async function getSecureToken() {
+    const timestamp = Math.floor(Date.now() / 1000);
+    try {
+        const response = await fetch(`${APPS_SCRIPT_URL}?action=getToken&t=${timestamp}`);
+        const data = await response.json();
+        return { token: data.token, timestamp: timestamp };
+    } catch (e) {
+        console.error('Token generation failed:', e);
+        return null;
+    }
+}
+
+async function addSecureParams(baseParams) {
+    const secureData = await getSecureToken();
+    if (!secureData) return null;
+    
+    return {
+        ...baseParams,
+        t: secureData.timestamp,
+        token: secureData.token,
+        ip: 'auto',
+        ua: encodeURIComponent(navigator.userAgent)
+    };
+}
+
+async function secureFetch(params) {
+    const secureParams = await addSecureParams(params);
+    if (!secureParams) {
+        throw new Error('Failed to generate secure token');
+    }
+    
+    const queryString = Object.entries(secureParams)
+        .map(([k, v]) => `${k}=${v}`)
+        .join('&');
+    
+    const response = await fetch(`${APPS_SCRIPT_URL}?${queryString}`);
+    return await response.json();
+}
+
 // ========== ACCESS CONTROL SYSTEM ==========
 let currentAccessCode = null;
 let accessData = null;
 let sessionId = null;
 
-// Generate unique session ID
 function generateSessionId() {
     return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
-// Load saved session
 function loadSession() {
     const saved = localStorage.getItem('merchAnalyzerSession');
     if (saved) {
         try {
             const session = JSON.parse(saved);
             if (session.sessionId) {
-                // Verify session is still valid by checking with Google Sheets
                 return checkSessionValidity(session);
             }
         } catch (e) {
@@ -1149,11 +1185,13 @@ function loadSession() {
     return false;
 }
 
-// Check if session is still valid
 async function checkSessionValidity(session) {
     try {
-        const response = await fetch(`${APPS_SCRIPT_URL}?action=checkSession&sessionId=${session.sessionId}&code=${session.code}`);
-        const result = await response.json();
+        const result = await secureFetch({
+            action: 'checkSession',
+            sessionId: session.sessionId,
+            code: session.code
+        });
         
         if (result.valid) {
             currentAccessCode = session.code;
@@ -1166,7 +1204,6 @@ async function checkSessionValidity(session) {
             return false;
         }
     } catch (e) {
-        // If Apps Script is not set up, fall back to local session
         if (session.code && session.expiryDate) {
             const expiry = new Date(session.expiryDate);
             if (expiry > new Date()) {
@@ -1181,7 +1218,6 @@ async function checkSessionValidity(session) {
     }
 }
 
-// Save session
 function saveSession(code, data, sid) {
     const session = {
         code: code,
@@ -1193,7 +1229,6 @@ function saveSession(code, data, sid) {
     return session.sessionId;
 }
 
-// Clear session
 function clearSession() {
     localStorage.removeItem('merchAnalyzerSession');
     currentAccessCode = null;
@@ -1201,7 +1236,6 @@ function clearSession() {
     sessionId = null;
 }
 
-// Verify access code with server-side tracking
 async function verifyAccessCode() {
     const codeInput = document.getElementById('accessCode');
     const errorMsg = document.getElementById('errorMsg');
@@ -1224,7 +1258,6 @@ async function verifyAccessCode() {
     successMsg.classList.remove('show');
     
     try {
-        // Check code validity from Google Sheets
         const codes = await fetchAccessCodes();
         
         if (codes.length === 0) {
@@ -1252,32 +1285,19 @@ async function verifyAccessCode() {
             return;
         }
         
-        // Now check with Apps Script if code is already in use
-        let canUse = true;
-        let serverSessionId = null;
-        
+        // Verify with Apps Script using secure token
+        let result;
         try {
-    const response = await fetch(`${APPS_SCRIPT_URL}?action=verifyCode&code=${code}`);
-    const result = await response.json();
-    
-    if (result.success) {
-        canUse = true;
-        serverSessionId = result.sessionId;
-    } else {
-        canUse = false;
-        // ✅ أظهر الرسالة الحقيقية من الـ server
-        const errorMsg = result.message || 'Access denied';
-        showError(errorMsg);
-        return;
-    }
-} catch (e) {
-            // If Apps Script is not set up, allow usage (fallback)
+            result = await secureFetch({
+                action: 'verifyCode',
+                code: code
+            });
+        } catch (e) {
             console.warn('Apps Script not available, using local verification only');
-            canUse = true;
-            serverSessionId = generateSessionId();
+            result = { success: true, sessionId: generateSessionId() };
         }
         
-        if (canUse) {
+        if (result.success) {
             successMsg.classList.add('show');
             successMsg.querySelector('span').textContent = 'Access granted! Loading...';
             
@@ -1287,11 +1307,13 @@ async function verifyAccessCode() {
                 expiryDate: accessEntry.expiryDate
             };
             
-            sessionId = saveSession(code, accessData, serverSessionId);
+            sessionId = saveSession(code, accessData, result.sessionId);
             
             setTimeout(() => {
                 showMainApp();
             }, 1000);
+        } else {
+            showError(result.message || 'Access denied');
         }
         
     } catch (error) {
@@ -1346,10 +1368,12 @@ function showMainApp() {
 }
 
 async function logout() {
-    // Notify server that session is ending
-    if (sessionId && APPS_SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    if (sessionId) {
         try {
-            await fetch(`${APPS_SCRIPT_URL}?action=logout&sessionId=${sessionId}`);
+            await secureFetch({
+                action: 'logout',
+                sessionId: sessionId
+            });
         } catch (e) {
             console.error('Logout notification failed:', e);
         }
@@ -1363,7 +1387,6 @@ async function logout() {
     document.getElementById('successMsg').classList.remove('show');
 }
 
-// Fetch access codes from Google Sheets
 async function fetchAccessCodes() {
     try {
         const response = await fetch(ACCESS_SHEET_URL);
@@ -1392,8 +1415,6 @@ async function fetchAccessCodes() {
         return [];
     }
 }
-
-// ... (rest of the existing functions remain the same) ...
 
 // ========== DATA FETCHING & PARSING ==========
 let masterProducts = [];
