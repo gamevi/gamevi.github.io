@@ -480,7 +480,7 @@ async function getFingerprintFromWorker(code, ua, sessionId) {
 }
 
 async function fetchAccessCodesFromWorker() {
-    const result = await callWorker('/fetchAccessCodes', 'GET');
+    const result = await callWorker(`/fetchAccessCodes?t=${Date.now()}`, 'GET');
     if (!result.success || !result.data) return [];
     
     const lines = result.data.split(/\r?\n/).filter(l => l.trim());
@@ -488,12 +488,13 @@ async function fetchAccessCodesFromWorker() {
     
     return lines.slice(1).map(l => {
         const c = parseCSVRow(l);
+        if (!c[0]?.trim()) return null;
         return {
-            code: c[0]?.trim().toUpperCase(),
+            code: c[0].trim().toUpperCase(),       // ✅ دائماً uppercase
             expiryDate: c[1]?.trim(),
-            status: c[4]?.trim() || 'active'
+            status: c[4]?.trim().toLowerCase() || 'active'  // ✅ دائماً lowercase
         };
-    }).filter(c => c.code);
+    }).filter(c => c && c.code);
 }
 
 async function fetchProductsFromWorker() {
@@ -568,52 +569,54 @@ async function loadSession() {
         const session = JSON.parse(saved);
         if (!session.sessionId || !session.code) return false;
         if (!session.expiryDate || new Date(session.expiryDate) < new Date()) {
-            clearSession();
-            return false;
+            clearSession(); return false;
         }
-        
-        // Restore Session Token
-        sessionToken = session.sessionToken || null;
-        
-        // Refresh Token if old or missing
-        const tokenAge = sessionToken ? (Date.now() / 1000) - parseInt(sessionToken.split('.')[0] || 0) : Infinity;
-        if (!sessionToken || tokenAge > 240) {
-            sessionToken = await generateSessionToken(session.code);
-        }
-        
-        // Verify session in Firestore
+
+        // تحقق من Firestore
         const doc = await db.collection('sessions').doc(session.sessionId).get();
-        if (!doc.exists) { clearSession(); return false; }
-        
-        const sessionData = doc.data();
-        if (sessionData.status !== 'active') { clearSession(); return false; }
-        
-        // Verify fingerprint
+        if (!doc.exists || doc.data().status !== 'active') { 
+            clearSession(); return false; 
+        }
+
+        // تحقق من Fingerprint
         const ua = navigator.userAgent;
         const expectedFP = await getFingerprintFromWorker(session.code, ua, session.sessionId);
-        if (sessionData.fingerprint !== expectedFP) { clearSession(); return false; }
-        
-        // Check code validity
+        if (doc.data().fingerprint !== expectedFP) { 
+            clearSession(); return false; 
+        }
+
+        // تحقق من كود الدخول
         const codes = await fetchAccessCodesFromWorker();
         const entry = codes.find(c => c.code === session.code.toUpperCase());
-        if (!entry) { clearSession(); return false; }
-        if (entry.status === 'revoked') { clearSession(); return false; }
-        if (new Date(entry.expiryDate) < new Date()) { clearSession(); return false; }
-        
-        currentAccessCode = session.code;
+        if (!entry || entry.status === 'revoked' || new Date(entry.expiryDate) < new Date()) {
+            clearSession(); return false;
+        }
+
+        // ✅ اضبط المتغيرات
+        currentAccessCode = session.code.toUpperCase();
         accessData = { code: session.code, expiryDate: entry.expiryDate };
         sessionId = session.sessionId;
-        
-        // Update session activity
-        await db.collection('sessions').doc(sessionId).update({
+
+        // ✅ أنشئ Session Token
+        sessionToken = session.sessionToken || null;
+        const tokenAge = sessionToken 
+            ? (Date.now() / 1000) - parseInt(sessionToken.split('.')[0] || 0) 
+            : Infinity;
+        if (!sessionToken || tokenAge > 240) {
+            sessionToken = await generateSessionToken(currentAccessCode);
+        }
+
+        // تجديد النشاط
+        await db.collection('sessions').doc(session.sessionId).update({
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(() => {});
-        
-        // Update local storage with fresh expiry
-        saveLocalSession(session.code, entry.expiryDate, sessionId);
-        
+
+        saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
+
+        // ✅ اعرض التطبيق هنا مباشرة
+        showMainApp();
         return true;
-        
+
     } catch (err) {
         console.error('Session load error:', err);
         clearSession();
@@ -837,7 +840,7 @@ async function performPeriodicCheck() {
         }
 
         const codes = await fetchAccessCodesFromWorker();
-        const entry = codes.find(c => c.code === currentAccessCode);
+        const entry = codes.find(c => c.code === currentAccessCode.toUpperCase());
 
         if (!entry) { await forceLogout('Access code not found.'); return; }
         if (entry.status === 'revoked') { await forceLogout('Access has been revoked.'); return; }
@@ -1029,33 +1032,28 @@ function showToast(message) {
 // INITIALIZATION
 // ═══════════════════════════════════════════════════
 async function initApp() {
-    // ✅ تأكد من وجود sessionToken قبل تحميل المنتجات
+    // ✅ تحقق من sessionToken أولاً
     if (!sessionToken) {
-        console.log('🔄 No session token found, generating new one...');
         sessionToken = await generateSessionToken(currentAccessCode);
-        
         if (!sessionToken) {
-            console.error('❌ Failed to generate session token');
             document.getElementById('productsContainer').innerHTML = 
-                '<div class="no-results">⚠️ Session error. Please try logging in again.</div>';
+                '<div class="no-results">⚠️ Session error. Please logout and login again.</div>';
             return;
         }
-        
-        // حفظ token الجديد
-        console.log('✅ New session token generated');
-        saveLocalSession(currentAccessCode, accessData.expiryDate, sessionId);
-    } else {
-        console.log('✅ Session token exists');
+        saveLocalSession(currentAccessCode, accessData?.expiryDate, sessionId);
     }
-    
+
     loadFavorites();
-    await loadProducts();
     setupEventListeners();
+    
+    // ✅ حمّل المنتجات
+    await loadProducts();
+    
+    // ✅ اعرض البيانات
     renderProducts(allProducts);
     updateTrendChart();
     updateHotNiches();
 }
-
 async function loadProducts() {
     try {
         const container = document.getElementById('productsContainer');
@@ -1572,14 +1570,17 @@ function searchNiche(phrase) {
 // ═══════════════════════════════════════════════════
 // INITIAL LOAD
 // ═══════════════════════════════════════════════════
-(async function initialLoad() {
+document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('accessCode').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') verifyAccessCode();
+    });
+    
     const hasSession = await loadSession();
-    if (hasSession) {
-        document.getElementById('currentCode').textContent = currentAccessCode;
-        updateExpiryBadge();
-        showMainApp();
+    if (!hasSession) {
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('mainApp').classList.remove('show');
     }
-})();
+});
 
 // Enter key on login
 document.getElementById('accessCode').addEventListener('keypress', (e) => {
