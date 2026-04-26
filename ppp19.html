@@ -558,10 +558,11 @@ function showSuccess() {
 // ═══════════════════════════════════════════════════
 // PERIODIC CHECK
 // ═══════════════════════════════════════════════════
+
 function startPeriodicCheck() {
     if (periodicCheckInterval) clearInterval(periodicCheckInterval);
-    setTimeout(() => performPeriodicCheck(), 10000);
-    periodicCheckInterval = setInterval(performPeriodicCheck, 2 * 60 * 1000);
+    setTimeout(() => performPeriodicCheck(), 5000); // فحص أول بعد 5 ثواني
+    periodicCheckInterval = setInterval(performPeriodicCheck, 20 * 1000); // كل 20 ثانية
 }
 
 function stopPeriodicCheck() {
