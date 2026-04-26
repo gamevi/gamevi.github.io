@@ -765,24 +765,24 @@ async function showSuccess() {
     setTimeout(() => showMainApp(), 1000);
 }
 
-function showMainApp() {
+f// ✅ بعد
+async function showMainApp() {
     document.getElementById('loginPage').style.display = 'none';
-    const mainApp = document.getElementById('mainApp');
-    mainApp.classList.add('show');
-    
-    // Set code badge
+    document.getElementById('mainApp').classList.add('show');
     document.getElementById('currentCode').textContent = currentAccessCode;
-    
-    // Update expiry badge
     updateExpiryBadge();
-    
-    // Start periodic checks
     startPeriodicCheck();
-    
-    // Initialize app
-    initApp();
-}
 
+    // ✅ تأكد من وجود sessionToken أولاً
+    if (!sessionToken) {
+        sessionToken = await generateSessionToken(currentAccessCode);
+        if (sessionToken) {
+            saveLocalSession(currentAccessCode, accessData?.expiryDate, sessionId);
+        }
+    }
+
+    await initApp();
+}
 function updateExpiryBadge() {
     if (!accessData?.expiryDate) return;
     const exp = new Date(accessData.expiryDate);
@@ -1031,25 +1031,17 @@ function showToast(message) {
 // ═══════════════════════════════════════════════════
 // INITIALIZATION
 // ═══════════════════════════════════════════════════
+// ✅ initApp مبسطة
 async function initApp() {
-    // ✅ تحقق من sessionToken أولاً
     if (!sessionToken) {
-        sessionToken = await generateSessionToken(currentAccessCode);
-        if (!sessionToken) {
-            document.getElementById('productsContainer').innerHTML = 
-                '<div class="no-results">⚠️ Session error. Please logout and login again.</div>';
-            return;
-        }
-        saveLocalSession(currentAccessCode, accessData?.expiryDate, sessionId);
+        document.getElementById('productsContainer').innerHTML = 
+            '<div class="no-results">⚠️ Session error. Please logout and login again.</div>';
+        return;
     }
 
     loadFavorites();
     setupEventListeners();
-    
-    // ✅ حمّل المنتجات
     await loadProducts();
-    
-    // ✅ اعرض البيانات
     renderProducts(allProducts);
     updateTrendChart();
     updateHotNiches();
