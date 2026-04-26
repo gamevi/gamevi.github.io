@@ -772,15 +772,7 @@ async function showMainApp() {
     document.getElementById('currentCode').textContent = currentAccessCode;
     updateExpiryBadge();
     startPeriodicCheck();
-
-    // ✅ تأكد من وجود sessionToken أولاً
-    async function showMainApp() {
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('mainApp').classList.add('show');
-    document.getElementById('currentCode').textContent = currentAccessCode;
-    updateExpiryBadge();
-    startPeriodicCheck();
-    await initApp(); // ✅ sessionToken جاهز دائماً هنا
+    await initApp();
 }
 function updateExpiryBadge() {
     if (!accessData?.expiryDate) return;
