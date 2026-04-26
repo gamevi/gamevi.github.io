@@ -572,32 +572,27 @@ async function loadSession() {
             clearSession(); return false;
         }
 
-        // تحقق من Firestore
         const doc = await db.collection('sessions').doc(session.sessionId).get();
         if (!doc.exists || doc.data().status !== 'active') { 
             clearSession(); return false; 
         }
 
-        // تحقق من Fingerprint
         const ua = navigator.userAgent;
         const expectedFP = await getFingerprintFromWorker(session.code, ua, session.sessionId);
         if (doc.data().fingerprint !== expectedFP) { 
             clearSession(); return false; 
         }
 
-        // تحقق من كود الدخول
         const codes = await fetchAccessCodesFromWorker();
         const entry = codes.find(c => c.code === session.code.toUpperCase());
         if (!entry || entry.status === 'revoked' || new Date(entry.expiryDate) < new Date()) {
             clearSession(); return false;
         }
 
-        // ✅ اضبط المتغيرات
         currentAccessCode = session.code.toUpperCase();
         accessData = { code: session.code, expiryDate: entry.expiryDate };
         sessionId = session.sessionId;
 
-        // ✅ أنشئ Session Token
         sessionToken = session.sessionToken || null;
         const tokenAge = sessionToken 
             ? (Date.now() / 1000) - parseInt(sessionToken.split('.')[0] || 0) 
@@ -606,27 +601,23 @@ async function loadSession() {
             sessionToken = await generateSessionToken(currentAccessCode);
         }
 
-        // تجديد النشاط
         await db.collection('sessions').doc(session.sessionId).update({
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(() => {});
 
-        saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
-
-        // ✅ اعرض التطبيق هنا مباشرة
         // ✅ تأكد من Token قبل عرض التطبيق
-if (!sessionToken) {
-    sessionToken = await generateSessionToken(currentAccessCode);
-}
+        if (!sessionToken) {
+            sessionToken = await generateSessionToken(currentAccessCode);
+        }
 
-if (!sessionToken) {
-    clearSession();
-    return false;
-}
+        if (!sessionToken) {
+            clearSession();
+            return false;
+        }
 
-saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
-showMainApp();
-return true;
+        saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
+        showMainApp();
+        return true;
 
     } catch (err) {
         console.error('Session load error:', err);
@@ -634,7 +625,6 @@ return true;
         return false;
     }
 }
-
 // ═══════════════════════════════════════════════════
 // ACCESS CONTROL
 // ═══════════════════════════════════════════════════
@@ -784,7 +774,7 @@ async function showMainApp() {
     startPeriodicCheck();
 
     // ✅ تأكد من وجود sessionToken أولاً
-    iasync function showMainApp() {
+    async function showMainApp() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainApp').classList.add('show');
     document.getElementById('currentCode').textContent = currentAccessCode;
@@ -792,7 +782,6 @@ async function showMainApp() {
     startPeriodicCheck();
     await initApp(); // ✅ sessionToken جاهز دائماً هنا
 }
-
 function updateExpiryBadge() {
     if (!accessData?.expiryDate) return;
     const exp = new Date(accessData.expiryDate);
