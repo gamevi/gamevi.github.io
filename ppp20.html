@@ -1029,6 +1029,25 @@ function showToast(message) {
 // INITIALIZATION
 // ═══════════════════════════════════════════════════
 async function initApp() {
+    // ✅ تأكد من وجود sessionToken قبل تحميل المنتجات
+    if (!sessionToken) {
+        console.log('🔄 No session token found, generating new one...');
+        sessionToken = await generateSessionToken(currentAccessCode);
+        
+        if (!sessionToken) {
+            console.error('❌ Failed to generate session token');
+            document.getElementById('productsContainer').innerHTML = 
+                '<div class="no-results">⚠️ Session error. Please try logging in again.</div>';
+            return;
+        }
+        
+        // حفظ token الجديد
+        console.log('✅ New session token generated');
+        saveLocalSession(currentAccessCode, accessData.expiryDate, sessionId);
+    } else {
+        console.log('✅ Session token exists');
+    }
+    
     loadFavorites();
     await loadProducts();
     setupEventListeners();
@@ -1094,7 +1113,6 @@ function setupEventListeners() {
         }
     });
 }
-
 // ═══════════════════════════════════════════════════
 // FILTERING & SORTING
 // ═══════════════════════════════════════════════════
