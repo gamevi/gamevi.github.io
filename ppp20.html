@@ -762,10 +762,9 @@ async function showSuccess() {
     const sm = document.getElementById('successMsg');
     sm.classList.add('show');
     sm.querySelector('span').textContent = 'Access granted! Loading...';
-    setTimeout(() => showMainApp(), 1000);
+    setTimeout(() => showMainApp(), 1000); // ✅
 }
 
-f// ✅ بعد
 async function showMainApp() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainApp').classList.add('show');
