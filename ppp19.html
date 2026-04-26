@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; font-family: 'Inter', sans-serif; }
@@ -282,31 +281,10 @@
 </div>
 
 <script>
-// ================================================================
-// CONFIG
-// ================================================================
-const ACCESS_SHEET_ID = '2PACX-1vT-y8uBwek4qboukH7oe_cxI4y7tpvExW_ovImcTExrMZbPRm5KWVF9AIpfopZZq-VdwWV2wuLC81OD';
-const ACCESS_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${ACCESS_SHEET_ID}/pub?output=csv`;
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRkn3LM1kUqxzI2LCVzD9u3B6P4BCyY5tsydZpcrfA4dGXjR92fik2L9wagD6tQwg-K62vAGDCuTV0f/pub?output=csv';
-
 // ═══════════════════════════════════════════════════
-// LAYER 1: HMAC TOKEN SYSTEM (من النظام القديم)
+// CONFIG - استبدل بعنوان Worker الخاص بك
 // ═══════════════════════════════════════════════════
-const API_SECRET = 'super_secret_key_2026';
-const SALT = 'fingerprint_salt';
-const TOKEN_EXPIRY_SECONDS = 120;
-
-function generateToken(secret, timestamp, payload) {
-    const raw = timestamp + '|' + payload;
-    const hash = CryptoJS.HmacSHA256(raw, secret);
-    return hash.toString(CryptoJS.enc.Hex);
-}
-
-function generateFingerprintWithSalt(code, ua, sessionId) {
-    const raw = [code, ua, sessionId, SALT].join('|');
-    const hash = CryptoJS.SHA256(raw);
-    return hash.toString(CryptoJS.enc.Hex);
-}
+const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev/';
 
 // ═══════════════════════════════════════════════════
 // FIREBASE
@@ -322,7 +300,86 @@ firebase.initializeApp({
 const db = firebase.firestore();
 
 // ═══════════════════════════════════════════════════
-// LAYER 2: RATE LIMITER (من النظام القديم)
+// WORKER API - جميع العمليات عبر Cloudflare Worker
+// ═══════════════════════════════════════════════════
+async function callWorker(endpoint, method = 'GET', body = null) {
+    try {
+        const options = {
+            method: method,
+            headers: { 'Content-Type': 'application/json' }
+        };
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+        const response = await fetch(`${WORKER_URL}${endpoint}`, options);
+        return await response.json();
+    } catch (error) {
+        console.error(`Worker call failed: ${endpoint}`, error);
+        return { success: false, message: 'Connection error' };
+    }
+}
+
+async function getTokenFromWorker(action, code, ua) {
+    return await callWorker('/getToken', 'POST', { action, code, ua });
+}
+
+async function verifyTokenFromWorker(action, code, token, timestamp, ua) {
+    return await callWorker('/verifyToken', 'POST', { action, code, token, timestamp, ua });
+}
+
+async function getFingerprintFromWorker(code, ua, sessionId) {
+    const result = await callWorker('/getFingerprint', 'POST', { code, ua, sessionId });
+    return result.fingerprint || null;
+}
+
+async function fetchAccessCodesFromWorker() {
+    const result = await callWorker('/fetchAccessCodes', 'GET');
+    if (!result.success || !result.data) return [];
+    
+    const lines = result.data.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) return [];
+    
+    return lines.slice(1).map(l => {
+        const c = parseCSVRow(l);
+        return {
+            code: c[0]?.trim().toUpperCase(),
+            expiryDate: c[1]?.trim(),
+            status: c[4]?.trim() || 'active'
+        };
+    }).filter(c => c.code);
+}
+
+async function fetchProductsFromWorker() {
+    const result = await callWorker('/fetchProducts', 'GET');
+    if (!result.success || !result.data) {
+        throw new Error('Failed to fetch products');
+    }
+    
+    const lines = result.data.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) throw new Error('Empty data');
+    
+    return lines.slice(1).map(l => {
+        const c = parseCSVRow(l);
+        if (c.length < 5) return null;
+        return {
+            asin: c[0] || '',
+            link: c[1] || '#',
+            bsrRaw: c[2] || '',
+            bsrNumber: extractBsrNumber(c[2]),
+            bsrDisplay: cleanBsrDisplay(c[2]),
+            imageUrl: c[3] || 'https://via.placeholder.com/300?text=No+Image',
+            dateAddedRaw: c[4] || '',
+            parsedDate: parseDateFromString(c[4]),
+            designTitle: c[5] || '',
+            brand: c[6] || '',
+            featureBullet1: c[7] || '',
+            featureBullet2: c[8] || ''
+        };
+    }).filter(Boolean);
+}
+
+// ═══════════════════════════════════════════════════
+// RATE LIMITER
 // ═══════════════════════════════════════════════════
 const rateLimiter = {
     attempts: {},
@@ -334,9 +391,6 @@ const rateLimiter = {
         this.attempts[key].push(now);
         return true;
     },
-    clear(key) {
-        delete this.attempts[key];
-    },
     cleanup() {
         const now = Date.now();
         for (const key in this.attempts) {
@@ -345,112 +399,36 @@ const rateLimiter = {
         }
     }
 };
-
 setInterval(() => rateLimiter.cleanup(), 300000);
 
 // ═══════════════════════════════════════════════════
-// LAYER 3: DEVICE FINGERPRINT (من النظام القديم)
+// DEVICE FINGERPRINT (بسيط - للاستخدام المحلي)
 // ═══════════════════════════════════════════════════
-function generateFingerprint() {
-    const nav = navigator;
+function generateSimpleFingerprint() {
     const components = [
-        nav.userAgent,
-        nav.language,
+        navigator.userAgent,
+        navigator.language,
         screen.width + 'x' + screen.height,
         screen.colorDepth,
-        new Date().getTimezoneOffset(),
-        nav.hardwareConcurrency || '',
-        nav.platform || '',
-        nav.deviceMemory || '',
-        nav.hardwareConcurrency || ''
+        new Date().getTimezoneOffset()
     ].join('|');
-
+    
     let hash = 0;
     for (let i = 0; i < components.length; i++) {
-        const char = components.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
+        hash = ((hash << 5) - hash) + components.charCodeAt(i);
         hash = hash & hash;
     }
     return 'fp_' + Math.abs(hash).toString(36);
 }
 
 // ═══════════════════════════════════════════════════
-// LAYER 4: LOCK MECHANISM VIA FIRESTORE (من النظام القديم)
-// ═══════════════════════════════════════════════════
-async function acquireLock(lockName, timeoutMs = 5000) {
-    const lockRef = db.collection('locks').doc(lockName);
-    const now = Date.now();
-
-    try {
-        const lockDoc = await lockRef.get();
-
-        if (lockDoc.exists) {
-            const lockData = lockDoc.data();
-            if (now - lockData.timestamp.toDate().getTime() < timeoutMs) {
-                return false; // Lock is held by another process
-            }
-        }
-
-        await lockRef.set({
-            timestamp: firebase.firestore.Timestamp.fromDate(new Date(now)),
-            expires: firebase.firestore.Timestamp.fromDate(new Date(now + timeoutMs))
-        });
-
-        return true;
-    } catch (error) {
-        console.error('Lock acquire error:', error);
-        return false;
-    }
-}
-
-async function releaseLock(lockName) {
-    try {
-        await db.collection('locks').doc(lockName).delete();
-    } catch (e) {
-        console.error('Lock release error:', e);
-    }
-}
-
-// ═══════════════════════════════════════════════════
-// LAYER 5: SERVER-SIDE TOKEN VALIDATION
-// ═══════════════════════════════════════════════════
-async function validateToken(action, code, token, timestamp, ua) {
-    const now = Math.floor(Date.now() / 1000);
-
-    // تحقق من وقت انتهاء التوكين (120 ثانية)
-    if (Math.abs(now - timestamp) > TOKEN_EXPIRY_SECONDS) {
-        return { valid: false, message: 'Token expired' };
-    }
-
-    // تحقق من توقيع HMAC
-    const payloadCode = (action === 'verifyCode') ? (code || '') : '';
-    const payload = action + '|' + payloadCode + '|' + ua;
-    const expected = generateToken(API_SECRET, timestamp, payload);
-
-    if (token !== expected) {
-        return { valid: false, message: 'Invalid token' };
-    }
-
-    return { valid: true };
-}
-
-function createTokenForAction(action, code, ua) {
-    const timestamp = Math.floor(Date.now() / 1000);
-    const payloadCode = (action === 'verifyCode') ? (code || '') : '';
-    const payload = action + '|' + payloadCode + '|' + ua;
-    const token = generateToken(API_SECRET, timestamp, payload);
-
-    return { token, timestamp };
-}
-
-// ═══════════════════════════════════════════════════
-// ACCESS CONTROL (مع جميع طبقات الحماية)
+// ACCESS CONTROL
 // ═══════════════════════════════════════════════════
 let currentAccessCode = null;
 let accessData = null;
 let sessionId = null;
 let periodicCheckInterval = null;
-const fingerprint = generateFingerprint();
+const simpleFingerprint = generateSimpleFingerprint();
 
 function generateSessionId() {
     return 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -465,8 +443,8 @@ async function verifyAccessCode() {
     const code = codeInput.value.trim().toUpperCase();
     if (!code) { showError('Please enter an access code'); return; }
 
-    // LAYER 2: Rate limiting
-    if (!rateLimiter.check('login_' + fingerprint, 5, 60000)) {
+    // Rate limiting
+    if (!rateLimiter.check('login_' + simpleFingerprint, 5, 60000)) {
         showError('Too many attempts. Please wait a minute.');
         return;
     }
@@ -477,32 +455,27 @@ async function verifyAccessCode() {
     document.getElementById('errorMsg').classList.remove('show');
     document.getElementById('successMsg').classList.remove('show');
 
-    // LAYER 4: Acquire lock for verify operation
-    const lockName = 'verify_' + code;
-    const lockAcquired = await acquireLock(lockName);
-
-    if (!lockAcquired) {
-        showError('System busy. Please try again in a few seconds.');
-        loginBtn.disabled = false;
-        btnText.style.display = 'inline';
-        spinner.style.display = 'none';
-        return;
-    }
-
     try {
-        // LAYER 1: Create HMAC token
         const ua = navigator.userAgent;
-        const { token, timestamp } = createTokenForAction('verifyCode', code, ua);
         
-        // LAYER 5: Validate token
-        const tokenValidation = await validateToken('verifyCode', code, token, timestamp, ua);
-        if (!tokenValidation.valid) {
-            showError(tokenValidation.message);
+        // الحصول على Token من Worker
+        const tokenResult = await getTokenFromWorker('verifyCode', code, ua);
+        
+        if (!tokenResult.success) {
+            showError('Failed to generate security token');
             return;
         }
 
-        // ═══ 1. تحقق من Google Sheets ═══
-        const codes = await fetchAccessCodes();
+        // التحقق من Token عبر Worker
+        const verifyResult = await verifyTokenFromWorker('verifyCode', code, tokenResult.token, tokenResult.timestamp, ua);
+        
+        if (!verifyResult.valid) {
+            showError(verifyResult.message || 'Security verification failed');
+            return;
+        }
+
+        // جلب الأكواد من Google Sheets عبر Worker
+        const codes = await fetchAccessCodesFromWorker();
         if (!codes.length) { showError('Connection error. Please try again.'); return; }
 
         const entry = codes.find(c => c.code === code);
@@ -510,7 +483,7 @@ async function verifyAccessCode() {
         if (entry.status === 'revoked') { showError('This code has been revoked.'); return; }
         if (new Date(entry.expiryDate) < new Date()) { showError('This code has expired.'); return; }
 
-        // ═══ 2. تحقق من Firestore — جلسة نشطة؟ ═══
+        // التحقق من جلسة نشطة في Firestore
         const activeSessions = await db.collection('sessions')
             .where('code', '==', code)
             .where('status', '==', 'active')
@@ -519,14 +492,15 @@ async function verifyAccessCode() {
         if (!activeSessions.empty) {
             const existingSession = activeSessions.docs[0].data();
             
-            // LAYER 3: Fingerprint check
-            const expectedFP = generateFingerprintWithSalt(code, ua, activeSessions.docs[0].id);
+            // الحصول على بصمة مشفرة من Worker
+            const expectedFP = await getFingerprintFromWorker(code, ua, activeSessions.docs[0].id);
+            
             if (existingSession.fingerprint !== expectedFP) {
                 showError('This code is already in use on another device.');
                 return;
             }
             
-            // نفس الجهاز — أعد استخدام الجلسة
+            // نفس الجهاز - إعادة استخدام الجلسة
             const sid = activeSessions.docs[0].id;
             await db.collection('sessions').doc(sid).update({
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -539,9 +513,14 @@ async function verifyAccessCode() {
             return;
         }
 
-        // ═══ 3. أنشئ جلسة جديدة مع HMAC fingerprint ═══
+        // إنشاء جلسة جديدة
         const newSid = generateSessionId();
-        const sessionFP = generateFingerprintWithSalt(code, ua, newSid);
+        const sessionFP = await getFingerprintFromWorker(code, ua, newSid);
+        
+        if (!sessionFP) {
+            showError('Failed to create secure session');
+            return;
+        }
 
         await db.collection('sessions').doc(newSid).set({
             code: code,
@@ -563,7 +542,6 @@ async function verifyAccessCode() {
         console.error('Verify error:', err);
         showError('Verification failed. Please try again.');
     } finally {
-        releaseLock(lockName);
         loginBtn.disabled = false;
         btnText.style.display = 'inline';
         spinner.style.display = 'none';
@@ -578,13 +556,10 @@ function showSuccess() {
 }
 
 // ═══════════════════════════════════════════════════
-// PERIODIC CHECK مع HMAC TOKEN
+// PERIODIC CHECK
 // ═══════════════════════════════════════════════════
 function startPeriodicCheck() {
-    if (periodicCheckInterval) {
-        clearInterval(periodicCheckInterval);
-    }
-
+    if (periodicCheckInterval) clearInterval(periodicCheckInterval);
     setTimeout(() => performPeriodicCheck(), 10000);
     periodicCheckInterval = setInterval(performPeriodicCheck, 2 * 60 * 1000);
 }
@@ -605,60 +580,45 @@ async function performPeriodicCheck() {
     try {
         const ua = navigator.userAgent;
         
-        // LAYER 1: Create and validate token for checkSession
-        const { token, timestamp } = createTokenForAction('checkSession', '', ua);
-        const tokenValidation = await validateToken('checkSession', '', token, timestamp, ua);
+        // التحقق من Token
+        const tokenResult = await getTokenFromWorker('checkSession', '', ua);
+        if (!tokenResult.success) {
+            await forceLogout('Security verification failed.');
+            return;
+        }
         
-        if (!tokenValidation.valid) {
-            await forceLogout('Session validation failed. You have been logged out.');
+        const verifyResult = await verifyTokenFromWorker('checkSession', '', tokenResult.token, tokenResult.timestamp, ua);
+        if (!verifyResult.valid) {
+            await forceLogout('Session expired.');
             return;
         }
 
-        // ═══ 1. تحقق من حالة الكود في Google Sheets ═══
-        const codes = await fetchAccessCodes();
+        // التحقق من الكود في Sheets
+        const codes = await fetchAccessCodesFromWorker();
         const entry = codes.find(c => c.code === currentAccessCode);
 
-        if (!entry) {
-            await forceLogout('Your access code was not found. You have been logged out.');
-            return;
-        }
+        if (!entry) { await forceLogout('Access code not found.'); return; }
+        if (entry.status === 'revoked') { await forceLogout('Access has been revoked.'); return; }
+        if (new Date(entry.expiryDate) < new Date()) { await forceLogout('Access code expired.'); return; }
 
-        if (entry.status === 'revoked') {
-            await forceLogout('Your access has been revoked by the administrator.');
-            return;
-        }
-
-        if (new Date(entry.expiryDate) < new Date()) {
-            await forceLogout('Your access code has expired.');
-            return;
-        }
-
-        // ═══ 2. تحقق من الجلسة في Firestore مع HMAC fingerprint ═══
+        // التحقق من الجلسة في Firestore
         const doc = await db.collection('sessions').doc(sessionId).get();
-
-        if (!doc.exists) {
-            await forceLogout('Your session was not found. You have been logged out.');
-            return;
-        }
+        if (!doc.exists) { await forceLogout('Session not found.'); return; }
 
         const sessionData = doc.data();
+        if (sessionData.status !== 'active') { await forceLogout('Session terminated.'); return; }
 
-        if (sessionData.status !== 'active') {
-            await forceLogout('Your session has been terminated.');
-            return;
-        }
-
-        // LAYER 3: Check HMAC fingerprint
-        const expectedFP = generateFingerprintWithSalt(currentAccessCode, ua, sessionId);
+        // التحقق من البصمة
+        const expectedFP = await getFingerprintFromWorker(currentAccessCode, ua, sessionId);
         if (sessionData.fingerprint !== expectedFP) {
-            await forceLogout('Device verification failed. You have been logged out.');
+            await forceLogout('Device verification failed.');
             return;
         }
 
-        // ═══ 3. جدّد وقت النشاط ═══
+        // تجديد النشاط
         await db.collection('sessions').doc(sessionId).update({
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(() => { });
+        }).catch(() => {});
 
         if (entry.expiryDate !== accessData.expiryDate) {
             accessData.expiryDate = entry.expiryDate;
@@ -666,7 +626,7 @@ async function performPeriodicCheck() {
             updateExpiryBadge();
         }
 
-        console.log('✅ Periodic check passed at', new Date().toLocaleTimeString());
+        console.log('✅ Check passed at', new Date().toLocaleTimeString());
 
     } catch (err) {
         console.error('Periodic check error:', err);
@@ -675,47 +635,30 @@ async function performPeriodicCheck() {
 
 async function forceLogout(message) {
     stopPeriodicCheck();
-
     try {
         if (sessionId) {
             await db.collection('sessions').doc(sessionId).update({
                 status: 'ended',
                 endedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(() => { });
+            }).catch(() => {});
         }
-    } catch (e) {
-        console.error('Force logout error:', e);
-    }
-
+    } catch (e) {}
     clearSession();
-
     alert(message);
-
     document.getElementById('mainApp').classList.remove('show');
     document.getElementById('loginPage').style.display = 'flex';
     document.getElementById('accessCode').value = '';
-    document.getElementById('errorMsg').classList.remove('show');
-    document.getElementById('successMsg').classList.remove('show');
 }
 
 function updateExpiryBadge() {
-    if (!accessData || !accessData.expiryDate) return;
-
+    if (!accessData?.expiryDate) return;
     const exp = new Date(accessData.expiryDate);
-    const daysLeft = Math.ceil((exp - new Date()) / (1000 * 60 * 60 * 24));
+    const daysLeft = Math.ceil((exp - new Date()) / (1000*60*60*24));
     const badge = document.getElementById('expiryBadge');
     const text = document.getElementById('expiryText');
-
-    if (daysLeft <= 0) {
-        badge.classList.add('expired');
-        text.textContent = 'Expired';
-    } else if (daysLeft <= 7) {
-        badge.classList.add('expired');
-        text.textContent = `${daysLeft} days left`;
-    } else {
-        badge.classList.remove('expired');
-        text.textContent = `Valid until ${exp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-    }
+    if (daysLeft <= 0) { badge.classList.add('expired'); text.textContent = 'Expired'; }
+    else if (daysLeft <= 7) { badge.classList.add('expired'); text.textContent = `${daysLeft} days left`; }
+    else { badge.classList.remove('expired'); text.textContent = `Valid until ${exp.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`; }
 }
 
 // ═══════════════════════════════════════════════════
@@ -724,67 +667,32 @@ function updateExpiryBadge() {
 async function loadSession() {
     const saved = localStorage.getItem('merchSession');
     if (!saved) return false;
-
     try {
         const session = JSON.parse(saved);
         if (!session.sessionId || !session.code) return false;
-
-        if (!session.expiryDate || new Date(session.expiryDate) < new Date()) {
-            clearSession();
-            return false;
-        }
-
-        const savedAt = new Date(session.savedAt);
-        const hoursSinceSave = (Date.now() - savedAt) / (1000 * 60 * 60);
-        if (hoursSinceSave > 24) {
-            clearSession();
-            return false;
-        }
+        if (!session.expiryDate || new Date(session.expiryDate) < new Date()) { clearSession(); return false; }
 
         const ua = navigator.userAgent;
+        
+        // تحقق سريع من Worker
+        const tokenResult = await getTokenFromWorker('checkSession', '', ua);
+        if (!tokenResult.success) { clearSession(); return false; }
 
-        // LAYER 1: Validate token for checkSession
-        const { token, timestamp } = createTokenForAction('checkSession', '', ua);
-        const tokenValidation = await validateToken('checkSession', '', token, timestamp, ua);
-
-        if (!tokenValidation.valid) {
-            clearSession();
-            return false;
-        }
-
-        // تحقق من Firestore
         const doc = await db.collection('sessions').doc(session.sessionId).get();
+        if (!doc.exists || doc.data().status !== 'active') { clearSession(); return false; }
 
-        if (!doc.exists) {
-            clearSession();
-            return false;
-        }
+        const expectedFP = await getFingerprintFromWorker(session.code, ua, session.sessionId);
+        if (doc.data().fingerprint !== expectedFP) { clearSession(); return false; }
 
-        const sessionData = doc.data();
-
-        if (sessionData.status !== 'active') {
-            clearSession();
-            return false;
-        }
-
-        // LAYER 3: HMAC fingerprint verification
-        const expectedFP = generateFingerprintWithSalt(session.code, ua, session.sessionId);
-        if (sessionData.fingerprint !== expectedFP) {
-            clearSession();
-            return false;
-        }
-
-        // جدّد وقت النشاط
         await db.collection('sessions').doc(session.sessionId).update({
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(() => { });
+        }).catch(() => {});
 
         currentAccessCode = session.code;
         accessData = session;
         sessionId = session.sessionId;
         showMainApp();
         return true;
-
     } catch (err) {
         console.error('Session load error:', err);
         try {
@@ -796,23 +704,21 @@ async function loadSession() {
                 showMainApp();
                 return true;
             }
-        } catch (e) { }
+        } catch (e) {}
         return false;
     }
 }
 
 async function logout() {
     stopPeriodicCheck();
-
     if (sessionId) {
         try {
             await db.collection('sessions').doc(sessionId).update({
                 status: 'ended',
                 endedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-        } catch (e) { console.error('Logout error:', e); }
+        } catch (e) {}
     }
-
     clearSession();
     document.getElementById('mainApp').classList.remove('show');
     document.getElementById('loginPage').style.display = 'flex';
@@ -823,10 +729,7 @@ async function logout() {
 
 function saveLocalSession(code, expiryDate, sid) {
     localStorage.setItem('merchSession', JSON.stringify({
-        code,
-        expiryDate,
-        sessionId: sid,
-        savedAt: new Date().toISOString()
+        code, expiryDate, sessionId: sid, savedAt: new Date().toISOString()
     }));
 }
 
@@ -849,39 +752,13 @@ function showMainApp() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainApp').classList.add('show');
     document.getElementById('currentCode').textContent = currentAccessCode;
-
     updateExpiryBadge();
-
     initializeApp();
     startPeriodicCheck();
 }
 
 // ═══════════════════════════════════════════════════
-// GOOGLE SHEETS — ACCESS CODES
-// ═══════════════════════════════════════════════════
-async function fetchAccessCodes() {
-    try {
-        const cacheBuster = '&t=' + Date.now();
-        const r = await fetch(ACCESS_SHEET_URL + cacheBuster);
-        const text = await r.text();
-        const lines = text.split(/\r?\n/).filter(l => l.trim());
-        if (lines.length < 2) return [];
-        return lines.slice(1).map(l => {
-            const c = parseCSVRow(l);
-            return {
-                code: c[0]?.trim().toUpperCase(),
-                expiryDate: c[1]?.trim(),
-                status: c[4]?.trim() || 'active'
-            };
-        }).filter(c => c.code);
-    } catch (e) {
-        console.error('fetchAccessCodes:', e);
-        return [];
-    }
-}
-
-// ═══════════════════════════════════════════════════
-// APP DATA & LOGIC (نفس المنطق السابق)
+// APP DATA & LOGIC
 // ═══════════════════════════════════════════════════
 let masterProducts = [];
 let filteredProducts = [];
@@ -896,7 +773,7 @@ function loadFavorites() {
 }
 
 function saveFavorites() {
-    try { localStorage.setItem('merchAnalyzerFavorites', JSON.stringify([...favorites])); } catch (e) { }
+    try { localStorage.setItem('merchAnalyzerFavorites', JSON.stringify([...favorites])); } catch (e) {}
     updateFavoritesCount();
 }
 
@@ -921,16 +798,13 @@ function exportFavoritesToCSV() {
     if (!favorites.size) { showToast('⚠️ No favorites', '#f59e0b'); return; }
     const fp = masterProducts.filter(p => favorites.has(p.asin));
     if (!fp.length) { showToast('⚠️ Not found', '#f59e0b'); return; }
-
     const esc = v => {
         if (v == null) return '';
         const s = String(v);
         return (s.includes(',') || s.includes('\n') || s.includes('"')) ? '"' + s.replace(/"/g, '""') + '"' : s;
     };
-
     let csv = ['ASIN,URL,BSR,BSR#,Image,Date,Title,Brand'].join(',') + '\n';
     fp.forEach(p => { csv += [p.asin, p.link, p.bsrDisplay, p.bsrNumber, p.imageUrl, p.dateAddedRaw, p.designTitle, p.brand].map(esc).join(',') + '\n'; });
-
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' }));
     a.download = `favorites_${new Date().toISOString().split('T')[0]}.csv`;
@@ -997,7 +871,6 @@ function renderHotNiches() {
 function applyNicheControls() { const input = document.getElementById('wordLengthInput'); let len = parseInt(input.value); if (isNaN(len)) len = 3; len = Math.max(2, Math.min(6, len)); input.value = len; currentWordLength = len; renderHotNiches(); }
 
 window.searchByKeyword = kw => { const i = document.getElementById('keywordSearch'); if (i) { i.value = kw; applyAllFilters(); document.querySelector('.keyword-panel').scrollIntoView({ behavior: 'smooth', block: 'start' }); } };
-
 window.openAmazonSearch = openAmazonSearch;
 
 function calculateTrendData() {
@@ -1018,14 +891,23 @@ function extractSmartKeywords(p) { const t = cleanTokens(`${p.designTitle} ${p.b
 
 function openAnalysisModal(p) { const modal = document.getElementById('analysisModal'), body = document.getElementById('modalBody'); const { keywords, longTail } = extractSmartKeywords(p); const dd = p.dateAddedRaw ? p.dateAddedRaw.replace(/^:\s*/, '') : 'Not specified'; body.innerHTML = `<div style="text-align:center;"><img class="modal-img" src="${p.imageUrl}" onerror="this.src='https://via.placeholder.com/180?text=No+Image'"></div><div class="detail-block"><strong>📌 Title:</strong><br>${escHtml(p.designTitle)}</div><div class="detail-block"><strong>🏷️ Brand:</strong><br>${escHtml(p.brand)}</div><div class="detail-block"><strong>✨ Feature 1:</strong><br>${escHtml(p.featureBullet1)}</div><div class="detail-block"><strong>✨ Feature 2:</strong><br>${escHtml(p.featureBullet2)}</div><div class="detail-block"><strong>📊 BSR:</strong> ${p.bsrDisplay}<br><strong>📅 Date:</strong> ${dd}<br><strong>🔗 ASIN:</strong> ${p.asin}</div><div class="keyword-section"><strong>🔑 Keywords:</strong><div class="keyword-list">${keywords.map(k => `<span class="keyword-badge">${escHtml(k)}</span>`).join('') || '—'}</div></div><div class="keyword-section"><strong>📖 Long-tail:</strong><div class="keyword-list">${longTail.map(lt => `<span class="keyword-badge longtail-badge">📖 "${escHtml(lt)}"</span>`).join('') || 'None'}</div></div><hr><div style="display:flex;justify-content:center;"><a href="${p.link}" target="_blank" class="amazon-btn" style="background:#232f3e;color:white;max-width:200px;"><i class="fab fa-amazon"></i> Open on Amazon</a></div>`; modal.classList.add('active'); }
 
-async function fetchAndBuildProducts() { try { const r = await fetch(CSV_URL), t = await r.text(), lines = t.split(/\r?\n/).filter(l => l.trim()); if (lines.length < 2) throw new Error('Empty'); masterProducts = lines.slice(1).map(l => { const c = parseCSVRow(l); if (c.length < 5) return null; return { asin: c[0] || '', link: c[1] || '#', bsrRaw: c[2] || '', bsrNumber: extractBsrNumber(c[2]), bsrDisplay: cleanBsrDisplay(c[2]), imageUrl: c[3] || 'https://via.placeholder.com/300?text=No+Image', dateAddedRaw: c[4] || '', parsedDate: parseDateFromString(c[4]), designTitle: c[5] || '', brand: c[6] || '', featureBullet1: c[7] || '', featureBullet2: c[8] || '' }; }).filter(Boolean); renderHotNiches(); renderTrendChart(); applyAllFilters(); } catch (err) { console.error(err); document.getElementById('productsContainer').innerHTML = '<div class="no-results">⚠️ Error loading data.</div>'; } }
+async function fetchAndBuildProducts() {
+    try {
+        masterProducts = await fetchProductsFromWorker();
+        renderHotNiches();
+        renderTrendChart();
+        applyAllFilters();
+    } catch (err) {
+        console.error(err);
+        document.getElementById('productsContainer').innerHTML = '<div class="no-results">⚠️ Error loading data.</div>';
+    }
+}
 
 function applyAllFilters() { const kw = document.getElementById('keywordSearch')?.value || '', bMin = parseFloat(document.getElementById('bsrMin')?.value) || 0, bMax = parseFloat(document.getElementById('bsrMax')?.value) || Infinity, dF = document.getElementById('dateFilter')?.value || 'all', sV = document.getElementById('sortSelect')?.value || 'date-desc'; let f = masterProducts.filter(p => { if (showFavoritesOnly && !isFavorite(p.asin)) return false; if (!keywordMatch(p, kw)) return false; if (p.bsrNumber < bMin || p.bsrNumber > bMax) return false; if (dF !== 'all' && p.parsedDate) { const d = (Date.now() - p.parsedDate) / (1000 * 3600 * 24); if (dF === 'today' && d > 1) return false; if (dF === 'week' && d > 7) return false; if (dF === 'month' && d > 30) return false; } return true; }); f.sort((a, b) => { if (sV === 'date-desc') return (b.parsedDate || 0) - (a.parsedDate || 0); if (sV === 'date-asc') return (a.parsedDate || 0) - (b.parsedDate || 0); if (sV === 'bsr-asc') return a.bsrNumber - b.bsrNumber; if (sV === 'bsr-desc') return b.bsrNumber - a.bsrNumber; return 0; }); filteredProducts = f; renderProducts(); }
 
 function renderProducts() { const con = document.getElementById('productsContainer'); document.getElementById('product-count').innerText = filteredProducts.length; if (!filteredProducts.length) { con.innerHTML = `<div class="no-results"><i class="fas fa-search"></i> ${showFavoritesOnly ? 'No favorites yet' : 'No products match your filters.'}</div>`; return; } let html = '<div class="products-grid">'; filteredProducts.forEach(p => { const dd = p.dateAddedRaw ? p.dateAddedRaw.replace(/^:\s*/, '') : 'Unknown', fc = isFavorite(p.asin) ? 'active' : '', hi = isFavorite(p.asin) ? 'fas fa-heart' : 'far fa-heart'; html += `<div class="product-card"><button class="favorite-btn ${fc}" onclick="event.stopPropagation();toggleFavorite('${p.asin}')"><i class="${hi}"></i></button><img class="product-image" src="${p.imageUrl}" onerror="this.src='https://via.placeholder.com/300?text=No+Img'"><div class="product-info"><div class="bsr-tag"><i class="fas fa-chart-line"></i> ${p.bsrDisplay}</div><div class="product-title">${escHtml(p.designTitle.substring(0, 80))}${p.designTitle.length > 80 ? '…' : ''}</div><div class="product-date"><i class="far fa-calendar-alt"></i> ${dd}</div><div class="card-actions"><a href="${p.link}" target="_blank" class="amazon-btn"><i class="fab fa-amazon"></i> View</a><button class="analyze-btn" data-asin="${p.asin}"><i class="fas fa-chart-simple"></i> Analyze</button></div></div></div>`; }); html += '</div>'; con.innerHTML = html; document.querySelectorAll('.analyze-btn').forEach(btn => { btn.addEventListener('click', e => { e.stopPropagation(); const p = masterProducts.find(x => x.asin === btn.dataset.asin); if (p) openAnalysisModal(p); }); }); }
 
 function escHtml(s) { if (!s) return ''; return s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
-
 function escHtmlJS(s) { if (!s) return ''; return s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])).replace(/\n/g, '\\n'); }
 
 function resetAll() { ['keywordSearch', 'bsrMin', 'bsrMax'].forEach(id => document.getElementById(id).value = ''); document.getElementById('dateFilter').value = 'all'; document.getElementById('sortSelect').value = 'date-desc'; document.getElementById('searchMode').value = 'normal'; if (showFavoritesOnly) toggleFavoritesFilter(); applyAllFilters(); }
@@ -1037,7 +919,6 @@ function initializeApp() { loadFavorites(); fetchAndBuildProducts(); document.ge
 // ═══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('accessCode')?.addEventListener('keypress', e => { if (e.key === 'Enter') verifyAccessCode(); });
-
     loadSession().then(loaded => {
         if (!loaded) {
             document.getElementById('loginPage').style.display = 'flex';
