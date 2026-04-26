@@ -579,53 +579,38 @@ async function performPeriodicCheck() {
     }
 
     try {
-        const ua = navigator.userAgent;
-        
-        // التحقق من Token
-        const tokenResult = await getTokenFromWorker('checkSession', '', ua);
-        if (!tokenResult.success) {
-            await forceLogout('Security verification failed.');
-            return;
-        }
-        
-        const verifyResult = await verifyTokenFromWorker('checkSession', '', tokenResult.token, tokenResult.timestamp, ua);
-        if (!verifyResult.valid) {
-            await forceLogout('Session expired.');
-            return;
-        }
-
-        // التحقق من الكود في Sheets
+        // فحص الكود مباشرة من Sheets
         const codes = await fetchAccessCodesFromWorker();
         const entry = codes.find(c => c.code === currentAccessCode);
 
-        if (!entry) { await forceLogout('Access code not found.'); return; }
-        if (entry.status === 'revoked') { await forceLogout('Access has been revoked.'); return; }
-        if (new Date(entry.expiryDate) < new Date()) { await forceLogout('Access code expired.'); return; }
+        if (!entry) { 
+            await forceLogout('⛔ Access code not found.'); 
+            return; 
+        }
+        if (entry.status === 'revoked') { 
+            await forceLogout('🚫 Your access has been revoked.'); 
+            return; 
+        }
+        if (new Date(entry.expiryDate) < new Date()) { 
+            await forceLogout('⏰ Your access code has expired.'); 
+            return; 
+        }
 
-        // التحقق من الجلسة في Firestore
+        // فحص الجلسة في Firestore
         const doc = await db.collection('sessions').doc(sessionId).get();
-        if (!doc.exists) { await forceLogout('Session not found.'); return; }
-
-        const sessionData = doc.data();
-        if (sessionData.status !== 'active') { await forceLogout('Session terminated.'); return; }
-
-        // التحقق من البصمة
-        const expectedFP = await getFingerprintFromWorker(currentAccessCode, ua, sessionId);
-        if (sessionData.fingerprint !== expectedFP) {
-            await forceLogout('Device verification failed.');
-            return;
+        if (!doc.exists) { 
+            await forceLogout('Session not found.'); 
+            return; 
+        }
+        if (doc.data().status !== 'active') { 
+            await forceLogout('🔴 Session terminated.'); 
+            return; 
         }
 
         // تجديد النشاط
         await db.collection('sessions').doc(sessionId).update({
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(() => {});
-
-        if (entry.expiryDate !== accessData.expiryDate) {
-            accessData.expiryDate = entry.expiryDate;
-            saveLocalSession(currentAccessCode, entry.expiryDate, sessionId);
-            updateExpiryBadge();
-        }
 
         console.log('✅ Check passed at', new Date().toLocaleTimeString());
 
