@@ -614,8 +614,19 @@ async function loadSession() {
         saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
 
         // ✅ اعرض التطبيق هنا مباشرة
-        showMainApp();
-        return true;
+        // ✅ تأكد من Token قبل عرض التطبيق
+if (!sessionToken) {
+    sessionToken = await generateSessionToken(currentAccessCode);
+}
+
+if (!sessionToken) {
+    clearSession();
+    return false;
+}
+
+saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
+showMainApp();
+return true;
 
     } catch (err) {
         console.error('Session load error:', err);
@@ -773,15 +784,15 @@ async function showMainApp() {
     startPeriodicCheck();
 
     // ✅ تأكد من وجود sessionToken أولاً
-    if (!sessionToken) {
-        sessionToken = await generateSessionToken(currentAccessCode);
-        if (sessionToken) {
-            saveLocalSession(currentAccessCode, accessData?.expiryDate, sessionId);
-        }
-    }
-
-    await initApp();
+    iasync function showMainApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').classList.add('show');
+    document.getElementById('currentCode').textContent = currentAccessCode;
+    updateExpiryBadge();
+    startPeriodicCheck();
+    await initApp(); // ✅ sessionToken جاهز دائماً هنا
 }
+
 function updateExpiryBadge() {
     if (!accessData?.expiryDate) return;
     const exp = new Date(accessData.expiryDate);
