@@ -1107,6 +1107,17 @@ function setupEventListeners() {
     document.getElementById('bsrMax').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') applyAllFilters();
     });
+
+        // Hot niches: instant updates
+    document.getElementById('nichesPeriod').addEventListener('change', updateHotNiches);
+    document.getElementById('wordLengthInput').addEventListener('change', updateHotNiches);
+    document.getElementById('wordLengthInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') updateHotNiches();
+    });
+    document.getElementById('minRepeats').addEventListener('change', updateHotNiches);
+    document.getElementById('minRepeats').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') updateHotNiches();
+    });
 }
 // ═══════════════════════════════════════════════════
 // FILTERING & SORTING
@@ -1481,107 +1492,152 @@ function updateTrendChart() {
     });
 }
 
+/// ═══════════════════════════════════════════════════
+// HOT NICHES — Smart Long-Tail Extraction
 // ═══════════════════════════════════════════════════
-// HOT NICHES
-// ═══════════════════════════════════════════════════
+
+const STOP_WORDS = new Set([
+    // Articles, prepositions, pronouns
+    'a','an','the','and','or','but','for','of','with','without','by','to','in','on','at','from','up','down',
+    'is','are','was','were','be','been','being','have','has','had','do','does','did','so','if','then','when',
+    'where','which','while','who','whom','this','that','these','those','no','not','just','very','too','than',
+    'over','more','out','as','its','it','i','my','your','our','their','his','her','we','they','me','him','us',
+    'them','what','how','all','any','each','few','some','such','into','about','after','before','between',
+    'during','off',
+    // Apparel / Merch noise
+    'shirt','shirts','tshirt','tshirts','tee','tees','tank','top','tops','hoodie','hoodies','pullover',
+    'sweatshirt','crewneck','vneck','sleeve','sleeves','short','long','graphic','design','printed','print',
+    'men','women','man','woman','male','female','boy','girl','boys','girls','kids','adult','adults','unisex',
+    'youth','toddler','infant','baby','clothing','wear','apparel','fashion','style','outfit','product','item',
+    'merchandise','merch','gift','gifts','present','presents','idea','ideas',
+    // Hype adjectives
+    'great','perfect','best','good','nice','beautiful','pretty','funny','cool','cute','awesome','amazing',
+    'unique','original','vintage','retro','classic','new','old','modern','trendy','brand','made','quality',
+    'premium','official','licensed',
+    // Material / care
+    '100','cotton','polyester','blend','machine','wash','dry','lightweight','comfortable','comfort','soft',
+    'casual','fit','fitted','novelty','humor','humorous','sarcastic','sarcasm','quote','saying','slogan',
+    'text','word','words',
+    // Generic groupings
+    'team','group','crew','squad','club','family','member','members','love','lover','lovers','fan','fans',
+    'enthusiast','enthusiasts','life','lifestyle','living',
+    // Geo / abbrev
+    'co','inc','llc','ltd','us','uk','ca','usa','america','side','see','soon','day','days','year','years','time'
+]);
+
+function _stem(w) {
+    if (!w || w.length < 4) return w;
+    w = w.replace(/ies$/, 'y')
+         .replace(/([^aeiou])s$/, '$1')
+         .replace(/ing$/, '')
+         .replace(/edly$/, '')
+         .replace(/ed$/, '')
+         .replace(/er$/, '');
+    return w.length >= 2 ? w : w + 'e';
+}
+
+function _cleanTokens(text) {
+    if (!text) return [];
+    return text.toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .filter(w => w.length >= 2
+                  && !/^\d+$/.test(w)
+                  && !STOP_WORDS.has(w)
+                  && !STOP_WORDS.has(_stem(w)))
+        .map(w => _stem(w));
+}
+
+function _extractPhrases(title, n) {
+    if (!title || n < 2) return [];
+    const tokens = _cleanTokens(title);
+    if (tokens.length < n) return [];
+    const set = new Set();
+    for (let i = 0; i <= tokens.length - n; i++) {
+        set.add(tokens.slice(i, i + n).join(' '));
+    }
+    return [...set];
+}
+
 function updateHotNiches() {
-    const wordLength = parseInt(document.getElementById('wordLengthInput').value) || 3;
+    const wordLength = Math.max(2, Math.min(6, parseInt(document.getElementById('wordLengthInput').value) || 3));
     const period = document.getElementById('nichesPeriod').value;
-    const minRepeats = parseInt(document.getElementById('minRepeats').value) || 2;
-    
+    const minRepeats = Math.max(1, parseInt(document.getElementById('minRepeats').value) || 2);
+
     const container = document.getElementById('hotNichesContainer');
     container.innerHTML = '<div class="loading">Analyzing...</div>';
-    
+
     setTimeout(() => {
-        // Filter products by period
+        // 1. Filter products by period
         let products = [...allProducts];
-        
         if (period !== '0') {
             const days = parseInt(period);
             const cutoff = new Date();
             cutoff.setDate(cutoff.getDate() - days);
             products = products.filter(p => p.parsedDate && p.parsedDate >= cutoff);
         }
-        
-        // Extract multi-word phrases
-        const phraseCount = {};
-        
+
+        // 2. Build phrase frequency from designTitle ONLY (no boilerplate bullets)
+        //    Each product counts each phrase ONCE.
+        const freq = new Map();
+        const bsrMap = new Map();
+        const titleMap = new Map();
+
         products.forEach(p => {
-            const text = [p.designTitle, p.featureBullet1, p.featureBullet2]
-                .filter(Boolean)
-                .join(' ')
-                .toLowerCase()
-                .replace(/[^\w\s]/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-            
-            const words = text.split(' ').filter(w => w.length > 2);
-            
-            if (words.length >= wordLength) {
-                for (let i = 0; i <= words.length - wordLength; i++) {
-                    const phrase = words.slice(i, i + wordLength).join(' ');
-                    if (phrase.length > 5) {
-                        phraseCount[phrase] = (phraseCount[phrase] || 0) + 1;
-                    }
+            const phrases = _extractPhrases(p.designTitle, wordLength);
+            const seen = new Set();
+            phrases.forEach(phrase => {
+                if (seen.has(phrase)) return;
+                seen.add(phrase);
+                freq.set(phrase, (freq.get(phrase) || 0) + 1);
+                if (!bsrMap.has(phrase)) bsrMap.set(phrase, []);
+                if (p.bsrNumber !== null && p.bsrNumber !== undefined) {
+                    bsrMap.get(phrase).push(p.bsrNumber);
                 }
-            }
+                if (!titleMap.has(phrase)) titleMap.set(phrase, p.designTitle);
+            });
         });
-        
-        // Sort and filter
-        const niches = Object.entries(phraseCount)
+
+        // 3. Build niche objects
+        const nicheData = [...freq.entries()]
             .filter(([_, count]) => count >= minRepeats)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 30);
-        
-        if (niches.length === 0) {
-            container.innerHTML = '<div class="no-results" style="padding:20px;">No niches found with current settings</div>';
+            .map(([phrase, count]) => {
+                const bsrs = bsrMap.get(phrase) || [];
+                const avgBsr = bsrs.length ? Math.round(bsrs.reduce((a, b) => a + b, 0) / bsrs.length) : null;
+                const minBsr = bsrs.length ? Math.min(...bsrs) : null;
+                return { phrase, count, avgBsr, minBsr, exampleTitle: titleMap.get(phrase) || '' };
+            })
+            .sort((a, b) => (b.count - a.count) || ((a.avgBsr || Infinity) - (b.avgBsr || Infinity)))
+            .slice(0, 50);
+
+        if (nicheData.length === 0) {
+            container.innerHTML = '<div class="no-results" style="padding:20px;">No niches found. Try lowering Min Repeats or increasing the period.</div>';
             return;
         }
-        
-        // Calculate BSR range for each niche
-        const nicheData = niches.map(([phrase, count]) => {
-            const matchingProducts = products.filter(p => {
-                const text = [p.designTitle, p.featureBullet1, p.featureBullet2]
-                    .filter(Boolean)
-                    .join(' ')
-                    .toLowerCase();
-                return text.includes(phrase);
-            });
-            
-            const bsrs = matchingProducts.map(p => p.bsrNumber).filter(b => b !== null);
-            const avgBsr = bsrs.length > 0 ? Math.round(bsrs.reduce((a, b) => a + b, 0) / bsrs.length) : null;
-            
-            return { phrase, count, avgBsr, products: matchingProducts };
-        });
-        
-        const maxCount = Math.max(...nicheData.map(n => n.count));
-        
+
+        const maxCount = nicheData[0].count;
+
         let html = '';
         nicheData.forEach((niche, index) => {
             const widthPercent = (niche.count / maxCount) * 100;
             const rank = index + 1;
-            let rankColor = '#94a3b8';
-            if (rank <= 3) rankColor = '#e95e2e';
-            else if (rank <= 10) rankColor = '#f59e0b';
-            
-            let countColor = '#3b82f6';
-            if (niche.count >= 10) countColor = '#e95e2e';
-            else if (niche.count >= 5) countColor = '#f59e0b';
-            else if (niche.count >= 3) countColor = '#10b981';
-            
-            const barColor = niche.count >= 10 ? '#e95e2e' : niche.count >= 5 ? '#f59e0b' : '#3b82f6';
+            const rankColor = rank === 1 ? '#e95e2e' : rank <= 3 ? '#f59e0b' : rank <= 10 ? '#3b82f6' : '#64748b';
+            const safePhrase = niche.phrase.replace(/'/g, "\\'");
             const amazonSearchUrl = `https://www.amazon.com/s?k=${encodeURIComponent(niche.phrase)}&i=merch`;
-            
+
             html += `
-                <div class="niche-item" onclick="searchNiche('${niche.phrase.replace(/'/g, "\\'")}')">
+                <div class="niche-item" onclick="searchNiche('${safePhrase}')" title="${niche.exampleTitle.replace(/"/g, '&quot;')}">
                     <div class="niche-main-row">
                         <div class="niche-left">
-                            <span class="niche-rank" style="background:${rankColor}20;color:${rankColor}">#${rank}</span>
-                            <span class="niche-keyword" title="${niche.phrase}">${niche.phrase}</span>
+                            <span class="niche-rank" style="background:${rankColor}22;color:${rankColor};">#${rank}</span>
+                            <span class="niche-keyword">${niche.phrase}</span>
                         </div>
                         <div class="niche-stats">
-                            <span class="niche-count" style="background:${countColor}">${niche.count} products</span>
-                            ${niche.avgBsr ? `<span class="niche-bsr">Avg BSR: ${niche.avgBsr.toLocaleString()}</span>` : ''}
+                            <span class="niche-count" style="background:${rankColor};">${niche.count}×</span>
+                            ${niche.avgBsr ? `<span class="niche-bsr">avg: ${niche.avgBsr.toLocaleString()}</span>` : ''}
+                            ${niche.minBsr ? `<span class="niche-bsr">🏆 ${niche.minBsr.toLocaleString()}</span>` : ''}
                             <div class="niche-action">
                                 <button class="amazon-search-btn" onclick="event.stopPropagation(); window.open('${amazonSearchUrl}', '_blank')" title="Search on Amazon">
                                     <i class="fab fa-amazon"></i> Search
@@ -1590,26 +1646,15 @@ function updateHotNiches() {
                         </div>
                     </div>
                     <div class="niche-bar-bg">
-                        <div class="niche-bar-fill" style="width:${widthPercent}%;background:${barColor};"></div>
+                        <div class="niche-bar-fill" style="width:${widthPercent}%;background:${rankColor};"></div>
                     </div>
                 </div>
             `;
         });
-        
+
         container.innerHTML = html;
     }, 100);
 }
-
-function searchNiche(phrase) {
-    document.getElementById('keywordSearch').value = phrase;
-    document.getElementById('searchMode').value = 'exact';
-    currentKeywordSearch = phrase;
-    applyAllFilters();
-    
-    // Scroll to products
-    document.getElementById('productsContainer').scrollIntoView({ behavior: 'smooth' });
-}
-
 // ═══════════════════════════════════════════════════
 // INITIAL LOAD
 // ═══════════════════════════════════════════════════
