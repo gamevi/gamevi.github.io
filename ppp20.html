@@ -530,16 +530,16 @@ async function fetchProductsFromWorker() {
 // SESSION TOKEN MANAGEMENT
 // ═══════════════════════════════════════════════════
 async function generateSessionToken(code) {
-    const timestamp = Math.floor(Date.now() / 1000);
     const tokenResult = await callWorker('/getToken', 'POST', {
         action: 'session',
         code: code,
         ua: navigator.userAgent
     });
-    
-    if (!tokenResult.success) return null;
-    
-    return `${timestamp}.${code}.${tokenResult.token}`;
+
+    if (!tokenResult.success || !tokenResult.timestamp) return null;
+
+    // 🔴 المهم: استعمل timestamp اللي رجع من السيرفر، مش وقت الجهاز
+    return `${tokenResult.timestamp}.${code}.${tokenResult.token}`;
 }
 
 // ═══════════════════════════════════════════════════
