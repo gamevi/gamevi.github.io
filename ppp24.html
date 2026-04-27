@@ -54,21 +54,21 @@
         .export-csv-btn:hover { background: #10b981; color: white; }
         .export-csv-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         /* ─── Amazon Research Button ─── */
-.research-btn { background: white; border: 2px solid #667eea; color: #667eea; padding: 10px 20px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(102,126,234,0.15); font-family: 'Inter', sans-serif; }
-.research-btn:hover { background: #667eea; color: white; transform: translateY(-1px); }
-.research-btn i { font-size: 0.9rem; }
+        .research-btn { background: white; border: 2px solid #667eea; color: #667eea; padding: 10px 20px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(102,126,234,0.15); font-family: 'Inter', sans-serif; }
+        .research-btn:hover { background: #667eea; color: white; transform: translateY(-1px); }
+        .research-btn i { font-size: 0.9rem; }
 
-/* ─── Research Modal Form ─── */
-.research-form { padding: 4px 0; }
-.research-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.research-group { width: 100%; }
-.research-group label { display: block; font-size: 0.7rem; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-.research-group label i { color: #667eea; margin-right: 4px; }
-.research-group select, .research-group input { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 14px; font-size: 0.95rem; font-family: 'Inter', sans-serif; color: #1e293b; background: #f8fafc; outline: none; transition: all 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-.research-group select:focus, .research-group input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
-.research-search-btn { width: 100%; margin-top: 20px; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 14px; font-size: 1rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.research-search-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,0.4); }
-@media(max-width: 480px) { .research-row { grid-template-columns: 1fr; } }
+        /* ─── Research Modal Form ─── */
+        .research-form { padding: 4px 0; }
+        .research-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .research-group { width: 100%; }
+        .research-group label { display: block; font-size: 0.7rem; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .research-group label i { color: #667eea; margin-right: 4px; }
+        .research-group select, .research-group input { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 14px; font-size: 0.95rem; font-family: 'Inter', sans-serif; color: #1e293b; background: #f8fafc; outline: none; transition: all 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+        .research-group select:focus, .research-group input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        .research-search-btn { width: 100%; margin-top: 20px; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 14px; font-size: 1rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .research-search-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,0.4); }
+        @media(max-width: 480px) { .research-row { grid-template-columns: 1fr; } }
         .favorites-actions { display: flex; align-items: center; gap: 8px; }
         .active-filter-badge { background: #fee2e2; color: #dc2626; padding: 4px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .filters-panel, .keyword-panel { background: white; border-radius: 20px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #eef2f8; }
@@ -192,11 +192,9 @@
             <div class="stats"><span id="product-count">0</span> products · BSR cleaned</div>
             <div class="favorites-header">
                 <div class="favorites-actions">
-    <button class="research-btn" id="researchBtn" onclick="openResearchModal()">
-        <i class="fas fa-search-dollar"></i><span>Amazon Research</span>
-    </button>
-    <button class="favorites-toggle-btn" id="favoritesToggleBtn" onclick="toggleFavoritesFilter()">
-                <div class="favorites-actions">
+                    <button class="research-btn" id="researchBtn" onclick="openResearchModal()">
+                        <i class="fas fa-search-dollar"></i><span>Amazon Research</span>
+                    </button>
                     <button class="favorites-toggle-btn" id="favoritesToggleBtn" onclick="toggleFavoritesFilter()">
                         <i class="far fa-heart"></i><span>My Favorites</span><span class="count-badge" id="favoritesCount">0</span>
                     </button>
@@ -298,6 +296,51 @@
             <button class="close-modal" id="closeModalBtn">&times;</button>
         </div>
         <div id="modalBody"></div>
+    </div>
+</div>
+
+<!-- Amazon Research Modal -->
+<div id="researchModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 560px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-search-dollar" style="color:#667eea;"></i> Amazon Research</h2>
+            <button class="close-modal" onclick="closeResearchModal()">&times;</button>
+        </div>
+        <div class="research-form">
+            <div class="research-row">
+                <div class="research-group">
+                    <label><i class="fas fa-globe"></i> Marketplace</label>
+                    <select id="researchLocale">
+                        <option value="com">🇺🇸 United States</option>
+                        <option value="couk">🇬🇧 United Kingdom</option>
+                        <option value="de">🇩🇪 Germany</option>
+                    </select>
+                </div>
+                <div class="research-group">
+                    <label><i class="fas fa-tshirt"></i> Product Type</label>
+                    <select id="researchCategory">
+                        <option value="tshirt">T-Shirt</option>
+                        <option value="longsleeve">Long Sleeve</option>
+                        <option value="sweatshirt">Sweatshirt</option>
+                        <option value="hoodie">Hoodie</option>
+                        <option value="vneck">V-Neck</option>
+                        <option value="raglan">Raglan</option>
+                        <option value="tanktop">Tank Top</option>
+                        <option value="popsocket">PopSocket</option>
+                        <option value="case">Phone Case</option>
+                        <option value="throwpillow">Throw Pillow</option>
+                        <option value="totebag">Tote Bag</option>
+                    </select>
+                </div>
+            </div>
+            <div class="research-group" style="margin-top: 16px;">
+                <label><i class="fas fa-keyboard"></i> Keyword or Search Term</label>
+                <input type="text" id="researchKeyword" placeholder="e.g., funny cat, hiking, motivational..." autocomplete="off">
+            </div>
+            <button class="research-search-btn" onclick="performAmazonSearch()">
+                <i class="fas fa-external-link-alt"></i> Search Amazon
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1086,6 +1129,95 @@ function showToast(message) {
 }
 
 // ═══════════════════════════════════════════════════
+// AMAZON RESEARCH TOOL (Integrated from SERCH.txt)
+// ═══════════════════════════════════════════════════
+function openResearchModal() {
+    document.getElementById('researchModal').classList.add('active');
+}
+function closeResearchModal() {
+    document.getElementById('researchModal').classList.remove('active');
+}
+
+const researchUrls = {
+    com: {
+        tshirt: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+shirt&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
+        longsleeve: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+long+sleeve&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
+        sweatshirt: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+sweatshirt&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
+        hoodie: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+hoodie&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
+        vneck: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+v+neck&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
+        raglan: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+raglan&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
+        tanktop: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+tank+top&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
+        popsocket: 'https://www.amazon.com/s?k=SEARCHTERM+%22popsockets%22',
+        case: 'https://www.amazon.com/s?k=SEARCHTERM+%22Two-part+protective+case+made+from+a+premium+scratch-resistant+polycarbonate+shell+and+shock+absorbent+TPU+liner+protects+against+drops%22',
+        throwpillow: 'https://www.amazon.com/s?k=SEARCHTERM+throw+pillow+%22100%25+spun+polyester+fabric',
+        totebag: 'https://www.amazon.com/s?k=SEARCHTERM+%22Tote+Bag%22&hidden-keywords=%2216%E2%80%9D+x+16%E2%80%9D+bag+with+two+14%E2%80%9D+long+and+1%E2%80%9D+wide+black+cotton+webbing+strap+handles%22'
+    },
+    couk: {
+        tshirt: 'https://www.amazon.co.uk/s?k=SEARCHTERM+shirt&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
+        longsleeve: 'https://www.amazon.co.uk/s?k=SEARCHTERM+long+sleeve&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
+        sweatshirt: 'https://www.amazon.co.uk/s?k=SEARCHTERM+sweatshirt&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
+        hoodie: 'https://www.amazon.co.uk/s?k=SEARCHTERM+hoodie&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
+        raglan: 'https://www.amazon.co.uk/s?k=SEARCHTERM+raglan&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
+        vneck: 'https://www.amazon.co.uk/s?k=SEARCHTERM+v+neck&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
+        tanktop: 'https://www.amazon.co.uk/s?k=SEARCHTERM+tank+top&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
+        popsocket: 'https://www.amazon.co.uk/s?k=SEARCHTERM+%22popsockets%22',
+        case: 'https://www.amazon.co.uk/s?k=SEARCHTERM+phone+case&rh=n%3A560798%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3ArapiHdzIV5G%2FQh5nraKtX5A8pijQVB39ApZAQOcrEDM&crid=2H4TYOOBCD6AD&qid=1738953195&rnid=419151031'
+    },
+    de: {
+        tshirt: 'https://www.amazon.de/s?k=SEARCHTERM+shirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
+        vneck: 'https://www.amazon.de/s?k=SEARCHTERM+v+neck&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
+        longsleeve: 'https://www.amazon.de/s?k=SEARCHTERM+langarmshirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
+        sweatshirt: 'https://www.amazon.de/s?k=SEARCHTERM+sweatshirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
+        hoodie: 'https://www.amazon.de/s?k=SEARCHTERM+hoodie&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
+        popsocket: 'https://www.amazon.de/s?k=SEARCHTERM+%22popsockets%22',
+        raglan: 'https://www.amazon.de/s?k=SEARCHTERM+raglan&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
+        tanktop: 'https://www.amazon.de/s?k=SEARCHTERM+tank+top&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
+        case: 'https://www.amazon.de/s?k=SEARCHTERM+H%C3%BClle+phone&rh=n%3A562066%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3ASCh9N13%2Fe97k7MXEjuayDuNNmA8m3AKtyQYi%2BYqQrik&crid=3I1WXN91F3J66&qid=1738952957&rnid=419115031&sprefix=dogh%C3%BClle+phone%2Caps%2C163&ref=sr_nr_p_6_1'
+    }
+};
+
+function performAmazonSearch() {
+    const locale = document.getElementById('researchLocale').value;
+    const category = document.getElementById('researchCategory').value;
+    const keyword = document.getElementById('researchKeyword').value.trim();
+    
+    if (!keyword) {
+        showToast('Please enter a keyword');
+        document.getElementById('researchKeyword').focus();
+        return;
+    }
+    
+    const urlTemplate = researchUrls[locale]?.[category];
+    if (!urlTemplate) {
+        showToast('This category is not available for that marketplace');
+        return;
+    }
+    
+    const finalUrl = urlTemplate.replace('SEARCHTERM', encodeURIComponent(keyword));
+    window.open(finalUrl, '_blank');
+}
+
+// Wire up events
+document.addEventListener('DOMContentLoaded', () => {
+    const rk = document.getElementById('researchKeyword');
+    if (rk) {
+        rk.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performAmazonSearch();
+        });
+    }
+    const rm = document.getElementById('researchModal');
+    if (rm) {
+        rm.addEventListener('click', (e) => {
+            if (e.target === rm) closeResearchModal();
+        });
+    }
+});
+
+window.openResearchModal = openResearchModal;
+window.closeResearchModal = closeResearchModal;
+window.performAmazonSearch = performAmazonSearch;
+
+// ═══════════════════════════════════════════════════
 // INITIALIZATION
 // ═══════════════════════════════════════════════════
 async function initApp() {
@@ -1585,94 +1717,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Expose functions globally
-    // ═══════════════════════════════════════════════════
-// AMAZON RESEARCH TOOL (Integrated from SERCH.txt)
-// ═══════════════════════════════════════════════════
-function openResearchModal() {
-    document.getElementById('researchModal').classList.add('active');
-}
-function closeResearchModal() {
-    document.getElementById('researchModal').classList.remove('active');
-}
-
-const researchUrls = {
-    com: {
-        tshirt: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+shirt&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        longsleeve: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+long+sleeve&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        sweatshirt: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+sweatshirt&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        hoodie: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+hoodie&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        vneck: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+v+neck&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        raglan: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+raglan&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        tanktop: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+tank+top&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        popsocket: 'https://www.amazon.com/s?k=SEARCHTERM+%22popsockets%22',
-        case: 'https://www.amazon.com/s?k=SEARCHTERM+%22Two-part+protective+case+made+from+a+premium+scratch-resistant+polycarbonate+shell+and+shock+absorbent+TPU+liner+protects+against+drops%22',
-        throwpillow: 'https://www.amazon.com/s?k=SEARCHTERM+throw+pillow+%22100%25+spun+polyester+fabric',
-        totebag: 'https://www.amazon.com/s?k=SEARCHTERM+%22Tote+Bag%22&hidden-keywords=%2216%E2%80%9D+x+16%E2%80%9D+bag+with+two+14%E2%80%9D+long+and+1%E2%80%9D+wide+black+cotton+webbing+strap+handles%22'
-    },
-    couk: {
-        tshirt: 'https://www.amazon.co.uk/s?k=SEARCHTERM+shirt&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        longsleeve: 'https://www.amazon.co.uk/s?k=SEARCHTERM+long+sleeve&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        sweatshirt: 'https://www.amazon.co.uk/s?k=SEARCHTERM+sweatshirt&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        hoodie: 'https://www.amazon.co.uk/s?k=SEARCHTERM+hoodie&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        raglan: 'https://www.amazon.co.uk/s?k=SEARCHTERM+raglan&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        vneck: 'https://www.amazon.co.uk/s?k=SEARCHTERM+v+neck&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        tanktop: 'https://www.amazon.co.uk/s?k=SEARCHTERM+tank+top&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        popsocket: 'https://www.amazon.co.uk/s?k=SEARCHTERM+%22popsockets%22',
-        case: 'https://www.amazon.co.uk/s?k=SEARCHTERM+phone+case&rh=n%3A560798%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3ArapiHdzIV5G%2FQh5nraKtX5A8pijQVB39ApZAQOcrEDM&crid=2H4TYOOBCD6AD&qid=1738953195&rnid=419151031'
-    },
-    de: {
-        tshirt: 'https://www.amazon.de/s?k=SEARCHTERM+shirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        vneck: 'https://www.amazon.de/s?k=SEARCHTERM+v+neck&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        longsleeve: 'https://www.amazon.de/s?k=SEARCHTERM+langarmshirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        sweatshirt: 'https://www.amazon.de/s?k=SEARCHTERM+sweatshirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        hoodie: 'https://www.amazon.de/s?k=SEARCHTERM+hoodie&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        popsocket: 'https://www.amazon.de/s?k=SEARCHTERM+%22popsockets%22',
-        raglan: 'https://www.amazon.de/s?k=SEARCHTERM+raglan&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        tanktop: 'https://www.amazon.de/s?k=SEARCHTERM+tank+top&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        case: 'https://www.amazon.de/s?k=SEARCHTERM+H%C3%BClle+phone&rh=n%3A562066%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3ASCh9N13%2Fe97k7MXEjuayDuNNmA8m3AKtyQYi%2BYqQrik&crid=3I1WXN91F3J66&qid=1738952957&rnid=419115031&sprefix=dogh%C3%BClle+phone%2Caps%2C163&ref=sr_nr_p_6_1'
-    }
-};
-
-function performAmazonSearch() {
-    const locale = document.getElementById('researchLocale').value;
-    const category = document.getElementById('researchCategory').value;
-    const keyword = document.getElementById('researchKeyword').value.trim();
-    
-    if (!keyword) {
-        showToast('Please enter a keyword');
-        document.getElementById('researchKeyword').focus();
-        return;
-    }
-    
-    const urlTemplate = researchUrls[locale]?.[category];
-    if (!urlTemplate) {
-        showToast('This category is not available for that marketplace');
-        return;
-    }
-    
-    const finalUrl = urlTemplate.replace('SEARCHTERM', encodeURIComponent(keyword));
-    window.open(finalUrl, '_blank');
-}
-
-// Wire up events
-document.addEventListener('DOMContentLoaded', () => {
-    const rk = document.getElementById('researchKeyword');
-    if (rk) {
-        rk.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') performAmazonSearch();
-        });
-    }
-    const rm = document.getElementById('researchModal');
-    if (rm) {
-        rm.addEventListener('click', (e) => {
-            if (e.target === rm) closeResearchModal();
-        });
-    }
-});
-
-window.openResearchModal = openResearchModal;
-window.closeResearchModal = closeResearchModal;
-window.performAmazonSearch = performAmazonSearch;
 window.toggleFavoritesFilter = toggleFavoritesFilter;
 window.toggleFavorite = toggleFavorite;
 window.exportFavoritesToCSV = exportFavoritesToCSV;
@@ -1682,50 +1726,10 @@ window.logout = logout;
 window.openAmazonSearch = openAmazonSearch;
 window.searchByKeyword = searchByKeyword;
 window.verifyAccessCode = verifyAccessCode;
+window.openResearchModal = openResearchModal;
+window.closeResearchModal = closeResearchModal;
+window.performAmazonSearch = performAmazonSearch;
 </script>
-<!-- Amazon Research Modal -->
-<div id="researchModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 560px;">
-        <div class="modal-header">
-            <h2><i class="fas fa-search-dollar" style="color:#667eea;"></i> Amazon Research</h2>
-            <button class="close-modal" onclick="closeResearchModal()">&times;</button>
-        </div>
-        <div class="research-form">
-            <div class="research-row">
-                <div class="research-group">
-                    <label><i class="fas fa-globe"></i> Marketplace</label>
-                    <select id="researchLocale">
-                        <option value="com">🇺🇸 United States</option>
-                        <option value="couk">🇬🇧 United Kingdom</option>
-                        <option value="de">🇩🇪 Germany</option>
-                    </select>
-                </div>
-                <div class="research-group">
-                    <label><i class="fas fa-tshirt"></i> Product Type</label>
-                    <select id="researchCategory">
-                        <option value="tshirt">T-Shirt</option>
-                        <option value="longsleeve">Long Sleeve</option>
-                        <option value="sweatshirt">Sweatshirt</option>
-                        <option value="hoodie">Hoodie</option>
-                        <option value="vneck">V-Neck</option>
-                        <option value="raglan">Raglan</option>
-                        <option value="tanktop">Tank Top</option>
-                        <option value="popsocket">PopSocket</option>
-                        <option value="case">Phone Case</option>
-                        <option value="throwpillow">Throw Pillow</option>
-                        <option value="totebag">Tote Bag</option>
-                    </select>
-                </div>
-            </div>
-            <div class="research-group" style="margin-top: 16px;">
-                <label><i class="fas fa-keyboard"></i> Keyword or Search Term</label>
-                <input type="text" id="researchKeyword" placeholder="e.g., funny cat, hiking, motivational..." autocomplete="off">
-            </div>
-            <button class="research-search-btn" onclick="performAmazonSearch()">
-                <i class="fas fa-external-link-alt"></i> Search Amazon
-            </button>
-        </div>
-    </div>
-</div>
+
 </body>
 </html>
