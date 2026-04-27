@@ -1181,22 +1181,17 @@ function performAmazonSearch() {
     const category = document.getElementById('researchCategory').value;
     const keyword = document.getElementById('researchKeyword').value.trim();
     
-    if (!keyword) {
-        showToast('Please enter a keyword');
-        document.getElementById('researchKeyword').focus();
-        return;
-    }
-    
     const urlTemplate = researchUrls[locale]?.[category];
     if (!urlTemplate) {
         showToast('This category is not available for that marketplace');
         return;
     }
     
-    const finalUrl = urlTemplate.replace('SEARCHTERM', encodeURIComponent(keyword));
+    // If keyword is empty, use empty string so the URL still works
+    const searchTerm = keyword ? encodeURIComponent(keyword) : '';
+    const finalUrl = urlTemplate.replace('SEARCHTERM', searchTerm);
     window.open(finalUrl, '_blank');
 }
-
 // Wire up events
 document.addEventListener('DOMContentLoaded', () => {
     const rk = document.getElementById('researchKeyword');
