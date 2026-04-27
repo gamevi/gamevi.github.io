@@ -561,11 +561,14 @@ const simpleFingerprint = generateSimpleFingerprint();
 async function callWorker(endpoint, method = 'GET', body = null) {
     try {
         const headers = { 
-            'Content-Type': 'application/json',
-            'X-App-Secret': APP_SECRET
+            'Content-Type': 'application/json'
         };
         
-        if (endpoint.includes('fetchProducts') && sessionToken) {
+        // Endpoints المحمية تحتاج Session Token
+        const protectedEndpoints = ['/fetchProducts', '/fetchAccessCodes', '/getFingerprint'];
+        const isProtected = protectedEndpoints.some(ep => endpoint.includes(ep));
+        
+        if (isProtected && sessionToken) {
             headers['X-Session-Token'] = sessionToken;
         }
         
@@ -639,7 +642,6 @@ async function fetchProductsFromWorker() {
         };
     }).filter(Boolean);
 }
-
 // ═══════════════════════════════════════════════════
 // SESSION TOKEN MANAGEMENT
 // ═══════════════════════════════════════════════════
