@@ -285,7 +285,7 @@
 // CONFIG
 // ═══════════════════════════════════════════════════
 const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
-const APP_SECRET = 'xK9#mP2$vL5@nQ82026'; // ⚠️ غيّر هذا إلى قيمة عشوائية قوية تطابق Worker
+const APP_SECRET = 'xK9#mP2$vL5@nQ82026';
 
 // ═══════════════════════════════════════════════════
 // FIREBASE
@@ -328,51 +328,21 @@ function parseCSVRow(row) {
 }
 
 function extractBsrNumber(bsrString) {
-    if (!bsrString) return null;
-    const cleaned = bsrString.replace(/[#,]/g, '').trim();
-    const match = cleaned.match(/[\d,.]+/);
-    if (match) {
-        return parseInt(match[0].replace(/,/g, ''), 10) || null;
-    }
-    const anyNumber = cleaned.match(/\d+/);
-    return anyNumber ? parseInt(anyNumber[0], 10) : null;
+    if (!bsrString) return 99999999;
+    const m = bsrString.replace(/,/g, '').match(/\d+/);
+    return m ? parseInt(m[0]) : 99999999;
 }
 
 function cleanBsrDisplay(bsrString) {
     if (!bsrString) return 'N/A';
-    return bsrString.replace(/#/g, '').replace(/in\s+/i, 'in ').replace(/\s+/g, ' ').trim();
+    return bsrString.replace(/ in Clothing, Shoes & Jewelry/gi, '').replace(/ in .+$/i, '').trim();
 }
 
 function parseDateFromString(dateString) {
     if (!dateString) return null;
-    try {
-        const cleaned = dateString.trim().replace(/\s+/g, ' ');
-        const patterns = [
-            /(\d{1,2})\/(\d{1,2})\/(\d{4})/,
-            /(\d{4})-(\d{1,2})-(\d{1,2})/,
-            /(\d{1,2})\.(\d{1,2})\.(\d{4})/,
-            /(\d{1,2})-(\w{3})-(\d{4})/i
-        ];
-        for (const pattern of patterns) {
-            const match = cleaned.match(pattern);
-            if (match) {
-                if (pattern === patterns[3]) {
-                    const months = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
-                    const monthIndex = months[match[2].toLowerCase()];
-                    if (monthIndex !== undefined) {
-                        return new Date(parseInt(match[3]), monthIndex, parseInt(match[1]));
-                    }
-                }
-                if (pattern === patterns[0] || pattern === patterns[2]) {
-                    return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
-                }
-                return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
-            }
-        }
-        const date = new Date(cleaned);
-        if (!isNaN(date.getTime())) return date;
-    } catch (e) { }
-    return null;
+    const c = dateString.replace(/^:\s*/, '').replace(/\u200e/g, '').trim();
+    const dt = new Date(c);
+    return isNaN(dt) ? null : dt;
 }
 
 function formatDate(date) {
@@ -380,11 +350,92 @@ function formatDate(date) {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-function getDaysAgo(date) {
-    if (!date) return Infinity;
-    const now = new Date();
-    const diffTime = now - date;
-    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+// ═══════════════════════════════════════════════════
+// STOP WORDS & STEMMING (from 1111)
+// ═══════════════════════════════════════════════════
+const STOP_WORDS = new Set(['a','an','the','and','or','but','for','of','with','without','by','to','in','on','at','from','up','down','is','are','was','were','be','been','being','have','has','had','do','does','did','so','if','then','when','where','which','while','who','whom','this','that','these','those','no','not','just','very','too','than','over','more','out','as','its','it','i','my','your','our','their','his','her','we','they','me','him','us','them','what','how','all','any','each','few','some','such','into','about','after','before','between','during','off','shirt','shirts','tshirt','tshirts','tee','tees','tank','top','tops','hoodie','hoodies','pullover','sweatshirt','crewneck','vneck','sleeve','sleeves','short','long','graphic','design','printed','print','men','women','man','woman','male','female','boy','girl','boys','girls','kids','adult','adults','unisex','youth','toddler','infant','baby','clothing','wear','apparel','fashion','style','outfit','product','item','merchandise','merch','gift','gifts','present','presents','idea','ideas','great','perfect','best','good','nice','beautiful','pretty','funny','cool','cute','awesome','amazing','unique','original','vintage','retro','classic','new','old','modern','trendy','brand','made','quality','premium','official','licensed','100','cotton','polyester','blend','machine','wash','dry','lightweight','comfortable','comfort','soft','casual','fit','fitted','novelty','humor','humorous','sarcastic','sarcasm','quote','saying','slogan','text','word','words','team','group','crew','squad','club','family','member','members','love','lover','lovers','fan','fans','enthusiast','enthusiasts','life','lifestyle','living','co','inc','llc','ltd','us','uk','ca','usa','america','side','see','soon','day','days','year','years','time']);
+
+function stem(w) {
+    if (!w || w.length < 4) return w;
+    w = w.replace(/ies$/, 'y').replace(/([^aeiou])s$/, '$1').replace(/ing$/, '').replace(/edly$/, '').replace(/ed$/, '').replace(/er$/, '');
+    return w.length >= 2 ? w : w + 'e';
+}
+
+function cleanTokens(t) {
+    if (!t) return [];
+    return t.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(w => w.length >= 2 && !/^\d+$/.test(w) && !STOP_WORDS.has(w) && !STOP_WORDS.has(stem(w))).map(w => stem(w));
+}
+
+// ═══════════════════════════════════════════════════
+// KEYWORD MATCHING (from 1111)
+// ═══════════════════════════════════════════════════
+function keywordMatchNormal(p, kw) {
+    if (!kw?.trim()) return true;
+    const tokens = kw.trim().toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').split(' ').filter(t => t);
+    if (!tokens.length) return true;
+    const txt = [p.designTitle, p.brand, p.featureBullet1, p.featureBullet2].join(' ').toLowerCase().replace(/[^\w\s]/g, ' ');
+    return tokens.every(t => txt.includes(t));
+}
+
+function keywordMatchExact(p, kw) {
+    if (!kw?.trim()) return true;
+    const n = kw.trim().toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!n) return true;
+    const h = [p.designTitle, p.brand, p.featureBullet1, p.featureBullet2].join(' ').toLowerCase().replace(/[^\w\s]/g, ' ');
+    return new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(h);
+}
+
+function keywordMatch(p, kw) {
+    return (document.getElementById('searchMode')?.value === 'exact') ? keywordMatchExact(p, kw) : keywordMatchNormal(p, kw);
+}
+
+// ═══════════════════════════════════════════════════
+// LONG-TAIL EXTRACTION (from 1111)
+// ═══════════════════════════════════════════════════
+function extractLongTailByLength(title, n) {
+    if (!title || n < 2) return [];
+    const t = cleanTokens(title);
+    if (t.length < n) return [];
+    const s = new Set();
+    for (let i = 0; i <= t.length - n; i++) {
+        s.add(t.slice(i, i + n).join(' '));
+    }
+    return [...s];
+}
+
+// ═══════════════════════════════════════════════════
+// HOT NICHES CALCULATION (from 1111)
+// ═══════════════════════════════════════════════════
+function calculateHotNiches(wl, pd, mr) {
+    let prods = allProducts;
+    if (pd > 0) {
+        const cut = new Date();
+        cut.setDate(cut.getDate() - pd);
+        prods = prods.filter(p => p.parsedDate && p.parsedDate >= cut);
+    }
+    const freq = new Map(), bsrM = new Map(), titleM = new Map();
+    prods.forEach(p => {
+        const ph = extractLongTailByLength(p.designTitle, wl);
+        const seen = new Set();
+        ph.forEach(x => {
+            if (seen.has(x)) return;
+            seen.add(x);
+            freq.set(x, (freq.get(x) || 0) + 1);
+            if (!bsrM.has(x)) bsrM.set(x, []);
+            bsrM.get(x).push(p.bsrNumber);
+            if (!titleM.has(x)) titleM.set(x, p.designTitle);
+        });
+    });
+    return [...freq.entries()].map(([kw, count]) => {
+        const b = bsrM.get(kw) || [];
+        return {
+            keyword: kw,
+            count,
+            avgBSR: Math.round(b.reduce((a, x) => a + x, 0) / b.length),
+            minBSR: Math.min(...b),
+            exampleTitle: titleM.get(kw) || ''
+        };
+    }).filter(n => n.count >= mr).sort((a, b) => b.count - a.count || a.avgBSR - b.avgBSR).slice(0, 50);
 }
 
 // ═══════════════════════════════════════════════════
@@ -441,7 +492,7 @@ let sessionToken = null;
 const simpleFingerprint = generateSimpleFingerprint();
 
 // ═══════════════════════════════════════════════════
-// WORKER API - SECURE VERSION
+// WORKER API
 // ═══════════════════════════════════════════════════
 async function callWorker(endpoint, method = 'GET', body = null) {
     try {
@@ -450,7 +501,6 @@ async function callWorker(endpoint, method = 'GET', body = null) {
             'X-App-Secret': APP_SECRET
         };
         
-        // Send Session Token only for sensitive endpoints
         if (endpoint.includes('fetchProducts') && sessionToken) {
             headers['X-Session-Token'] = sessionToken;
         }
@@ -490,9 +540,9 @@ async function fetchAccessCodesFromWorker() {
         const c = parseCSVRow(l);
         if (!c[0]?.trim()) return null;
         return {
-            code: c[0].trim().toUpperCase(),       // ✅ دائماً uppercase
+            code: c[0].trim().toUpperCase(),
             expiryDate: c[1]?.trim(),
-            status: c[4]?.trim().toLowerCase() || 'active'  // ✅ دائماً lowercase
+            status: c[4]?.trim().toLowerCase() || 'active'
         };
     }).filter(c => c && c.code);
 }
@@ -537,8 +587,6 @@ async function generateSessionToken(code) {
     });
 
     if (!tokenResult.success || !tokenResult.timestamp) return null;
-
-    // 🔴 المهم: استعمل timestamp اللي رجع من السيرفر، مش وقت الجهاز
     return `${tokenResult.timestamp}.${code}.${tokenResult.token}`;
 }
 
@@ -605,7 +653,6 @@ async function loadSession() {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(() => {});
 
-        // ✅ تأكد من Token قبل عرض التطبيق
         if (!sessionToken) {
             sessionToken = await generateSessionToken(currentAccessCode);
         }
@@ -625,6 +672,7 @@ async function loadSession() {
         return false;
     }
 }
+
 // ═══════════════════════════════════════════════════
 // ACCESS CONTROL
 // ═══════════════════════════════════════════════════
@@ -635,7 +683,6 @@ function showError(message) {
     errorMsg.classList.add('show');
     document.getElementById('successMsg').classList.remove('show');
     
-    // Re-enable button
     const loginBtn = document.getElementById('loginBtn');
     loginBtn.disabled = false;
     document.getElementById('btnText').style.display = 'inline';
@@ -709,7 +756,6 @@ async function verifyAccessCode() {
             accessData = { code, expiryDate: entry.expiryDate };
             sessionId = sid;
             
-            // Generate session token
             sessionToken = await generateSessionToken(code);
             
             saveLocalSession(code, entry.expiryDate, sid);
@@ -739,7 +785,6 @@ async function verifyAccessCode() {
         accessData = { code, expiryDate: entry.expiryDate };
         sessionId = newSid;
         
-        // Generate session token
         sessionToken = await generateSessionToken(code);
         
         saveLocalSession(code, entry.expiryDate, newSid);
@@ -763,7 +808,7 @@ async function showSuccess() {
     const sm = document.getElementById('successMsg');
     sm.classList.add('show');
     sm.querySelector('span').textContent = 'Access granted! Loading...';
-    setTimeout(() => showMainApp(), 1000); // ✅
+    setTimeout(() => showMainApp(), 1000);
 }
 
 async function showMainApp() {
@@ -774,6 +819,7 @@ async function showMainApp() {
     startPeriodicCheck();
     await initApp();
 }
+
 function updateExpiryBadge() {
     if (!accessData?.expiryDate) return;
     const exp = new Date(accessData.expiryDate);
@@ -849,11 +895,9 @@ async function performPeriodicCheck() {
             return;
         }
 
-        // Renew Session Token every 4 minutes
         const tokenAge = sessionToken ? (Date.now() / 1000) - parseInt(sessionToken.split('.')[0] || 0) : Infinity;
         if (!sessionToken || tokenAge > 240) {
             sessionToken = await generateSessionToken(currentAccessCode);
-            // Save updated token
             const saved = JSON.parse(localStorage.getItem('merchSession') || '{}');
             saved.sessionToken = sessionToken;
             localStorage.setItem('merchSession', JSON.stringify(saved));
@@ -908,6 +952,7 @@ let favorites = new Set();
 let favoritesFilterActive = false;
 let currentKeywordSearch = '';
 let trendChart = null;
+let currentWordLength = 3;
 
 // ═══════════════════════════════════════════════════
 // FAVORITES MANAGEMENT
@@ -1022,7 +1067,6 @@ function showToast(message) {
 // ═══════════════════════════════════════════════════
 // INITIALIZATION
 // ═══════════════════════════════════════════════════
-// ✅ initApp مبسطة
 async function initApp() {
     if (!sessionToken) {
         document.getElementById('productsContainer').innerHTML = 
@@ -1035,8 +1079,9 @@ async function initApp() {
     await loadProducts();
     renderProducts(allProducts);
     updateTrendChart();
-    updateHotNiches();
+    renderHotNiches();
 }
+
 async function loadProducts() {
     try {
         const container = document.getElementById('productsContainer');
@@ -1044,7 +1089,6 @@ async function loadProducts() {
         
         allProducts = await fetchProductsFromWorker();
         
-        // Sort by date descending by default
         allProducts.sort((a, b) => {
             if (!a.parsedDate && !b.parsedDate) return 0;
             if (!a.parsedDate) return 1;
@@ -1084,7 +1128,14 @@ function setupEventListeners() {
     });
     
     // Hot niches apply button
-    document.getElementById('applyWordLengthBtn').addEventListener('click', updateHotNiches);
+    document.getElementById('applyWordLengthBtn').addEventListener('click', applyNicheControls);
+    document.getElementById('wordLengthInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyNicheControls();
+    });
+    document.getElementById('nichesPeriod').addEventListener('change', renderHotNiches);
+    document.getElementById('minRepeats').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyNicheControls();
+    });
     
     // Modal close
     document.getElementById('closeModalBtn').addEventListener('click', closeModal);
@@ -1093,7 +1144,8 @@ function setupEventListeners() {
             closeModal();
         }
     });
-        // Live filters: trigger on change
+    
+    // Live filters
     document.getElementById('sortSelect').addEventListener('change', applyAllFilters);
     document.getElementById('dateFilter').addEventListener('change', applyAllFilters);
     document.getElementById('searchMode').addEventListener('change', () => {
@@ -1108,116 +1160,55 @@ function setupEventListeners() {
         if (e.key === 'Enter') applyAllFilters();
     });
 }
+
 // ═══════════════════════════════════════════════════
-// FILTERING & SORTING
+// FILTERING & SORTING (from 1111)
 // ═══════════════════════════════════════════════════
 function applyAllFilters() {
-    let results = [...allProducts];
+    const kw = document.getElementById('keywordSearch')?.value || '';
+    const bMin = parseFloat(document.getElementById('bsrMin')?.value) || 0;
+    const bMax = parseFloat(document.getElementById('bsrMax')?.value) || Infinity;
+    const dF = document.getElementById('dateFilter')?.value || 'all';
+    const sV = document.getElementById('sortSelect')?.value || 'date-desc';
     
-    // Apply favorites filter
-    if (favoritesFilterActive) {
-        results = results.filter(p => favorites.has(p.asin));
-    }
-    
-        // Apply keyword search
-    if (currentKeywordSearch) {
-        const searchMode = document.getElementById('searchMode').value;
-
-        // Normalize text: lowercase + remove punctuation + collapse spaces
-        const normalize = (s) => (s || '')
-            .toLowerCase()
-            .replace(/[^\w\s]/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-
-        const normalizedQuery = normalize(currentKeywordSearch);
-        const searchTerms = normalizedQuery.split(' ').filter(t => t.length > 0);
-
-        if (normalizedQuery && searchTerms.length > 0) {
-            results = results.filter(p => {
-                const haystack = normalize([
-                    p.designTitle,
-                    p.brand,
-                    p.featureBullet1,
-                    p.featureBullet2,
-                    p.asin
-                ].join(' '));
-
-                if (searchMode === 'exact') {
-                    // Whole-phrase match with word boundaries
-                    const escaped = normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    return new RegExp(`\\b${escaped}\\b`, 'i').test(haystack);
-                } else {
-                    // Normal: every word must be present
-                    return searchTerms.every(term => haystack.includes(term));
-                }
-            });
+    let f = allProducts.filter(p => {
+        if (favoritesFilterActive && !isFavorite(p.asin)) return false;
+        if (!keywordMatch(p, kw)) return false;
+        if (p.bsrNumber < bMin || p.bsrNumber > bMax) return false;
+        if (dF !== 'all' && p.parsedDate) {
+            const d = (Date.now() - p.parsedDate) / (1000 * 3600 * 24);
+            if (dF === 'today' && d > 1) return false;
+            if (dF === 'week' && d > 7) return false;
+            if (dF === 'month' && d > 30) return false;
         }
-    }
-    
-    // Apply date filter
-    const dateFilter = document.getElementById('dateFilter').value;
-    if (dateFilter !== 'all') {
-        const now = new Date();
-        let cutoffDate;
-        
-        if (dateFilter === 'today') {
-            cutoffDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        } else if (dateFilter === 'week') {
-            cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        } else if (dateFilter === 'month') {
-            cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        }
-        
-        if (cutoffDate) {
-            results = results.filter(p => p.parsedDate && p.parsedDate >= cutoffDate);
-        }
-    }
-    
-    // Apply BSR range
-    const bsrMin = document.getElementById('bsrMin').value;
-    const bsrMax = document.getElementById('bsrMax').value;
-    
-    if (bsrMin || bsrMax) {
-        const min = bsrMin ? parseInt(bsrMin) : 0;
-        const max = bsrMax ? parseInt(bsrMax) : Infinity;
-        
-        results = results.filter(p => {
-            if (p.bsrNumber === null) return false;
-            return p.bsrNumber >= min && p.bsrNumber <= max;
-        });
-    }
-    
-    // Apply sorting
-    const sortBy = document.getElementById('sortSelect').value;
-    results.sort((a, b) => {
-        switch (sortBy) {
-            case 'date-desc':
-                return (b.parsedDate || 0) - (a.parsedDate || 0);
-            case 'date-asc':
-                return (a.parsedDate || 0) - (b.parsedDate || 0);
-            case 'bsr-asc':
-                return (a.bsrNumber || Infinity) - (b.bsrNumber || Infinity);
-            case 'bsr-desc':
-                return (b.bsrNumber || 0) - (a.bsrNumber || 0);
-            default:
-                return 0;
-        }
+        return true;
     });
     
-    filteredProducts = results;
-    renderProducts(results);
+    f.sort((a, b) => {
+        if (sV === 'date-desc') return (b.parsedDate || 0) - (a.parsedDate || 0);
+        if (sV === 'date-asc') return (a.parsedDate || 0) - (b.parsedDate || 0);
+        if (sV === 'bsr-asc') return a.bsrNumber - b.bsrNumber;
+        if (sV === 'bsr-desc') return b.bsrNumber - a.bsrNumber;
+        return 0;
+    });
+    
+    filteredProducts = f;
+    renderProducts(f);
 }
 
 function resetAll() {
-    document.getElementById('sortSelect').value = 'date-desc';
-    document.getElementById('bsrMin').value = '';
-    document.getElementById('bsrMax').value = '';
-    document.getElementById('dateFilter').value = 'all';
-    document.getElementById('keywordSearch').value = '';
+    ['keywordSearch', 'bsrMin', 'bsrMax'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const dateFilter = document.getElementById('dateFilter');
+    if (dateFilter) dateFilter.value = 'all';
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) sortSelect.value = 'date-desc';
+    const searchMode = document.getElementById('searchMode');
+    if (searchMode) searchMode.value = 'normal';
     currentKeywordSearch = '';
-    favoritesFilterActive = false;
-    updateFavoritesUI();
+    if (favoritesFilterActive) toggleFavoritesFilter();
     applyAllFilters();
 }
 
@@ -1232,6 +1223,8 @@ function renderProducts(products) {
         return;
     }
     
+    document.getElementById('product-count').innerText = products.length;
+    
     let html = '<div class="products-grid">';
     
     products.forEach(product => {
@@ -1244,11 +1237,11 @@ function renderProducts(products) {
                 <button class="favorite-btn ${favActive}" onclick="event.stopPropagation(); toggleFavorite('${product.asin}')" title="Add to favorites">
                     <i class="${favIcon}"></i>
                 </button>
-                <img class="product-image" src="${product.imageUrl}" alt="${product.designTitle || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                <img class="product-image" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle) || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                 <div class="product-info">
                     ${product.bsrDisplay ? `<div class="bsr-tag">📊 ${product.bsrDisplay}</div>` : ''}
-                    <div class="product-title">${product.designTitle || 'Untitled Design'}</div>
-                    ${product.brand ? `<div style="font-size:0.7rem;color:#64748b;margin-bottom:4px;">🏷️ ${product.brand}</div>` : ''}
+                    <div class="product-title">${escHtmlSafe(product.designTitle) || 'Untitled Design'}</div>
+                    ${product.brand ? `<div style="font-size:0.7rem;color:#64748b;margin-bottom:4px;">🏷️ ${escHtmlSafe(product.brand)}</div>` : ''}
                     <div class="product-date">📅 ${dateDisplay}</div>
                     <div class="card-actions">
                         <a href="${product.link}" target="_blank" class="amazon-btn" onclick="event.stopPropagation();">
@@ -1271,6 +1264,72 @@ function renderProducts(products) {
 }
 
 // ═══════════════════════════════════════════════════
+// HOT NICHES RENDERING (from 1111)
+// ═══════════════════════════════════════════════════
+function renderHotNiches() {
+    const container = document.getElementById('hotNichesContainer');
+    const pd = parseInt(document.getElementById('nichesPeriod')?.value || '7');
+    const mr = Math.max(1, parseInt(document.getElementById('minRepeats')?.value || '2'));
+    const niches = calculateHotNiches(currentWordLength, pd, mr);
+    
+    if (!niches.length) {
+        container.innerHTML = '<div class="niche-item" style="text-align:center;color:#94a3b8;">No results</div>';
+        return;
+    }
+    
+    const max = niches[0].count;
+    container.innerHTML = niches.map((n, i) => {
+        const bw = Math.round((n.count / max) * 100);
+        const rc = i === 0 ? '#e95e2e' : i < 3 ? '#f59e0b' : i < 10 ? '#3b82f6' : '#64748b';
+        return `<div class="niche-item" onclick="searchByKeyword('${escHtmlJS(n.keyword)}')">
+            <div class="niche-main-row">
+                <div class="niche-left">
+                    <span class="niche-rank" style="background:${rc}22;color:${rc};">#${i + 1}</span>
+                    <span class="niche-keyword" title="${escHtmlJS(n.exampleTitle)}">${escHtmlSafe(n.keyword)}</span>
+                </div>
+                <div class="niche-stats">
+                    <span class="niche-count" style="background:${rc};">${n.count}×</span>
+                    <span class="niche-bsr">avg:${n.avgBSR.toLocaleString()}</span>
+                    <span class="niche-bsr">🏆${n.minBSR.toLocaleString()}</span>
+                    <span class="niche-action">
+                        <button class="amazon-search-btn" onclick="event.stopPropagation();openAmazonSearch('${escHtmlJS(n.keyword)}')">
+                            <i class="fab fa-amazon"></i> Search
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <div class="niche-bar-bg">
+                <div class="niche-bar-fill" style="width:${bw}%;background:${rc};"></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function applyNicheControls() {
+    const input = document.getElementById('wordLengthInput');
+    let len = parseInt(input.value);
+    if (isNaN(len)) len = 3;
+    len = Math.max(2, Math.min(6, len));
+    input.value = len;
+    currentWordLength = len;
+    renderHotNiches();
+}
+
+function openAmazonSearch(kw) {
+    window.open(`https://www.amazon.com/s?k=${encodeURIComponent(kw)}`, '_blank');
+}
+
+function searchByKeyword(kw) {
+    const i = document.getElementById('keywordSearch');
+    if (i) {
+        i.value = kw;
+        currentKeywordSearch = kw;
+        applyAllFilters();
+        document.querySelector('.keyword-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// ═══════════════════════════════════════════════════
 // PRODUCT ANALYSIS MODAL
 // ═══════════════════════════════════════════════════
 function escHtmlSafe(str) {
@@ -1283,6 +1342,17 @@ function escHtmlSafe(str) {
         .replace(/'/g, '&#39;');
 }
 
+function escHtmlJS(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\n/g, '\\n');
+}
+
 function analyzeProduct(asin) {
     const product = allProducts.find(p => p.asin === asin);
     if (!product) return;
@@ -1290,7 +1360,6 @@ function analyzeProduct(asin) {
     const modal = document.getElementById('analysisModal');
     const body = document.getElementById('modalBody');
 
-    // Extract keywords from title and bullets
     const allText = [product.designTitle, product.featureBullet1, product.featureBullet2, product.brand]
         .filter(Boolean)
         .join(' ')
@@ -1307,7 +1376,6 @@ function analyzeProduct(asin) {
         .slice(0, 10)
         .map(([word, count]) => ({ word, count }));
 
-    // Long-tail (3+ words from title)
     const titleWords = (product.designTitle || '')
         .toLowerCase()
         .replace(/[^\w\s]/g, ' ')
@@ -1398,7 +1466,6 @@ function closeModal() {
 function updateTrendChart() {
     const ctx = document.getElementById('trendChart').getContext('2d');
     
-    // Calculate products per day for last 14 days
     const days = [];
     const counts = [];
     
@@ -1482,135 +1549,6 @@ function updateTrendChart() {
 }
 
 // ═══════════════════════════════════════════════════
-// HOT NICHES
-// ═══════════════════════════════════════════════════
-function updateHotNiches() {
-    const wordLength = parseInt(document.getElementById('wordLengthInput').value) || 3;
-    const period = document.getElementById('nichesPeriod').value;
-    const minRepeats = parseInt(document.getElementById('minRepeats').value) || 2;
-    
-    const container = document.getElementById('hotNichesContainer');
-    container.innerHTML = '<div class="loading">Analyzing...</div>';
-    
-    setTimeout(() => {
-        // Filter products by period
-        let products = [...allProducts];
-        
-        if (period !== '0') {
-            const days = parseInt(period);
-            const cutoff = new Date();
-            cutoff.setDate(cutoff.getDate() - days);
-            products = products.filter(p => p.parsedDate && p.parsedDate >= cutoff);
-        }
-        
-        // Extract multi-word phrases
-        const phraseCount = {};
-        
-        products.forEach(p => {
-            const text = [p.designTitle, p.featureBullet1, p.featureBullet2]
-                .filter(Boolean)
-                .join(' ')
-                .toLowerCase()
-                .replace(/[^\w\s]/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-            
-            const words = text.split(' ').filter(w => w.length > 2);
-            
-            if (words.length >= wordLength) {
-                for (let i = 0; i <= words.length - wordLength; i++) {
-                    const phrase = words.slice(i, i + wordLength).join(' ');
-                    if (phrase.length > 5) {
-                        phraseCount[phrase] = (phraseCount[phrase] || 0) + 1;
-                    }
-                }
-            }
-        });
-        
-        // Sort and filter
-        const niches = Object.entries(phraseCount)
-            .filter(([_, count]) => count >= minRepeats)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 30);
-        
-        if (niches.length === 0) {
-            container.innerHTML = '<div class="no-results" style="padding:20px;">No niches found with current settings</div>';
-            return;
-        }
-        
-        // Calculate BSR range for each niche
-        const nicheData = niches.map(([phrase, count]) => {
-            const matchingProducts = products.filter(p => {
-                const text = [p.designTitle, p.featureBullet1, p.featureBullet2]
-                    .filter(Boolean)
-                    .join(' ')
-                    .toLowerCase();
-                return text.includes(phrase);
-            });
-            
-            const bsrs = matchingProducts.map(p => p.bsrNumber).filter(b => b !== null);
-            const avgBsr = bsrs.length > 0 ? Math.round(bsrs.reduce((a, b) => a + b, 0) / bsrs.length) : null;
-            
-            return { phrase, count, avgBsr, products: matchingProducts };
-        });
-        
-        const maxCount = Math.max(...nicheData.map(n => n.count));
-        
-        let html = '';
-        nicheData.forEach((niche, index) => {
-            const widthPercent = (niche.count / maxCount) * 100;
-            const rank = index + 1;
-            let rankColor = '#94a3b8';
-            if (rank <= 3) rankColor = '#e95e2e';
-            else if (rank <= 10) rankColor = '#f59e0b';
-            
-            let countColor = '#3b82f6';
-            if (niche.count >= 10) countColor = '#e95e2e';
-            else if (niche.count >= 5) countColor = '#f59e0b';
-            else if (niche.count >= 3) countColor = '#10b981';
-            
-            const barColor = niche.count >= 10 ? '#e95e2e' : niche.count >= 5 ? '#f59e0b' : '#3b82f6';
-            const amazonSearchUrl = `https://www.amazon.com/s?k=${encodeURIComponent(niche.phrase)}&i=merch`;
-            
-            html += `
-                <div class="niche-item" onclick="searchNiche('${niche.phrase.replace(/'/g, "\\'")}')">
-                    <div class="niche-main-row">
-                        <div class="niche-left">
-                            <span class="niche-rank" style="background:${rankColor}20;color:${rankColor}">#${rank}</span>
-                            <span class="niche-keyword" title="${niche.phrase}">${niche.phrase}</span>
-                        </div>
-                        <div class="niche-stats">
-                            <span class="niche-count" style="background:${countColor}">${niche.count} products</span>
-                            ${niche.avgBsr ? `<span class="niche-bsr">Avg BSR: ${niche.avgBsr.toLocaleString()}</span>` : ''}
-                            <div class="niche-action">
-                                <button class="amazon-search-btn" onclick="event.stopPropagation(); window.open('${amazonSearchUrl}', '_blank')" title="Search on Amazon">
-                                    <i class="fab fa-amazon"></i> Search
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="niche-bar-bg">
-                        <div class="niche-bar-fill" style="width:${widthPercent}%;background:${barColor};"></div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
-    }, 100);
-}
-
-function searchNiche(phrase) {
-    document.getElementById('keywordSearch').value = phrase;
-    document.getElementById('searchMode').value = 'exact';
-    currentKeywordSearch = phrase;
-    applyAllFilters();
-    
-    // Scroll to products
-    document.getElementById('productsContainer').scrollIntoView({ behavior: 'smooth' });
-}
-
-// ═══════════════════════════════════════════════════
 // INITIAL LOAD
 // ═══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1625,12 +1563,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Enter key on login
-document.getElementById('accessCode').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        verifyAccessCode();
-    }
-});
+// Expose functions globally
+window.toggleFavoritesFilter = toggleFavoritesFilter;
+window.toggleFavorite = toggleFavorite;
+window.exportFavoritesToCSV = exportFavoritesToCSV;
+window.applyAllFilters = applyAllFilters;
+window.resetAll = resetAll;
+window.logout = logout;
+window.openAmazonSearch = openAmazonSearch;
+window.searchByKeyword = searchByKeyword;
+window.verifyAccessCode = verifyAccessCode;
 </script>
 
 </body>
