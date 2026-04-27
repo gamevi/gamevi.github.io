@@ -217,9 +217,9 @@
             <div style="font-weight:600;margin-bottom:12px;font-size:0.95rem;"><i class="fas fa-magnifying-glass-chart"></i> 🔎 Keyword Research</div>
             <div class="keyword-row">
                 <select id="searchMode" class="search-mode-select">
-    <option value="normal">🔍 Normal</option>
-    <option value="exact">🎯 Exact</option>
-</select>
+                    <option value="normal">🔍 Normal</option>
+                    <option value="exact">🎯 Exact</option>
+                </select>
                 <input type="text" id="keywordSearch" placeholder="e.g. pope leo shirt, funny lab week..." autocomplete="off">
                 <button id="searchKeywordBtn"><i class="fas fa-search"></i> Search</button>
                 <button id="clearKeywordBtn" class="outline"><i class="fas fa-eraser"></i> Clear</button>
@@ -232,11 +232,11 @@
                 <div class="filter-group">
                     <label>📊 Sort by</label>
                     <select id="sortSelect">
-    <option value="date-desc">Newest First</option>
-    <option value="date-asc">Oldest First</option>
-    <option value="bsr-asc">BSR (Lowest)</option>
-    <option value="bsr-desc">BSR (Highest)</option>
-</select>
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="bsr-asc">BSR (Lowest)</option>
+                        <option value="bsr-desc">BSR (Highest)</option>
+                    </select>
                 </div>
                 <div class="filter-group">
                     <label>🔢 BSR Range</label>
@@ -1093,6 +1093,20 @@ function setupEventListeners() {
             closeModal();
         }
     });
+        // Live filters: trigger on change
+    document.getElementById('sortSelect').addEventListener('change', applyAllFilters);
+    document.getElementById('dateFilter').addEventListener('change', applyAllFilters);
+    document.getElementById('searchMode').addEventListener('change', () => {
+        if (currentKeywordSearch) applyAllFilters();
+    });
+    document.getElementById('bsrMin').addEventListener('change', applyAllFilters);
+    document.getElementById('bsrMax').addEventListener('change', applyAllFilters);
+    document.getElementById('bsrMin').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyAllFilters();
+    });
+    document.getElementById('bsrMax').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyAllFilters();
+    });
 }
 // ═══════════════════════════════════════════════════
 // FILTERING & SORTING
@@ -1105,26 +1119,37 @@ function applyAllFilters() {
         results = results.filter(p => favorites.has(p.asin));
     }
     
-    // Apply keyword search
+        // Apply keyword search
     if (currentKeywordSearch) {
         const searchMode = document.getElementById('searchMode').value;
-        const searchTerms = currentKeywordSearch.toLowerCase().split(/\s+/).filter(t => t.length > 0);
-        
-        if (searchTerms.length > 0) {
+
+        // Normalize text: lowercase + remove punctuation + collapse spaces
+        const normalize = (s) => (s || '')
+            .toLowerCase()
+            .replace(/[^\w\s]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        const normalizedQuery = normalize(currentKeywordSearch);
+        const searchTerms = normalizedQuery.split(' ').filter(t => t.length > 0);
+
+        if (normalizedQuery && searchTerms.length > 0) {
             results = results.filter(p => {
-                const searchText = [
+                const haystack = normalize([
                     p.designTitle,
                     p.brand,
                     p.featureBullet1,
                     p.featureBullet2,
                     p.asin
-                ].join(' ').toLowerCase();
-                
+                ].join(' '));
+
                 if (searchMode === 'exact') {
-                    const phrase = currentKeywordSearch.toLowerCase();
-                    return searchText.includes(phrase);
+                    // Whole-phrase match with word boundaries
+                    const escaped = normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    return new RegExp(`\\b${escaped}\\b`, 'i').test(haystack);
                 } else {
-                    return searchTerms.every(term => searchText.includes(term));
+                    // Normal: every word must be present
+                    return searchTerms.every(term => haystack.includes(term));
                 }
             });
         }
