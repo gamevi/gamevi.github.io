@@ -53,10 +53,8 @@
         .export-csv-btn { background: white; border: 2px solid #10b981; color: #10b981; padding: 10px 20px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(16,185,129,0.15); font-family: 'Inter', sans-serif; }
         .export-csv-btn:hover { background: #10b981; color: white; }
         .export-csv-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        /* ==================== إضافة CSS للزر الجديد ==================== */
         .search-tool-btn { background: white; border: 2px solid #0AA89E; color: #0AA89E; padding: 10px 24px; border-radius: 40px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(10,168,158,0.2); font-family: 'Inter', sans-serif; }
         .search-tool-btn:hover { background: #0AA89E; color: white; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(10,168,158,0.35); }
-        /* ==================== نهاية الإضافة ==================== */
         .favorites-actions { display: flex; align-items: center; gap: 8px; }
         .active-filter-badge { background: #fee2e2; color: #dc2626; padding: 4px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
         .filters-panel, .keyword-panel { background: white; border-radius: 20px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #eef2f8; }
@@ -180,11 +178,9 @@
             <div class="stats"><span id="product-count">0</span> products · BSR cleaned</div>
             <div class="favorites-header">
                 <div class="favorites-actions">
-                    <!-- ==================== زر Search Tool الجديد ==================== -->
                     <button class="search-tool-btn" id="searchToolBtn" onclick="openSearchTool()" title="Open Amazon Merch Research Tool">
                         <i class="fas fa-search"></i><span>Search Tool</span>
                     </button>
-                    <!-- ==================== نهاية زر Search Tool ==================== -->
                     <button class="favorites-toggle-btn" id="favoritesToggleBtn" onclick="toggleFavoritesFilter()">
                         <i class="far fa-heart"></i><span>My Favorites</span><span class="count-badge" id="favoritesCount">0</span>
                     </button>
@@ -198,7 +194,6 @@
             </div>
         </div>
 
-        <!-- بقية المحتوى كما هو بدون تغيير -->
         <div class="hot-niches-panel">
             <div class="panel-title"><i class="fas fa-fire-flame-curved" style="color:#e95e2e;"></i> 🔥 Hot Long-Tail Niches</div>
             <div class="niches-controls">
@@ -293,7 +288,8 @@
 <script>
 // ═══════════════════════════════════════════════════
 // CONFIG
-// ═══════════════════════════════════════════════════const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
+// ═══════════════════════════════════════════════════
+const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
 const APP_SECRET = 'xK9#mP2$vL5@nQ82026';
 
 // ═══════════════════════════════════════════════════
@@ -1074,11 +1070,9 @@ function showToast(message) {
 }
 
 // ═══════════════════════════════════════════════════
-// SEARCH TOOL FUNCTION (جديد)
+// SEARCH TOOL
 // ═══════════════════════════════════════════════════
 function openSearchTool() {
-    // يفتح صفحة أداة البحث في نافذة جديدة
-    // يمكنك تغيير الرابط إلى المسار الصحيح لملف SERCH.html
     window.open('SERCH.html', '_blank');
 }
 
