@@ -596,22 +596,15 @@ async function getFingerprintFromWorker(code, ua, sessionId) {
     return result.fingerprint || null;
 }
 
-async function fetchAccessCodesFromWorker() {
-    const result = await callWorker(`/fetchAccessCodes?t=${Date.now()}`, 'GET');
-    if (!result.success || !result.data) return [];
-    
-    const lines = result.data.split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) return [];
-    
-    return lines.slice(1).map(l => {
-        const c = parseCSVRow(l);
-        if (!c[0]?.trim()) return null;
-        return {
-            code: c[0].trim().toUpperCase(),
-            expiryDate: c[1]?.trim(),
-            status: c[4]?.trim().toLowerCase() || 'active'
-        };
-    }).filter(c => c && c.code);
+async function validateAccessCode(code) {
+    const result = await callWorker('/validateCode', 'POST', { code: String(code).toUpperCase() });
+    if (!result.success) return null;
+    return {
+        code: String(code).toUpperCase(),
+        expiryDate: result.expiryDate,
+        status: result.status,
+        valid: result.valid
+    };
 }
 
 async function fetchProductsFromWorker() {
@@ -697,12 +690,10 @@ async function loadSession() {
             clearSession(); return false; 
         }
 
-        const codes = await fetchAccessCodesFromWorker();
-        const entry = codes.find(c => c.code === session.code.toUpperCase());
-        if (!entry || entry.status === 'revoked' || new Date(entry.expiryDate) < new Date()) {
-            clearSession(); return false;
-        }
-
+        const entry = await validateAccessCode(session.code);
+if (!entry || !entry.valid) {
+    clearSession(); return false;
+}
         currentAccessCode = session.code.toUpperCase();
         accessData = { code: session.code, expiryDate: entry.expiryDate };
         sessionId = session.sessionId;
@@ -792,13 +783,13 @@ async function verifyAccessCode() {
             return;
         }
 
-        const codes = await fetchAccessCodesFromWorker();
-        if (!codes.length) { showError('Connection error. Please try again.'); return; }
-
-        const entry = codes.find(c => c.code === code);
-        if (!entry) { showError('Invalid access code'); return; }
-        if (entry.status === 'revoked') { showError('This code has been revoked.'); return; }
-        if (new Date(entry.expiryDate) < new Date()) { showError('This code has expired.'); return; }
+       const entry = await validateAccessCode(code);
+if (!entry) { showError('Connection error. Please try again.'); return; }
+if (!entry.valid) {
+    if (entry.status === 'revoked') { showError('This code has been revoked.'); return; }
+    if (entry.status === 'unknown') { showError('Invalid access code'); return; }
+    showError('This code has expired.'); return;
+}
 
         const activeSessions = await db.collection('sessions')
             .where('code', '==', code)
@@ -942,12 +933,16 @@ async function performPeriodicCheck() {
             return;
         }
 
-        const codes = await fetchAccessCodesFromWorker();
-        const entry = codes.find(c => c.code === currentAccessCode.toUpperCase());
-
-        if (!entry) { await forceLogout('Access code not found.'); return; }
-        if (entry.status === 'revoked') { await forceLogout('Access has been revoked.'); return; }
-        if (new Date(entry.expiryDate) < new Date()) { await forceLogout('Access code expired.'); return; }
+                const entry = await validateAccessCode(currentAccessCode);
+        if (!entry) {
+            console.warn('validateAccessCode returned null — network glitch, will retry next cycle');
+            return;
+        }
+        if (!entry.valid) {
+            if (entry.status === 'revoked') { await forceLogout('Access has been revoked.'); return; }
+            if (entry.status === 'unknown') { await forceLogout('Access code not found.'); return; }
+            await forceLogout('Access code expired.'); return;
+        }
 
         const doc = await db.collection('sessions').doc(sessionId).get();
         if (!doc.exists) { await forceLogout('Session not found.'); return; }
