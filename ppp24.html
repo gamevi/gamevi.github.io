@@ -810,9 +810,11 @@ if (!entry.valid) {
 }
 
 function generateSessionId() {
-    return 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    return 's_' + hex;
 }
-
 async function showSuccess() {
     const sm = document.getElementById('successMsg');
     sm.classList.add('show');
