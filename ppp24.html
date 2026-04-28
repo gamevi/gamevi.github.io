@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
+    <meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self' 'unsafe-inline' https://www.gstatic.com;
+               connect-src 'self' https://*.workers.dev https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://firestore.googleapis.com;
+               img-src 'self' data: https:;
+               style-src 'self' 'unsafe-inline';
+               font-src 'self' data: https:;
+               frame-ancestors 'none';
+               base-uri 'self';
+               form-action 'self';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Merch Analyzer | Amazon BSR Keyword Research</title>
@@ -679,52 +689,33 @@ async function loadSession() {
             clearSession(); return false;
         }
 
-        const doc = await db.collection('sessions').doc(session.sessionId).get();
-        if (!doc.exists || doc.data().status !== 'active') { 
-            clearSession(); return false; 
-        }
-
         const ua = navigator.userAgent;
-        const expectedFP = await getFingerprintFromWorker(session.code, ua, session.sessionId);
-        if (doc.data().fingerprint !== expectedFP) { 
-            clearSession(); return false; 
-        }
-
         const entry = await validateAccessCode(session.code);
-if (!entry || !entry.valid) {
-    clearSession(); return false;
-}
+        if (!entry || !entry.valid) { clearSession(); return false; }
+
+        // Server-side session check (replaces direct Firestore read)
+        const touch = await callWorker('/sessionTouch', 'POST', {
+            sessionId: session.sessionId,
+            code: session.code,
+            ua
+        });
+        if (!touch.success) { clearSession(); return false; }
+
         currentAccessCode = session.code.toUpperCase();
         accessData = { code: session.code, expiryDate: entry.expiryDate };
         sessionId = session.sessionId;
 
         sessionToken = session.sessionToken || null;
-        const tokenAge = sessionToken 
-            ? (Date.now() / 1000) - parseInt(sessionToken.split('.')[0] || 0) 
+        const tokenAge = sessionToken
+            ? (Date.now() / 1000) - parseInt(sessionToken.split('.')[0] || 0)
             : Infinity;
         if (!sessionToken || tokenAge > 240) {
             sessionToken = await generateSessionToken(currentAccessCode);
         }
-
-        await db.collection('sessions').doc(session.sessionId).update({
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(() => {});
-
-        if (!sessionToken) {
-            sessionToken = await generateSessionToken(currentAccessCode);
-        }
-
-        if (!sessionToken) {
-            clearSession();
-            return false;
-        }
-
         saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
-        showMainApp();
         return true;
-
-    } catch (err) {
-        console.error('Session load error:', err);
+    } catch (e) {
+        console.error('loadSession error:', e);
         clearSession();
         return false;
     }
@@ -796,106 +787,39 @@ if (!entry.valid) {
             .where('status', '==', 'active')
             .get();
 
-        if (!activeSessions.empty) {
-            const existingSession = activeSessions.docs[0].data();
-            const expectedFP = await getFingerprintFromWorker(code, ua, activeSessions.docs[0].id);
-            
-            if (existingSession.fingerprint !== expectedFP) {
-                showError('This code is already in use on another device.');
-                return;
-            }
-            
-            const sid = activeSessions.docs[0].id;
-            await db.collection('sessions').doc(sid).update({
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            currentAccessCode = code;
-            accessData = { code, expiryDate: entry.expiryDate };
-            sessionId = sid;
-            
-            sessionToken = await generateSessionToken(code);
-            
-            saveLocalSession(code, entry.expiryDate, sid);
-            await showSuccess();
-            return;
-        }
+        const lookup = await callWorker('/sessionLookup', 'POST', { code, ua });
+if (!lookup.success) { showError('Connection error. Please try again.'); return; }
 
-        const newSid = generateSessionId();
-        const sessionFP = await getFingerprintFromWorker(code, ua, newSid);
-        
-        if (!sessionFP) {
-            showError('Failed to create secure session');
-            return;
-        }
-
-        await db.collection('sessions').doc(newSid).set({
-            code: code,
-            status: 'active',
-            fingerprint: sessionFP,
-            ua: ua.substring(0, 300),
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            expiresAt: entry.expiryDate
-        });
-
-        currentAccessCode = code;
-        accessData = { code, expiryDate: entry.expiryDate };
-        sessionId = newSid;
-        
-        sessionToken = await generateSessionToken(code);
-        
-        saveLocalSession(code, entry.expiryDate, newSid);
-        await showSuccess();
-
-    } catch (err) {
-        console.error('Verify error:', err);
-        showError('Verification failed. Please try again.');
-    } finally {
-        loginBtn.disabled = false;
-        btnText.style.display = 'inline';
-        spinner.style.display = 'none';
+if (lookup.exists) {
+    if (!lookup.fingerprintMatch) {
+        showError('This code is already in use on another device.');
+        return;
     }
+    sessionId = lookup.sessionId;
+    await callWorker('/sessionTouch', 'POST', { sessionId, code, ua });
+    currentAccessCode = code;
+    accessData = { code, expiryDate: entry.expiryDate };
+    sessionToken = await generateSessionToken(code);
+    saveLocalSession(code, entry.expiryDate, sessionId);
+    await showSuccess();
+    return;
 }
 
-function generateSessionId() {
-    return 's_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
+const newSid = generateSessionId();
+const create = await callWorker('/sessionCreate', 'POST', {
+    code,
+    ua,
+    sessionId: newSid,
+    expiryDate: entry.expiryDate
+});
+if (!create.success) { showError('Failed to create secure session'); return; }
 
-async function showSuccess() {
-    const sm = document.getElementById('successMsg');
-    sm.classList.add('show');
-    sm.querySelector('span').textContent = 'Access granted! Loading...';
-    setTimeout(() => showMainApp(), 1000);
-}
-
-async function showMainApp() {
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('mainApp').classList.add('show');
-    document.getElementById('currentCode').textContent = currentAccessCode;
-    updateExpiryBadge();
-    startPeriodicCheck();
-    await initApp();
-}
-
-function updateExpiryBadge() {
-    if (!accessData?.expiryDate) return;
-    const exp = new Date(accessData.expiryDate);
-    const daysLeft = Math.ceil((exp - new Date()) / (1000*60*60*24));
-    const badge = document.getElementById('expiryBadge');
-    const text = document.getElementById('expiryText');
-    
-    if (daysLeft <= 0) {
-        badge.classList.add('expired');
-        text.textContent = 'Expired';
-    } else if (daysLeft <= 7) {
-        badge.classList.add('expired');
-        text.textContent = `Expires in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`;
-    } else {
-        badge.classList.remove('expired');
-        text.textContent = `Expires in ${daysLeft} days`;
-    }
-}
-
+currentAccessCode = code;
+accessData = { code, expiryDate: entry.expiryDate };
+sessionId = newSid;
+sessionToken = await generateSessionToken(code);
+saveLocalSession(code, entry.expiryDate, newSid);
+await showSuccess();
 // ═══════════════════════════════════════════════════
 // PERIODIC CHECK
 // ═══════════════════════════════════════════════════
@@ -945,29 +869,25 @@ async function performPeriodicCheck() {
         }
 
         const doc = await db.collection('sessions').doc(sessionId).get();
-        if (!doc.exists) { await forceLogout('Session not found.'); return; }
+        const touch = await callWorker('/sessionTouch', 'POST', {
+    sessionId,
+    code: currentAccessCode,
+    ua
+});
+if (!touch.success) {
+    await forceLogout(touch.message === 'Fingerprint mismatch'
+        ? 'Device verification failed.'
+        : 'Session terminated.');
+    return;
+}
 
-        const sessionData = doc.data();
-        if (sessionData.status !== 'active') { await forceLogout('Session terminated.'); return; }
-
-        const expectedFP = await getFingerprintFromWorker(currentAccessCode, ua, sessionId);
-        if (sessionData.fingerprint !== expectedFP) {
-            await forceLogout('Device verification failed.');
-            return;
-        }
-
-        const tokenAge = sessionToken ? (Date.now() / 1000) - parseInt(sessionToken.split('.')[0] || 0) : Infinity;
-        if (!sessionToken || tokenAge > 240) {
-            sessionToken = await generateSessionToken(currentAccessCode);
-            const saved = JSON.parse(localStorage.getItem('merchSession') || '{}');
-            saved.sessionToken = sessionToken;
-            localStorage.setItem('merchSession', JSON.stringify(saved));
-        }
-
-        await db.collection('sessions').doc(sessionId).update({
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(() => {});
-
+const tokenAge = sessionToken ? (Date.now() / 1000) - parseInt(sessionToken.split('.')[0] || 0) : Infinity;
+if (!sessionToken || tokenAge > 240) {
+    sessionToken = await generateSessionToken(currentAccessCode);
+    const saved = JSON.parse(localStorage.getItem('merchSession') || '{}');
+    saved.sessionToken = sessionToken;
+    localStorage.setItem('merchSession', JSON.stringify(saved));
+}
         if (entry.expiryDate !== accessData.expiryDate) {
             accessData.expiryDate = entry.expiryDate;
             saveLocalSession(currentAccessCode, entry.expiryDate, sessionId);
@@ -985,11 +905,8 @@ async function forceLogout(message) {
     stopPeriodicCheck();
     try {
         if (sessionId) {
-            await db.collection('sessions').doc(sessionId).update({
-                status: 'ended',
-                endedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(() => {});
-        }
+    await callWorker('/sessionEnd', 'POST', { sessionId }).catch(() => {});
+}
     } catch (e) {}
     clearSession();
     alert(message);
