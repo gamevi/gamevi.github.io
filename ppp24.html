@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+    font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+    img-src 'self' data: https:;
+    connect-src 'self' https://noisy-voice-0c5b.mohammedmila022.workers.dev https://docs.google.com;
+    frame-ancestors 'none';
+    base-uri 'self';
+    form-action 'self';
+">
     <title>Merch Analyzer | Amazon BSR Keyword Research</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; font-family: 'Inter', sans-serif; }
@@ -351,18 +361,7 @@
 const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
 
 
-// ═══════════════════════════════════════════════════
-// FIREBASE
-// ═══════════════════════════════════════════════════
-firebase.initializeApp({
-    apiKey: "AIzaSyCw-MBaK4mE21Iojed-AnsJoNQQ6Uv-5R8",
-    authDomain: "merch-analyzer.firebaseapp.com",
-    projectId: "merch-analyzer",
-    storageBucket: "merch-analyzer.firebasestorage.app",
-    messagingSenderId: "507434019242",
-    appId: "1:507434019242:web:7bdc267fb9dd3fe4df23d3"
-});
-const db = firebase.firestore();
+
 
 // ═══════════════════════════════════════════════════
 // HELPER FUNCTIONS
@@ -923,7 +922,7 @@ async function performPeriodicCheck() {
             updateExpiryBadge();
         }
 
-        console.log('✅ Check passed at', new Date().toLocaleTimeString());
+        
 
     } catch (err) {
         console.error('Periodic check error:', err);
@@ -933,8 +932,12 @@ async function performPeriodicCheck() {
 async function forceLogout(message) {
     stopPeriodicCheck();
     try {
-        if (sessionId) {
-            await callWorker('/sessionEnd', 'POST', { sessionId }).catch(() => {});
+        if (sessionId && currentAccessCode) {
+            await callWorker('/sessionEnd', 'POST', {
+                sessionId,
+                code: currentAccessCode,
+                ua: navigator.userAgent
+            }).catch(() => {});
         }
     } catch (e) {}
     clearSession();
@@ -1190,7 +1193,7 @@ async function loadProducts() {
         document.getElementById('product-count').textContent = allProducts.length;
         filteredProducts = [...allProducts];
         
-        console.log(`Loaded ${allProducts.length} products`);
+       
     } catch (error) {
         console.error('Error loading products:', error);
         document.getElementById('productsContainer').innerHTML = 
