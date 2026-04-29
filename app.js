@@ -3,6 +3,27 @@
 // ═══════════════════════════════════════════════════
 const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
 
+
+// ═══════════════════════════════════════════════════
+// CLIENT SECRET & NONCE (v4.0 worker)
+// ═══════════════════════════════════════════════════
+function ensureClientSecret() {
+    let cs = localStorage.getItem('merchClientSecret');
+    if (!cs) {
+        const bytes = new Uint8Array(24);
+        crypto.getRandomValues(bytes);
+        cs = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        localStorage.setItem('merchClientSecret', cs);
+    }
+    return cs;
+}
+function generateNonce() {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+const CLIENT_SECRET = ensureClientSecret();
+
 // ═══════════════════════════════════════════════════
 // CLIENT SESSION STATE (NEW)
 // ═══════════════════════════════════════════════════
@@ -249,12 +270,13 @@ async function refreshSessionToken() {
             body: JSON.stringify({
                 sessionId: sessionId,
                 code: currentAccessCode,
-                ua: navigator.userAgent
+                ua: navigator.userAgent,
+                clientSecret: CLIENT_SECRET
             })
         });
         const result = await response.json();
-        if (result.success && result.token) {
-            SESSION_TOKEN = result.token;
+        if (result.success && result.sessionToken) {
+            SESSION_TOKEN = result.sessionToken;
             return true;
         }
         return false;
@@ -307,17 +329,8 @@ async function fetchProductsFromWorker() {
 // ═══════════════════════════════════════════════════
 // SESSION TOKEN MANAGEMENT
 // ═══════════════════════════════════════════════════
-async function generateSessionToken(code) {
-    const tokenResult = await callWorker('/sessionCreate', 'POST', {
-        code: code,
-        ua: navigator.userAgent,
-        sessionId: sessionId,
-        expiryDate: accessData?.expiryDate
-    });
-
-    if (!tokenResult.success || !tokenResult.token) return null;
-    SESSION_TOKEN = tokenResult.token;
-    return SESSION_TOKEN;
+async function generateSessionToken() {
+    return await refreshSessionToken() ? SESSION_TOKEN : null;
 }
 
 // ═══════════════════════════════════════════════════
@@ -353,10 +366,11 @@ async function loadSession() {
         if (!entry || !entry.valid) { clearSession(); return false; }
         // Server-side session check
         const touch = await callWorker('/sessionTouch', 'POST', {
-            sessionId: session.sessionId,
-            code: session.code,
-            ua
-        });
+    sessionId: session.sessionId,
+    code: session.code,
+    ua,
+    clientSecret: CLIENT_SECRET
+});
         if (!touch.success) { clearSession(); return false; }
         currentAccessCode = session.code.toUpperCase();
         accessData = { code: session.code, expiryDate: entry.expiryDate };
@@ -410,7 +424,7 @@ async function verifyAccessCode() {
 
     try {
         const ua = navigator.userAgent;
-        
+
         const entry = await validateAccessCode(code);
         if (!entry) { showError('Connection error. Please try again.'); return; }
         if (!entry.valid) {
@@ -419,34 +433,53 @@ async function verifyAccessCode() {
             showError('This code has expired.'); return;
         }
 
+        // Try resuming an existing session on THIS device first
+        const saved = (() => {
+            try { return JSON.parse(localStorage.getItem('merchSession') || 'null'); }
+            catch { return null; }
+        })();
+        if (saved && saved.code === code && saved.sessionId) {
+            const touch = await callWorker('/sessionTouch', 'POST', {
+                sessionId: saved.sessionId,
+                code,
+                ua,
+                clientSecret: CLIENT_SECRET
+            });
+            if (touch.success) {
+                sessionId = saved.sessionId;
+                currentAccessCode = code;
+                accessData = { code, expiryDate: entry.expiryDate };
+                SESSION_TOKEN = await generateSessionToken();
+                saveLocalSession(code, entry.expiryDate, sessionId);
+                await showSuccess();
+                return;
+            }
+        }
+
+        // Otherwise check whether the code is already in use on another device
         const lookup = await callWorker('/sessionLookup', 'POST', { code, ua });
         if (!lookup.success) { showError('Connection error. Please try again.'); return; }
         if (lookup.exists) {
-            if (!lookup.fingerprintMatch) {
-                showError('This code is already in use on another device.');
-                return;
-            }
-            sessionId = lookup.sessionId;
-            await callWorker('/sessionTouch', 'POST', { sessionId, code, ua });
-            currentAccessCode = code;
-            accessData = { code, expiryDate: entry.expiryDate };
-            SESSION_TOKEN = await generateSessionToken(code);
-            saveLocalSession(code, entry.expiryDate, sessionId);
-            await showSuccess();
+            showError('This code is already in use on another device.');
             return;
         }
+
+        // Create a brand new session
         const newSid = generateSessionId();
         const create = await callWorker('/sessionCreate', 'POST', {
             code,
             ua,
             sessionId: newSid,
+            clientSecret: CLIENT_SECRET,
+            nonce: generateNonce(),
             expiryDate: entry.expiryDate
         });
         if (!create.success) { showError('Failed to create secure session'); return; }
+
         currentAccessCode = code;
         accessData = { code, expiryDate: entry.expiryDate };
         sessionId = newSid;
-        SESSION_TOKEN = await generateSessionToken(code);
+        SESSION_TOKEN = create.sessionToken || await generateSessionToken();
         saveLocalSession(code, entry.expiryDate, newSid);
         await showSuccess();
 
@@ -539,10 +572,11 @@ async function performPeriodicCheck() {
         }
 
         const touch = await callWorker('/sessionTouch', 'POST', {
-            sessionId,
-            code: currentAccessCode,
-            ua
-        });
+    sessionId,
+    code: currentAccessCode,
+    ua,
+    clientSecret: CLIENT_SECRET
+});
         if (!touch.success) {
             await forceLogout(touch.message === 'Fingerprint mismatch'
                 ? 'Device verification failed.'
@@ -571,10 +605,11 @@ async function forceLogout(message) {
     try {
         if (sessionId && currentAccessCode) {
             await callWorker('/sessionEnd', 'POST', {
-                sessionId,
-                code: currentAccessCode,
-                ua: navigator.userAgent
-            }).catch(() => {});
+    sessionId,
+    code: currentAccessCode,
+    ua: navigator.userAgent,
+    clientSecret: CLIENT_SECRET
+}).catch(() => {});
         }
     } catch (e) {}
     clearSession();
