@@ -307,23 +307,23 @@ async function fetchProductsFromWorker() {
     if (lines.length < 2) throw new Error('Empty data');
     
     return lines.slice(1).map(l => {
-        const c = parseCSVRow(l);
-        if (c.length < 5) return null;
-        return {
-            asin: c[0] || '',
-            link: c[1] || '#',
-            bsrRaw: c[2] || '',
-            bsrNumber: extractBsrNumber(c[2]),
-            bsrDisplay: cleanBsrDisplay(c[2]),
-            imageUrl: c[3] || 'https://via.placeholder.com/300?text=No+Image',
-            dateAddedRaw: c[4] || '',
-            parsedDate: parseDateFromString(c[4]),
-            designTitle: c[5] || '',
-            brand: c[6] || '',
-            featureBullet1: c[7] || '',
-            featureBullet2: c[8] || ''
-        };
-    }).filter(Boolean);
+    const c = parseCSVRow(l);
+    if (c.length < 5) return null;
+    return {
+        asin: (c[0] || '').trim().toUpperCase(), // تنظيف ASIN: إزالة المسافات وتحويل لأحرف كبيرة
+        link: c[1] || '#',
+        bsrRaw: c[2] || '',
+        bsrNumber: extractBsrNumber(c[2]),
+        bsrDisplay: cleanBsrDisplay(c[2]),
+        imageUrl: c[3] || 'https://via.placeholder.com/300?text=No+Image',
+        dateAddedRaw: c[4] || '',
+        parsedDate: parseDateFromString(c[4]),
+        designTitle: c[5] || '',
+        brand: c[6] || '',
+        featureBullet1: c[7] || '',
+        featureBullet2: c[8] || ''
+    };
+}).filter(p => p && p.asin); // تأكد من وجود ASIN
 }
 
 // ═══════════════════════════════════════════════════
@@ -636,17 +636,45 @@ let currentKeywordSearch = '';
 let trendChart = null;
 let currentWordLength = 3;
 
+
+// ═══════════════════════════════════════════════════
+// VALIDATE ASIN
+// ═══════════════════════════════════════════════════
+function isValidAsin(asin) {
+    // ASIN عادةً يتكون من 10 أحرف (حروف وأرقام)
+    return asin && typeof asin === 'string' && asin.trim().length >= 10 && /^[A-Z0-9]+$/i.test(asin.trim());
+}
+
 // ═══════════════════════════════════════════════════
 // FAVORITES MANAGEMENT
 // ═══════════════════════════════════════════════════
 function loadFavorites() {
-    const saved = localStorage.getItem('merchFavorites');
-    if (saved) {
-        try {
-            favorites = new Set(JSON.parse(saved));
-        } catch (e) {
+    try {
+        const saved = localStorage.getItem('merchFavorites');
+        if (saved) {
+            const parsedData = JSON.parse(saved);
+            // تصفية أي ASIN غير صالح
+            const validAsins = parsedData.filter(asin => {
+                // تأكد من أن الـ ASIN موجود في المنتجات وأنه صالح
+                return asin && typeof asin === 'string' && asin.length >= 10 && asin.match(/^[A-Z0-9]+$/);
+            });
+            
+            if (validAsins.length !== parsedData.length) {
+                // إذا كان هناك ASINs غير صالحة، نظف البيانات
+                console.log('Cleaned invalid ASINs:', parsedData.length - validAsins.length);
+                favorites = new Set(validAsins);
+                saveFavorites(); // حفظ البيانات النظيفة
+            } else {
+                favorites = new Set(parsedData);
+            }
+        } else {
             favorites = new Set();
         }
+    } catch (e) {
+        console.error('Error loading favorites:', e);
+        favorites = new Set();
+        // مسح البيانات التالفة
+        localStorage.removeItem('merchFavorites');
     }
     updateFavoritesUI();
 }
@@ -657,16 +685,43 @@ function saveFavorites() {
 }
 
 function toggleFavorite(asin) {
-    if (favorites.has(asin)) {
-        favorites.delete(asin);
-    } else {
-        favorites.add(asin);
-    }
-    saveFavorites();
-    if (favoritesFilterActive) {
-        applyAllFilters();
-    } else {
-        renderProducts(filteredProducts.length > 0 ? filteredProducts : allProducts);
+    if (!asin) return;
+    
+    try {
+        // تأكد من أن asin موجود وصالح
+        const product = allProducts.find(p => p.asin === asin);
+        
+        if (favorites.has(asin)) {
+            favorites.delete(asin);
+        } else {
+            favorites.add(asin);
+        }
+        
+        // حفظ مباشر
+        saveFavorites();
+        
+        // تحديث الواجهة
+        if (favoritesFilterActive) {
+            applyAllFilters();
+        } else {
+            // تحديث عرض البطاقات فقط دون إعادة تحميل كل المنتجات
+            const favBtn = document.querySelector(`button[onclick*="${asin}"]`);
+            if (favBtn) {
+                const isFav = favorites.has(asin);
+                favBtn.classList.toggle('active', isFav);
+                const icon = favBtn.querySelector('i');
+                if (icon) {
+                    icon.className = isFav ? 'fas fa-heart' : 'far fa-heart';
+                }
+            }
+        }
+        
+        // إظهار إشعار
+        showToast(favorites.has(asin) ? '❤️ Added to favorites' : '💔 Removed from favorites');
+        
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        showToast('Error updating favorite');
     }
 }
 
@@ -1406,6 +1461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+
 // ═══════════════════════════════════════════════════
 // GLOBAL EXPOSURE
 // ═══════════════════════════════════════════════════
@@ -1421,3 +1477,15 @@ window.verifyAccessCode = verifyAccessCode;
 window.openResearchModal = openResearchModal;
 window.closeResearchModal = closeResearchModal;
 window.performAmazonSearch = performAmazonSearch;
+
+
+// أضف هذا في نهاية ملف app.js
+function clearAllLocalData() {
+    if (confirm('Are you sure you want to clear all local data? This will remove favorites and require re-login.')) {
+        localStorage.removeItem('merchFavorites');
+        localStorage.removeItem('merchSession');
+        localStorage.removeItem('merchClientSecret');
+        location.reload();
+    }
+}
+window.clearAllLocalData = clearAllLocalData;
