@@ -657,53 +657,106 @@ function saveFavorites() {
 }
 
 function toggleFavorite(asin) {
-    console.log('toggleFavorite called with:', asin);
-    console.log('Current favorites:', [...favorites]);
+    console.log('toggleFavorite called with asin:', asin);
     
     if (!asin) {
         console.error('toggleFavorite: asin is empty');
         return;
     }
     
-    try {
-        if (favorites.has(asin)) {
-            favorites.delete(asin);
-            console.log('Removed from favorites:', asin);
-        } else {
-            favorites.add(asin);
-            console.log('Added to favorites:', asin);
-        }
-        
-        // حفظ في localStorage
-        saveFavorites();
-        
-        // تحديث الزر في الواجهة بدون إعادة تحميل الصفحة
-        const favoriteBtn = document.querySelector(`.favorite-btn[data-asin="${asin.replace(/'/g, "\\'")}"]`);
-        if (favoriteBtn) {
-            const isFav = favorites.has(asin);
-            favoriteBtn.classList.toggle('active', isFav);
-            const icon = favoriteBtn.querySelector('i');
-            if (icon) {
-                icon.className = isFav ? 'fas fa-heart' : 'far fa-heart';
-            }
-            console.log('Button updated successfully');
-        } else {
-            console.warn('Favorite button not found in DOM for:', asin);
-        }
-        
-        // إذا كان فلتر المفضلة نشط، أعد تحميل المنتجات
-        if (favoritesFilterActive) {
-            applyAllFilters();
-        }
-        
-        // إظهار إشعار
-        showToast(favorites.has(asin) ? '❤️ Added to favorites' : '💔 Removed from favorites');
-        
-    } catch (error) {
-        console.error('Error in toggleFavorite:', error);
-        showToast('Error updating favorite');
+    if (favorites.has(asin)) {
+        favorites.delete(asin);
+        console.log('Removed from favorites');
+    } else {
+        favorites.add(asin);
+        console.log('Added to favorites');
+    }
+    
+    saveFavorites();
+    
+    if (favoritesFilterActive) {
+        applyAllFilters();
+    } else {
+        renderProducts(filteredProducts.length > 0 ? filteredProducts : allProducts);
     }
 }
+
+function isFavorite(asin) {
+    return favorites.has(asin);
+}
+
+function updateFavoritesUI() {
+    const count = favorites.size;
+    document.getElementById('favoritesCount').textContent = count;
+    
+    const toggleBtn = document.getElementById('favoritesToggleBtn');
+    const indicator = document.getElementById('favoritesActiveIndicator');
+    const exportBtn = document.getElementById('exportCsvBtn');
+    
+    if (favoritesFilterActive) {
+        toggleBtn.classList.add('active');
+        toggleBtn.querySelector('i').className = 'fas fa-heart';
+        indicator.style.display = 'inline-flex';
+    } else {
+        toggleBtn.classList.remove('active');
+        toggleBtn.querySelector('i').className = 'far fa-heart';
+        indicator.style.display = 'none';
+    }
+    
+    exportBtn.disabled = count === 0;
+}
+
+function toggleFavoritesFilter() {
+    favoritesFilterActive = !favoritesFilterActive;
+    updateFavoritesUI();
+    applyAllFilters();
+}
+
+function exportFavoritesToCSV() {
+    if (favorites.size === 0) {
+        showToast('No favorites to export');
+        return;
+    }
+    
+    const favProducts = allProducts.filter(p => favorites.has(p.asin));
+    if (favProducts.length === 0) {
+        showToast('No favorite products found in current data');
+        return;
+    }
+    
+    const headers = ['ASIN', 'Title', 'BSR', 'Date Added', 'Link'];
+    const rows = favProducts.map(p => [
+        p.asin,
+        `"${(p.designTitle || '').replace(/"/g, '""')}"`,
+        p.bsrDisplay,
+        p.dateAddedRaw,
+        p.link
+    ]);
+    
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `merch_favorites_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showToast(`✅ Exported ${favProducts.length} favorites`);
+}
+
+function showToast(message) {
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.remove(), 3000);
+}
+
 // ═══════════════════════════════════════════════════
 // AMAZON RESEARCH TOOL
 // ═══════════════════════════════════════════════════
@@ -940,25 +993,26 @@ function renderProducts(products) {
         return;
     }
     
+    document.getElementById('product-count').innerText = products.length;
+    
     let html = '<div class="products-grid">';
     
     products.forEach(product => {
         const favActive = isFavorite(product.asin) ? 'active' : '';
         const favIcon = isFavorite(product.asin) ? 'fas fa-heart' : 'far fa-heart';
         const dateDisplay = product.parsedDate ? formatDate(product.parsedDate) : product.dateAddedRaw || 'N/A';
-        // تأكد من تنظيف asin
-        const cleanAsin = product.asin.replace(/'/g, "\\'");
+        const safeAsin = product.asin.replace(/'/g, "\\'");
         
         html += `
-            <div class="product-card" data-asin="${cleanAsin}">
-                <button class="favorite-btn ${favActive}" data-asin="${cleanAsin}" onclick="toggleFavorite('${cleanAsin}')" title="Add to favorites">
+            <div class="product-card">
+                <button class="favorite-btn ${favActive}" data-asin="${safeAsin}" onclick="window.toggleFavorite('${safeAsin}'); return false;" title="Add to favorites">
                     <i class="${favIcon}"></i>
                 </button>
-                <img class="product-image" src="${product.imageUrl}" alt="${product.designTitle || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                <img class="product-image" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle) || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                 <div class="product-info">
-                    ${product.bsrDisplay ? '<div class="bsr-tag">📊 ' + product.bsrDisplay + '</div>' : ''}
-                    <div class="product-title">${product.designTitle || 'Untitled Design'}</div>
-                    ${product.brand ? '<div style="font-size:0.7rem;color:#64748b;margin-bottom:4px;">🏷️ ' + product.brand + '</div>' : ''}
+                    ${product.bsrDisplay ? `<div class="bsr-tag">📊 ${product.bsrDisplay}</div>` : ''}
+                    <div class="product-title">${escHtmlSafe(product.designTitle) || 'Untitled Design'}</div>
+                    ${product.brand ? `<div style="font-size:0.7rem;color:#64748b;margin-bottom:4px;">🏷️ ${escHtmlSafe(product.brand)}</div>` : ''}
                     <div class="product-date">📅 ${dateDisplay}</div>
                     <div class="card-actions">
                         <a href="${product.link}" target="_blank" class="amazon-btn" onclick="event.stopPropagation();">
@@ -967,7 +1021,7 @@ function renderProducts(products) {
                         <a href="https://www.amazon.com/dp/${product.asin}" target="_blank" class="amazon-btn" onclick="event.stopPropagation();" style="flex:0.5;">
                             <i class="fas fa-external-link-alt"></i>
                         </a>
-                        <button class="analyze-btn" onclick="event.stopPropagation(); analyzeProduct('${cleanAsin}')">
+                        <button class="analyze-btn" data-asin="${safeAsin}" onclick="event.stopPropagation(); window.analyzeProduct('${safeAsin}');">
                             <i class="fas fa-chart-line"></i> Analyze
                         </button>
                     </div>
@@ -979,6 +1033,7 @@ function renderProducts(products) {
     html += '</div>';
     container.innerHTML = html;
 }
+
 // ═══════════════════════════════════════════════════
 // HOT NICHES RENDERING
 // ═══════════════════════════════════════════════════
@@ -1363,55 +1418,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// تنظيف المفضلات من الـ ASINs غير الموجودة
-function cleanFavorites() {
-    const saved = localStorage.getItem('merchFavorites');
-    if (!saved) return;
-    
-    try {
-        const favAsins = JSON.parse(saved);
-        console.log('Favorites before cleaning:', favAsins);
-        
-        // انتظر حتى يتم تحميل المنتجات
-        setTimeout(() => {
-            const existingAsins = allProducts.map(p => p.asin.trim().toUpperCase());
-            console.log('Existing ASINs:', existingAsins.slice(0, 5));
-            
-            const validFavs = favAsins.filter(asin => existingAsins.includes(asin.trim().toUpperCase()));
-            console.log('Valid favorites after cleaning:', validFavs);
-            
-            if (validFavs.length !== favAsins.length) {
-                favorites = new Set(validFavs);
-                saveFavorites();
-                console.log('Cleaned favorites, removed:', favAsins.length - validFavs.length);
-            }
-        }, 3000);
-    } catch (e) {
-        console.error('Error cleaning favorites:', e);
-        localStorage.removeItem('merchFavorites');
-        favorites = new Set();
-    }
-}
-async function initApp() {
-    if (!sessionToken) {
-        document.getElementById('productsContainer').innerHTML = 
-            '<div class="no-results">⚠️ Session error. Please logout and login again.</div>';
-        return;
-    }
-
-    loadFavorites();
-    setupEventListeners();
-    await loadProducts();
-    renderProducts(allProducts);
-    updateTrendChart();
-    updateHotNiches();
-    
-    // تنظيف المفضلات القديمة
-    cleanFavorites();
-}
-
-// استدعها بعد loadProducts
-
 // ═══════════════════════════════════════════════════
 // GLOBAL EXPOSURE
 // ═══════════════════════════════════════════════════
@@ -1427,3 +1433,5 @@ window.verifyAccessCode = verifyAccessCode;
 window.openResearchModal = openResearchModal;
 window.closeResearchModal = closeResearchModal;
 window.performAmazonSearch = performAmazonSearch;
+window.analyzeProduct = analyzeProduct;
+window.closeModal = closeModal;
