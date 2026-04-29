@@ -20,11 +20,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-          integrity="sha256-HtsXJanqjKTc8vVQjO4YMhiqFoXkfBsjBWcX91T1jr8"
+          integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0"
           crossorigin="anonymous"
           referrerpolicy="no-referrer">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
-            integrity="sha256-0q+JdOlScWOHcunpUk21uab1jW7C1deBQARHtKMcaB4"
+            integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4"
             crossorigin="anonymous"></script>
     
     <style>
@@ -71,12 +71,9 @@
         .export-csv-btn { background: white; border: 2px solid #10b981; color: #10b981; padding: 10px 20px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(16,185,129,0.15); font-family: 'Inter', sans-serif; }
         .export-csv-btn:hover { background: #10b981; color: white; }
         .export-csv-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        /* ─── Amazon Research Button ─── */
         .research-btn { background: white; border: 2px solid #667eea; color: #667eea; padding: 10px 20px; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 8px rgba(102,126,234,0.15); font-family: 'Inter', sans-serif; }
         .research-btn:hover { background: #667eea; color: white; transform: translateY(-1px); }
         .research-btn i { font-size: 0.9rem; }
-
-        /* ─── Research Modal Form ─── */
         .research-form { padding: 4px 0; }
         .research-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .research-group { width: 100%; }
@@ -185,7 +182,7 @@
             <i class="fas fa-key"></i>
             <input type="text" id="accessCode" placeholder="Enter your access code..." autocomplete="off">
         </div>
-        <button class="login-btn" id="loginBtn" onclick="verifyAccessCode()">
+        <button class="login-btn" id="loginBtn">
             <span id="btnText">Unlock Tool</span>
             <div class="loading-spinner" id="loadingSpinner"></div>
         </button>
@@ -201,7 +198,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <span class="expiry-badge" id="expiryBadge"><i class="fas fa-clock"></i><span id="expiryText">-</span></span>
-            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </div>
     </div>
     <div class="container">
@@ -210,13 +207,13 @@
             <div class="stats"><span id="product-count">0</span> products · BSR cleaned</div>
             <div class="favorites-header">
                 <div class="favorites-actions">
-                    <button class="research-btn" id="researchBtn" onclick="openResearchModal()">
+                    <button class="research-btn" id="researchBtn">
                         <i class="fas fa-search-dollar"></i><span>Amazon Research</span>
                     </button>
-                    <button class="favorites-toggle-btn" id="favoritesToggleBtn" onclick="toggleFavoritesFilter()">
+                    <button class="favorites-toggle-btn" id="favoritesToggleBtn">
                         <i class="far fa-heart"></i><span>My Favorites</span><span class="count-badge" id="favoritesCount">0</span>
                     </button>
-                    <button class="export-csv-btn" id="exportCsvBtn" onclick="exportFavoritesToCSV()">
+                    <button class="export-csv-btn" id="exportCsvBtn">
                         <i class="fas fa-download"></i><span>Export CSV</span>
                     </button>
                 </div>
@@ -294,8 +291,8 @@
                 <div class="filter-group">
                     <label>&nbsp;</label>
                     <div style="display:flex;gap:6px;">
-                        <button class="btn btn-primary" onclick="applyAllFilters()">Apply</button>
-                        <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
+                        <button class="btn btn-primary" id="applyFiltersBtn">Apply</button>
+                        <button class="btn btn-secondary" id="resetFiltersBtn">Reset</button>
                     </div>
                 </div>
             </div>
@@ -322,7 +319,7 @@
     <div class="modal-content" style="max-width: 560px;">
         <div class="modal-header">
             <h2><i class="fas fa-search-dollar" style="color:#667eea;"></i> Amazon Research</h2>
-            <button class="close-modal" onclick="closeResearchModal()">&times;</button>
+            <button class="close-modal" id="closeResearchModalBtn">&times;</button>
         </div>
         <div class="research-form">
             <div class="research-row">
@@ -355,7 +352,7 @@
                 <label><i class="fas fa-keyboard"></i> Keyword or Search Term</label>
                 <input type="text" id="researchKeyword" placeholder="e.g., funny cat, hiking, motivational..." autocomplete="off">
             </div>
-            <button class="research-search-btn" onclick="performAmazonSearch()">
+            <button class="research-search-btn" id="researchSearchBtn">
                 <i class="fas fa-external-link-alt"></i> Search Amazon
             </button>
         </div>
