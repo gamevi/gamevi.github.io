@@ -1276,13 +1276,87 @@ function updateTrendChart() {
 }
 
 // ═══════════════════════════════════════════════════
-// INITIAL LOAD
+// INITIAL LOAD & EVENT BINDING
 // ═══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
+    // ── Login Page Events ──
+    document.getElementById('loginBtn').addEventListener('click', verifyAccessCode);
+    
     document.getElementById('accessCode').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') verifyAccessCode();
     });
-    
+
+    // ── Logout Button ──
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    // ── Research Button & Modal ──
+    document.getElementById('researchBtn').addEventListener('click', openResearchModal);
+    document.getElementById('closeResearchModalBtn').addEventListener('click', closeResearchModal);
+    document.getElementById('researchModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('researchModal')) closeResearchModal();
+    });
+    document.getElementById('researchSearchBtn').addEventListener('click', performAmazonSearch);
+    document.getElementById('researchKeyword').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performAmazonSearch();
+    });
+
+    // ── Favorites ──
+    document.getElementById('favoritesToggleBtn').addEventListener('click', toggleFavoritesFilter);
+    document.getElementById('exportCsvBtn').addEventListener('click', exportFavoritesToCSV);
+
+    // ── Filters ──
+    document.getElementById('applyFiltersBtn').addEventListener('click', applyAllFilters);
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetAll);
+
+    // ── Keyword Search ──
+    document.getElementById('searchKeywordBtn').addEventListener('click', () => {
+        currentKeywordSearch = document.getElementById('keywordSearch').value.trim();
+        applyAllFilters();
+    });
+    document.getElementById('clearKeywordBtn').addEventListener('click', () => {
+        document.getElementById('keywordSearch').value = '';
+        currentKeywordSearch = '';
+        applyAllFilters();
+    });
+    document.getElementById('keywordSearch').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            currentKeywordSearch = document.getElementById('keywordSearch').value.trim();
+            applyAllFilters();
+        }
+    });
+
+    // ── Hot Niches ──
+    document.getElementById('applyWordLengthBtn').addEventListener('click', applyNicheControls);
+    document.getElementById('wordLengthInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyNicheControls();
+    });
+    document.getElementById('nichesPeriod').addEventListener('change', renderHotNiches);
+    document.getElementById('minRepeats').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyNicheControls();
+    });
+
+    // ── Analysis Modal ──
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('analysisModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('analysisModal')) closeModal();
+    });
+
+    // ── Live Filters ──
+    document.getElementById('sortSelect').addEventListener('change', applyAllFilters);
+    document.getElementById('dateFilter').addEventListener('change', applyAllFilters);
+    document.getElementById('searchMode').addEventListener('change', () => {
+        if (currentKeywordSearch) applyAllFilters();
+    });
+    document.getElementById('bsrMin').addEventListener('change', applyAllFilters);
+    document.getElementById('bsrMax').addEventListener('change', applyAllFilters);
+    document.getElementById('bsrMin').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyAllFilters();
+    });
+    document.getElementById('bsrMax').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') applyAllFilters();
+    });
+
+    // ── Load Session or Show Login ──
     const hasSession = await loadSession();
     if (hasSession) {
         document.getElementById('loginPage').style.display = 'none';
@@ -1297,7 +1371,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Expose functions globally
+// ═══════════════════════════════════════════════════
+// GLOBAL EXPOSURE
+// ═══════════════════════════════════════════════════
 window.toggleFavoritesFilter = toggleFavoritesFilter;
 window.toggleFavorite = toggleFavorite;
 window.exportFavoritesToCSV = exportFavoritesToCSV;
