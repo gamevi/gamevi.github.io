@@ -998,16 +998,16 @@ function renderProducts(products) {
     let html = '<div class="products-grid">';
     
     products.forEach(product => {
-        const favActive = isFavorite(product.asin) ? 'active' : '';
-        const favIcon = isFavorite(product.asin) ? 'fas fa-heart' : 'far fa-heart';
+        const favActive = isFavorite(p.asin) ? 'active' : '';
+const favIcon = isFavorite(p.asin) ? 'fas fa-heart' : 'far fa-heart';
         const dateDisplay = product.parsedDate ? formatDate(product.parsedDate) : product.dateAddedRaw || 'N/A';
         const safeAsin = product.asin.replace(/'/g, "\\'");
         
         html += `
             <div class="product-card">
-                <button class="favorite-btn ${favActive}" data-asin="${safeAsin}" onclick="window.toggleFavorite('${safeAsin}'); return false;" title="Add to favorites">
-                    <i class="${favIcon}"></i>
-                </button>
+                <button class="favorite-btn ${favActive}" data-asin="${safeAsin}" title="Add to favorites">
+    <i class="${favIcon}"></i>
+</button>
                 <img class="product-image" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle) || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                 <div class="product-info">
                     ${product.bsrDisplay ? `<div class="bsr-tag">📊 ${product.bsrDisplay}</div>` : ''}
@@ -1415,6 +1415,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         document.getElementById('loginPage').style.display = 'flex';
         document.getElementById('mainApp').classList.remove('show');
+    }
+});
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.favorite-btn');
+    if (!btn) return;
+
+    const asin = btn.dataset.asin;
+
+    if (!asin) {
+        console.warn('ASIN missing');
+        return;
+    }
+
+    // تشغيل الفافوريت
+    toggleFavorite(asin);
+
+    // تحديث شكل الزر مباشرة
+    btn.classList.toggle('active');
+
+    // تحديث الأيقونة (قلب ممتلئ / فارغ)
+    const icon = btn.querySelector('i');
+    if (icon) {
+        icon.classList.toggle('fas');
+        icon.classList.toggle('far');
     }
 });
 
