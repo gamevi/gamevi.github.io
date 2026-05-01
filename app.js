@@ -657,23 +657,12 @@ function saveFavorites() {
 }
 
 function toggleFavorite(asin) {
-    console.log('toggleFavorite called with asin:', asin);
-    
-    if (!asin) {
-        console.error('toggleFavorite: asin is empty');
-        return;
-    }
-    
     if (favorites.has(asin)) {
         favorites.delete(asin);
-        console.log('Removed from favorites');
     } else {
         favorites.add(asin);
-        console.log('Added to favorites');
     }
-    
     saveFavorites();
-    
     if (favoritesFilterActive) {
         applyAllFilters();
     } else {
@@ -998,16 +987,15 @@ function renderProducts(products) {
     let html = '<div class="products-grid">';
     
     products.forEach(product => {
-        const favActive = isFavorite(p.asin) ? 'active' : '';
-const favIcon = isFavorite(p.asin) ? 'fas fa-heart' : 'far fa-heart';
+        const favActive = isFavorite(product.asin) ? 'active' : '';
+        const favIcon = isFavorite(product.asin) ? 'fas fa-heart' : 'far fa-heart';
         const dateDisplay = product.parsedDate ? formatDate(product.parsedDate) : product.dateAddedRaw || 'N/A';
-        const safeAsin = product.asin.replace(/'/g, "\\'");
         
         html += `
             <div class="product-card">
-                <button class="favorite-btn ${favActive}" data-asin="${safeAsin}" title="Add to favorites">
-    <i class="${favIcon}"></i>
-</button>
+                <button class="favorite-btn ${favActive}" onclick="event.stopPropagation(); toggleFavorite('${product.asin}')" title="Add to favorites">
+                    <i class="${favIcon}"></i>
+                </button>
                 <img class="product-image" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle) || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                 <div class="product-info">
                     ${product.bsrDisplay ? `<div class="bsr-tag">📊 ${product.bsrDisplay}</div>` : ''}
@@ -1021,7 +1009,7 @@ const favIcon = isFavorite(p.asin) ? 'fas fa-heart' : 'far fa-heart';
                         <a href="https://www.amazon.com/dp/${product.asin}" target="_blank" class="amazon-btn" onclick="event.stopPropagation();" style="flex:0.5;">
                             <i class="fas fa-external-link-alt"></i>
                         </a>
-                        <button class="analyze-btn" data-asin="${safeAsin}" onclick="event.stopPropagation(); window.analyzeProduct('${safeAsin}');">
+                        <button class="analyze-btn" onclick="event.stopPropagation(); analyzeProduct('${product.asin}')">
                             <i class="fas fa-chart-line"></i> Analyze
                         </button>
                     </div>
@@ -1418,31 +1406,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.favorite-btn');
-    if (!btn) return;
-
-    const asin = btn.dataset.asin;
-
-    if (!asin) {
-        console.warn('ASIN missing');
-        return;
-    }
-
-    // تشغيل الفافوريت
-    toggleFavorite(asin);
-
-    // تحديث شكل الزر مباشرة
-    btn.classList.toggle('active');
-
-    // تحديث الأيقونة (قلب ممتلئ / فارغ)
-    const icon = btn.querySelector('i');
-    if (icon) {
-        icon.classList.toggle('fas');
-        icon.classList.toggle('far');
-    }
-});
-
 // ═══════════════════════════════════════════════════
 // GLOBAL EXPOSURE
 // ═══════════════════════════════════════════════════
@@ -1458,5 +1421,3 @@ window.verifyAccessCode = verifyAccessCode;
 window.openResearchModal = openResearchModal;
 window.closeResearchModal = closeResearchModal;
 window.performAmazonSearch = performAmazonSearch;
-window.analyzeProduct = analyzeProduct;
-window.closeModal = closeModal;
