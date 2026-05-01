@@ -739,8 +739,7 @@ function toggleFavorite(asin) {
         // In favorites-only mode: re-render to remove un-favorited products from view
         applyAllFilters();
     } else {
-        // FIX v4.2: Update heart buttons using data-asin attribute instead of onclick string matching
-        // This is more reliable and handles ASINs with special characters correctly.
+        // FIX v4.2 CSP: Update heart buttons using data-asin attribute (no inline onclick)
         const isFav = favorites.has(asin);
         document.querySelectorAll('.favorite-btn[data-asin="' + CSS.escape(asin) + '"]').forEach(btn => {
             btn.classList.toggle('active', isFav);
@@ -902,6 +901,7 @@ async function initApp() {
 
     loadFavorites();
     setupEventListeners();
+    setupEventDelegation(); // FIX v4.2 CSP: Setup click delegation for dynamic content
     await loadProducts();
     cleanOrphanedFavorites(); // FIX: Remove stuck favorites not in current data
     renderProducts(allProducts);
@@ -1053,6 +1053,63 @@ function resetAll() {
 }
 
 // ═══════════════════════════════════════════════════
+// EVENT DELEGATION (CSP-safe: no inline onclick)
+// ═══════════════════════════════════════════════════
+function setupEventDelegation() {
+    const container = document.getElementById('productsContainer');
+    if (!container) return;
+
+    container.addEventListener('click', function(e) {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+
+        const action = btn.getAttribute('data-action');
+        const asin = btn.getAttribute('data-asin');
+
+        switch(action) {
+            case 'favorite':
+                e.preventDefault();
+                e.stopPropagation();
+                if (asin) toggleFavorite(asin);
+                break;
+            case 'analyze':
+                e.preventDefault();
+                e.stopPropagation();
+                if (asin) analyzeProduct(asin);
+                break;
+            case 'external-link':
+                // Let the link work normally, just stop propagation to card
+                e.stopPropagation();
+                break;
+        }
+    });
+
+    // Hot niches container delegation
+    const nichesContainer = document.getElementById('hotNichesContainer');
+    if (nichesContainer) {
+        nichesContainer.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+
+            const action = btn.getAttribute('data-action');
+            const keyword = btn.getAttribute('data-keyword');
+
+            switch(action) {
+                case 'search-keyword':
+                    e.preventDefault();
+                    if (keyword) searchByKeyword(keyword);
+                    break;
+                case 'amazon-search':
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (keyword) openAmazonSearch(keyword);
+                    break;
+            }
+        });
+    }
+}
+
+// ═══════════════════════════════════════════════════
 // RENDERING
 // ═══════════════════════════════════════════════════
 function renderProducts(products) {
@@ -1074,7 +1131,7 @@ function renderProducts(products) {
         
         html += `
             <div class="product-card">
-                <button class="favorite-btn ${favActive}" data-asin="${escHtmlSafe(product.asin)}" onclick="event.stopPropagation(); toggleFavorite('${escHtmlJS(product.asin)}')" title="Add to favorites">
+                <button class="favorite-btn ${favActive}" data-action="favorite" data-asin="${escHtmlSafe(product.asin)}" title="Add to favorites">
                     <i class="${favIcon}"></i>
                 </button>
                 <img class="product-image" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle) || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
@@ -1084,13 +1141,13 @@ function renderProducts(products) {
                     ${product.brand ? `<div style="font-size:0.7rem;color:#64748b;margin-bottom:4px;">🏷️ ${escHtmlSafe(product.brand)}</div>` : ''}
                     <div class="product-date">📅 ${dateDisplay}</div>
                     <div class="card-actions">
-                        <a href="${product.link}" target="_blank" class="amazon-btn" onclick="event.stopPropagation();">
+                        <a href="${product.link}" target="_blank" class="amazon-btn" data-action="external-link">
                             <i class="fab fa-amazon"></i> Amazon
                         </a>
-                        <a href="https://www.amazon.com/dp/${product.asin}" target="_blank" class="amazon-btn" onclick="event.stopPropagation();" style="flex:0.5;">
+                        <a href="https://www.amazon.com/dp/${product.asin}" target="_blank" class="amazon-btn" data-action="external-link" style="flex:0.5;">
                             <i class="fas fa-external-link-alt"></i>
                         </a>
-                        <button class="analyze-btn" onclick="event.stopPropagation(); analyzeProduct('${escHtmlJS(product.asin)}')">
+                        <button class="analyze-btn" data-action="analyze" data-asin="${escHtmlSafe(product.asin)}">
                             <i class="fas fa-chart-line"></i> Analyze
                         </button>
                     </div>
@@ -1121,7 +1178,7 @@ function renderHotNiches() {
     container.innerHTML = niches.map((n, i) => {
         const bw = Math.round((n.count / max) * 100);
         const rc = i === 0 ? '#e95e2e' : i < 3 ? '#f59e0b' : i < 10 ? '#3b82f6' : '#64748b';
-        return `<div class="niche-item" onclick="searchByKeyword('${escHtmlJS(n.keyword)}')">
+        return `<div class="niche-item" data-action="search-keyword" data-keyword="${escHtmlSafe(n.keyword)}">
             <div class="niche-main-row">
                 <div class="niche-left">
                     <span class="niche-rank" style="background:${rc}22;color:${rc};">#${i + 1}</span>
@@ -1132,7 +1189,7 @@ function renderHotNiches() {
                     <span class="niche-bsr">avg:${n.avgBSR.toLocaleString()}</span>
                     <span class="niche-bsr">🏆${n.minBSR.toLocaleString()}</span>
                     <span class="niche-action">
-                        <button class="amazon-search-btn" onclick="event.stopPropagation();openAmazonSearch('${escHtmlJS(n.keyword)}')">
+                        <button class="amazon-search-btn" data-action="amazon-search" data-keyword="${escHtmlSafe(n.keyword)}">
                             <i class="fab fa-amazon"></i> Search
                         </button>
                     </span>
