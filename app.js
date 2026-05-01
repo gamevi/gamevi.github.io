@@ -3,27 +3,6 @@
 // ═══════════════════════════════════════════════════
 const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
 
-
-// ═══════════════════════════════════════════════════
-// CLIENT SECRET & NONCE (v4.0 worker)
-// ═══════════════════════════════════════════════════
-function ensureClientSecret() {
-    let cs = localStorage.getItem('merchClientSecret');
-    if (!cs) {
-        const bytes = new Uint8Array(24);
-        crypto.getRandomValues(bytes);
-        cs = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-        localStorage.setItem('merchClientSecret', cs);
-    }
-    return cs;
-}
-function generateNonce() {
-    const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-const CLIENT_SECRET = ensureClientSecret();
-
 // ═══════════════════════════════════════════════════
 // CLIENT SESSION STATE (NEW)
 // ═══════════════════════════════════════════════════
@@ -270,13 +249,12 @@ async function refreshSessionToken() {
             body: JSON.stringify({
                 sessionId: sessionId,
                 code: currentAccessCode,
-                ua: navigator.userAgent,
-                clientSecret: CLIENT_SECRET
+                ua: navigator.userAgent
             })
         });
         const result = await response.json();
-        if (result.success && result.sessionToken) {
-            SESSION_TOKEN = result.sessionToken;
+        if (result.success && result.token) {
+            SESSION_TOKEN = result.token;
             return true;
         }
         return false;
@@ -329,8 +307,17 @@ async function fetchProductsFromWorker() {
 // ═══════════════════════════════════════════════════
 // SESSION TOKEN MANAGEMENT
 // ═══════════════════════════════════════════════════
-async function generateSessionToken() {
-    return await refreshSessionToken() ? SESSION_TOKEN : null;
+async function generateSessionToken(code) {
+    const tokenResult = await callWorker('/sessionCreate', 'POST', {
+        code: code,
+        ua: navigator.userAgent,
+        sessionId: sessionId,
+        expiryDate: accessData?.expiryDate
+    });
+
+    if (!tokenResult.success || !tokenResult.token) return null;
+    SESSION_TOKEN = tokenResult.token;
+    return SESSION_TOKEN;
 }
 
 // ═══════════════════════════════════════════════════
@@ -366,11 +353,10 @@ async function loadSession() {
         if (!entry || !entry.valid) { clearSession(); return false; }
         // Server-side session check
         const touch = await callWorker('/sessionTouch', 'POST', {
-    sessionId: session.sessionId,
-    code: session.code,
-    ua,
-    clientSecret: CLIENT_SECRET
-});
+            sessionId: session.sessionId,
+            code: session.code,
+            ua
+        });
         if (!touch.success) { clearSession(); return false; }
         currentAccessCode = session.code.toUpperCase();
         accessData = { code: session.code, expiryDate: entry.expiryDate };
@@ -424,7 +410,7 @@ async function verifyAccessCode() {
 
     try {
         const ua = navigator.userAgent;
-
+        
         const entry = await validateAccessCode(code);
         if (!entry) { showError('Connection error. Please try again.'); return; }
         if (!entry.valid) {
@@ -433,53 +419,34 @@ async function verifyAccessCode() {
             showError('This code has expired.'); return;
         }
 
-        // Try resuming an existing session on THIS device first
-        const saved = (() => {
-            try { return JSON.parse(localStorage.getItem('merchSession') || 'null'); }
-            catch { return null; }
-        })();
-        if (saved && saved.code === code && saved.sessionId) {
-            const touch = await callWorker('/sessionTouch', 'POST', {
-                sessionId: saved.sessionId,
-                code,
-                ua,
-                clientSecret: CLIENT_SECRET
-            });
-            if (touch.success) {
-                sessionId = saved.sessionId;
-                currentAccessCode = code;
-                accessData = { code, expiryDate: entry.expiryDate };
-                SESSION_TOKEN = await generateSessionToken();
-                saveLocalSession(code, entry.expiryDate, sessionId);
-                await showSuccess();
-                return;
-            }
-        }
-
-        // Otherwise check whether the code is already in use on another device
         const lookup = await callWorker('/sessionLookup', 'POST', { code, ua });
         if (!lookup.success) { showError('Connection error. Please try again.'); return; }
         if (lookup.exists) {
-            showError('This code is already in use on another device.');
+            if (!lookup.fingerprintMatch) {
+                showError('This code is already in use on another device.');
+                return;
+            }
+            sessionId = lookup.sessionId;
+            await callWorker('/sessionTouch', 'POST', { sessionId, code, ua });
+            currentAccessCode = code;
+            accessData = { code, expiryDate: entry.expiryDate };
+            SESSION_TOKEN = await generateSessionToken(code);
+            saveLocalSession(code, entry.expiryDate, sessionId);
+            await showSuccess();
             return;
         }
-
-        // Create a brand new session
         const newSid = generateSessionId();
         const create = await callWorker('/sessionCreate', 'POST', {
             code,
             ua,
             sessionId: newSid,
-            clientSecret: CLIENT_SECRET,
-            nonce: generateNonce(),
             expiryDate: entry.expiryDate
         });
         if (!create.success) { showError('Failed to create secure session'); return; }
-
         currentAccessCode = code;
         accessData = { code, expiryDate: entry.expiryDate };
         sessionId = newSid;
-        SESSION_TOKEN = create.sessionToken || await generateSessionToken();
+        SESSION_TOKEN = await generateSessionToken(code);
         saveLocalSession(code, entry.expiryDate, newSid);
         await showSuccess();
 
@@ -572,11 +539,10 @@ async function performPeriodicCheck() {
         }
 
         const touch = await callWorker('/sessionTouch', 'POST', {
-    sessionId,
-    code: currentAccessCode,
-    ua,
-    clientSecret: CLIENT_SECRET
-});
+            sessionId,
+            code: currentAccessCode,
+            ua
+        });
         if (!touch.success) {
             await forceLogout(touch.message === 'Fingerprint mismatch'
                 ? 'Device verification failed.'
@@ -605,11 +571,10 @@ async function forceLogout(message) {
     try {
         if (sessionId && currentAccessCode) {
             await callWorker('/sessionEnd', 'POST', {
-    sessionId,
-    code: currentAccessCode,
-    ua: navigator.userAgent,
-    clientSecret: CLIENT_SECRET
-}).catch(() => {});
+                sessionId,
+                code: currentAccessCode,
+                ua: navigator.userAgent
+            }).catch(() => {});
         }
     } catch (e) {}
     clearSession();
@@ -657,23 +622,12 @@ function saveFavorites() {
 }
 
 function toggleFavorite(asin) {
-    console.log('toggleFavorite called with asin:', asin);
-    
-    if (!asin) {
-        console.error('toggleFavorite: asin is empty');
-        return;
-    }
-    
     if (favorites.has(asin)) {
         favorites.delete(asin);
-        console.log('Removed from favorites');
     } else {
         favorites.add(asin);
-        console.log('Added to favorites');
     }
-    
     saveFavorites();
-    
     if (favoritesFilterActive) {
         applyAllFilters();
     } else {
@@ -998,16 +952,15 @@ function renderProducts(products) {
     let html = '<div class="products-grid">';
     
     products.forEach(product => {
-        const favActive = isFavorite(p.asin) ? 'active' : '';
-const favIcon = isFavorite(p.asin) ? 'fas fa-heart' : 'far fa-heart';
+        const favActive = isFavorite(product.asin) ? 'active' : '';
+        const favIcon = isFavorite(product.asin) ? 'fas fa-heart' : 'far fa-heart';
         const dateDisplay = product.parsedDate ? formatDate(product.parsedDate) : product.dateAddedRaw || 'N/A';
-        const safeAsin = product.asin.replace(/'/g, "\\'");
         
         html += `
             <div class="product-card">
-                <button class="favorite-btn ${favActive}" data-asin="${safeAsin}" title="Add to favorites">
-    <i class="${favIcon}"></i>
-</button>
+                <button class="favorite-btn ${favActive}" onclick="event.stopPropagation(); toggleFavorite('${product.asin}')" title="Add to favorites">
+                    <i class="${favIcon}"></i>
+                </button>
                 <img class="product-image" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle) || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
                 <div class="product-info">
                     ${product.bsrDisplay ? `<div class="bsr-tag">📊 ${product.bsrDisplay}</div>` : ''}
@@ -1021,7 +974,7 @@ const favIcon = isFavorite(p.asin) ? 'fas fa-heart' : 'far fa-heart';
                         <a href="https://www.amazon.com/dp/${product.asin}" target="_blank" class="amazon-btn" onclick="event.stopPropagation();" style="flex:0.5;">
                             <i class="fas fa-external-link-alt"></i>
                         </a>
-                        <button class="analyze-btn" data-asin="${safeAsin}" onclick="event.stopPropagation(); window.analyzeProduct('${safeAsin}');">
+                        <button class="analyze-btn" onclick="event.stopPropagation(); analyzeProduct('${product.asin}')">
                             <i class="fas fa-chart-line"></i> Analyze
                         </button>
                     </div>
@@ -1418,31 +1371,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.favorite-btn');
-    if (!btn) return;
-
-    const asin = btn.dataset.asin;
-
-    if (!asin) {
-        console.warn('ASIN missing');
-        return;
-    }
-
-    // تشغيل الفافوريت
-    toggleFavorite(asin);
-
-    // تحديث شكل الزر مباشرة
-    btn.classList.toggle('active');
-
-    // تحديث الأيقونة (قلب ممتلئ / فارغ)
-    const icon = btn.querySelector('i');
-    if (icon) {
-        icon.classList.toggle('fas');
-        icon.classList.toggle('far');
-    }
-});
-
 // ═══════════════════════════════════════════════════
 // GLOBAL EXPOSURE
 // ═══════════════════════════════════════════════════
@@ -1458,5 +1386,3 @@ window.verifyAccessCode = verifyAccessCode;
 window.openResearchModal = openResearchModal;
 window.closeResearchModal = closeResearchModal;
 window.performAmazonSearch = performAmazonSearch;
-window.analyzeProduct = analyzeProduct;
-window.closeModal = closeModal;
