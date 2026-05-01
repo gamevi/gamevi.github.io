@@ -373,14 +373,18 @@ async function loadSession() {
             clientSecret: CLIENT_SECRET
         });
         if (!touch.success) {
-            // Touch failed: session may have been revoked/expired server-side.
-            // Best-effort cleanup of stale Firestore session, then clear local.
-            callWorker('/sessionEnd', 'POST', {
-                sessionId: session.sessionId,
-                code: session.code,
-                ua,
-                clientSecret: CLIENT_SECRET
-            }).catch(() => {});
+            // Touch failed: session is revoked, expired, or is a legacy session
+            // (old sessions without clientSecretHash). AWAIT sessionEnd so Firestore
+            // is cleaned BEFORE the user tries to re-login — otherwise sessionLookup
+            // finds the stale "active" session and shows "already in use" error.
+            try {
+                await callWorker('/sessionEnd', 'POST', {
+                    sessionId: session.sessionId,
+                    code: session.code,
+                    ua,
+                    clientSecret: CLIENT_SECRET
+                });
+            } catch (_) {}
             clearSession();
             return false;
         }
@@ -473,13 +477,39 @@ async function verifyAccessCode() {
             localStorage.removeItem('merchSession');
         }
 
-        // Check whether the code is already in use on a DIFFERENT device.
-        // (With updated worker, /sessionCreate also handles stale same-device sessions.)
+        // Check if code is already active somewhere.
+        // If existingSessionId is returned, try to reclaim it with OUR clientSecret
+        // (same localStorage = same device). If touch succeeds, resume. If not, block.
         const lookup = await callWorker('/sessionLookup', 'POST', { code, ua });
         if (!lookup.success) { showError('Connection error. Please try again.'); return; }
-        if (lookup.exists) {
-            showError('This code is already in use on another device.');
-            return;
+        if (lookup.exists && lookup.existingSessionId) {
+            const reclaim = await callWorker('/sessionTouch', 'POST', {
+                sessionId: lookup.existingSessionId,
+                code,
+                ua,
+                clientSecret: CLIENT_SECRET
+            });
+            if (reclaim.success) {
+                // Same device — resume the existing session
+                sessionId = lookup.existingSessionId;
+                currentAccessCode = code;
+                accessData = { code, expiryDate: entry.expiryDate };
+                SESSION_TOKEN = await generateSessionToken();
+                saveLocalSession(code, entry.expiryDate, sessionId);
+                await showSuccess();
+                return;
+            }
+            // Touch failed → different device OR session was already cleaned.
+            // 'Legacy session ended' (410): worker ended an old session → safe to create new
+            // 'Session not found'   (404): session already ended (race) → safe to create new
+            // Any other failure    (403): real device mismatch → block
+            const safeToProceed = reclaim.message === 'Legacy session ended'
+                               || reclaim.message === 'Session not found';
+            if (!safeToProceed) {
+                showError('This code is already in use on another device.');
+                return;
+            }
+            // Session was cleaned — fall through to create new session
         }
 
         // Create a brand new session
@@ -492,7 +522,13 @@ async function verifyAccessCode() {
             nonce: generateNonce(),
             expiryDate: entry.expiryDate
         });
-        if (!create.success) { showError('Failed to create secure session'); return; }
+        if (!create.success) {
+            const msg = create.message === 'Code in use on another device'
+                ? 'This code is already in use on another device.'
+                : 'Failed to create session. Please try again.';
+            showError(msg);
+            return;
+        }
 
         currentAccessCode = code;
         accessData = { code, expiryDate: entry.expiryDate };
@@ -698,9 +734,22 @@ function toggleFavorite(asin) {
         favorites.add(asin);
     }
     saveFavorites();
-    // FIX: Always use applyAllFilters to keep filter state and product list consistent.
-    // The old conditional could render stale filteredProducts after a toggle.
-    applyAllFilters();
+    if (favoritesFilterActive) {
+        // In favorites-only mode: re-render to remove un-favorited products from view
+        applyAllFilters();
+    } else {
+        // FIX: Update ONLY the heart button in-place — no full re-render.
+        // Avoids DOM rebuilding issues and keeps current scroll/filter state.
+        const isFav = favorites.has(asin);
+        document.querySelectorAll('.favorite-btn').forEach(btn => {
+            const oc = btn.getAttribute('onclick') || '';
+            if (oc.includes("'" + asin + "'")) {
+                btn.classList.toggle('active', isFav);
+                const icon = btn.querySelector('i');
+                if (icon) icon.className = isFav ? 'fas fa-heart' : 'far fa-heart';
+            }
+        });
+    }
 }
 
 function isFavorite(asin) {
