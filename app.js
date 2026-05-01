@@ -364,14 +364,26 @@ async function loadSession() {
         const ua = navigator.userAgent;
         const entry = await validateAccessCode(session.code);
         if (!entry || !entry.valid) { clearSession(); return false; }
-        // Server-side session check
+        // FIX v4.1: With updated worker, sessionTouch no longer requires IP match,
+        // so same-device page refreshes always succeed regardless of IP change.
         const touch = await callWorker('/sessionTouch', 'POST', {
-    sessionId: session.sessionId,
-    code: session.code,
-    ua,
-    clientSecret: CLIENT_SECRET
-});
-        if (!touch.success) { clearSession(); return false; }
+            sessionId: session.sessionId,
+            code: session.code,
+            ua,
+            clientSecret: CLIENT_SECRET
+        });
+        if (!touch.success) {
+            // Touch failed: session may have been revoked/expired server-side.
+            // Best-effort cleanup of stale Firestore session, then clear local.
+            callWorker('/sessionEnd', 'POST', {
+                sessionId: session.sessionId,
+                code: session.code,
+                ua,
+                clientSecret: CLIENT_SECRET
+            }).catch(() => {});
+            clearSession();
+            return false;
+        }
         currentAccessCode = session.code.toUpperCase();
         accessData = { code: session.code, expiryDate: entry.expiryDate };
         sessionId = session.sessionId;
@@ -433,7 +445,8 @@ async function verifyAccessCode() {
             showError('This code has expired.'); return;
         }
 
-        // Try resuming an existing session on THIS device first
+        // FIX v4.1: Try resuming existing session on THIS device first.
+        // With updated worker, touch succeeds even after IP change.
         const saved = (() => {
             try { return JSON.parse(localStorage.getItem('merchSession') || 'null'); }
             catch { return null; }
@@ -454,9 +467,14 @@ async function verifyAccessCode() {
                 await showSuccess();
                 return;
             }
+            // Touch failed for our own saved session (revoked/corrupted).
+            // Clear local data so we can create a fresh session below.
+            // The worker's /sessionCreate will end any stale Firestore session for same device.
+            localStorage.removeItem('merchSession');
         }
 
-        // Otherwise check whether the code is already in use on another device
+        // Check whether the code is already in use on a DIFFERENT device.
+        // (With updated worker, /sessionCreate also handles stale same-device sessions.)
         const lookup = await callWorker('/sessionLookup', 'POST', { code, ua });
         if (!lookup.success) { showError('Connection error. Please try again.'); return; }
         if (lookup.exists) {
@@ -572,15 +590,13 @@ async function performPeriodicCheck() {
         }
 
         const touch = await callWorker('/sessionTouch', 'POST', {
-    sessionId,
-    code: currentAccessCode,
-    ua,
-    clientSecret: CLIENT_SECRET
-});
+            sessionId,
+            code: currentAccessCode,
+            ua,
+            clientSecret: CLIENT_SECRET
+        });
         if (!touch.success) {
-            await forceLogout(touch.message === 'Fingerprint mismatch'
-                ? 'Device verification failed.'
-                : 'Session terminated.');
+            await forceLogout('Session terminated.');
             return;
         }
 
@@ -605,11 +621,11 @@ async function forceLogout(message) {
     try {
         if (sessionId && currentAccessCode) {
             await callWorker('/sessionEnd', 'POST', {
-    sessionId,
-    code: currentAccessCode,
-    ua: navigator.userAgent,
-    clientSecret: CLIENT_SECRET
-}).catch(() => {});
+                sessionId,
+                code: currentAccessCode,
+                ua: navigator.userAgent,
+                clientSecret: CLIENT_SECRET
+            }).catch(() => {});
         }
     } catch (e) {}
     clearSession();
@@ -656,6 +672,25 @@ function saveFavorites() {
     updateFavoritesUI();
 }
 
+// FIX: Remove favorites whose ASINs no longer exist in the loaded product data.
+// This clears "stuck" favorites that can't be removed because the product was
+// deleted from the data source. Called once after products are loaded.
+function cleanOrphanedFavorites() {
+    if (!allProducts.length) return;
+    const asinSet = new Set(allProducts.map(p => p.asin));
+    let changed = false;
+    for (const asin of [...favorites]) {
+        if (!asinSet.has(asin)) {
+            favorites.delete(asin);
+            changed = true;
+        }
+    }
+    if (changed) {
+        saveFavorites();
+        console.log('Removed orphaned favorites (products no longer in data).');
+    }
+}
+
 function toggleFavorite(asin) {
     if (favorites.has(asin)) {
         favorites.delete(asin);
@@ -663,11 +698,9 @@ function toggleFavorite(asin) {
         favorites.add(asin);
     }
     saveFavorites();
-    if (favoritesFilterActive) {
-        applyAllFilters();
-    } else {
-        renderProducts(filteredProducts.length > 0 ? filteredProducts : allProducts);
-    }
+    // FIX: Always use applyAllFilters to keep filter state and product list consistent.
+    // The old conditional could render stale filteredProducts after a toggle.
+    applyAllFilters();
 }
 
 function isFavorite(asin) {
@@ -823,6 +856,7 @@ async function initApp() {
     loadFavorites();
     setupEventListeners();
     await loadProducts();
+    cleanOrphanedFavorites(); // FIX: Remove stuck favorites not in current data
     renderProducts(allProducts);
     updateTrendChart();
     renderHotNiches();
