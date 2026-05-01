@@ -728,6 +728,7 @@ function cleanOrphanedFavorites() {
 }
 
 function toggleFavorite(asin) {
+    if (!asin) return;
     if (favorites.has(asin)) {
         favorites.delete(asin);
     } else {
@@ -738,16 +739,13 @@ function toggleFavorite(asin) {
         // In favorites-only mode: re-render to remove un-favorited products from view
         applyAllFilters();
     } else {
-        // FIX: Update ONLY the heart button in-place — no full re-render.
-        // Avoids DOM rebuilding issues and keeps current scroll/filter state.
+        // FIX v4.2: Update heart buttons using data-asin attribute instead of onclick string matching
+        // This is more reliable and handles ASINs with special characters correctly.
         const isFav = favorites.has(asin);
-        document.querySelectorAll('.favorite-btn').forEach(btn => {
-            const oc = btn.getAttribute('onclick') || '';
-            if (oc.includes("'" + asin + "'")) {
-                btn.classList.toggle('active', isFav);
-                const icon = btn.querySelector('i');
-                if (icon) icon.className = isFav ? 'fas fa-heart' : 'far fa-heart';
-            }
+        document.querySelectorAll('.favorite-btn[data-asin="' + CSS.escape(asin) + '"]').forEach(btn => {
+            btn.classList.toggle('active', isFav);
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = isFav ? 'fas fa-heart' : 'far fa-heart';
         });
     }
 }
@@ -1076,7 +1074,7 @@ function renderProducts(products) {
         
         html += `
             <div class="product-card">
-                <button class="favorite-btn ${favActive}" onclick="event.stopPropagation(); toggleFavorite('${product.asin}')" title="Add to favorites">
+                <button class="favorite-btn ${favActive}" data-asin="${escHtmlSafe(product.asin)}" onclick="event.stopPropagation(); toggleFavorite('${escHtmlJS(product.asin)}')" title="Add to favorites">
                     <i class="${favIcon}"></i>
                 </button>
                 <img class="product-image" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle) || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
@@ -1092,7 +1090,7 @@ function renderProducts(products) {
                         <a href="https://www.amazon.com/dp/${product.asin}" target="_blank" class="amazon-btn" onclick="event.stopPropagation();" style="flex:0.5;">
                             <i class="fas fa-external-link-alt"></i>
                         </a>
-                        <button class="analyze-btn" onclick="event.stopPropagation(); analyzeProduct('${product.asin}')">
+                        <button class="analyze-btn" onclick="event.stopPropagation(); analyzeProduct('${escHtmlJS(product.asin)}')">
                             <i class="fas fa-chart-line"></i> Analyze
                         </button>
                     </div>
