@@ -3,17 +3,16 @@
 // ═══════════════════════════════════════════════════
 const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
 
-
 // ═══════════════════════════════════════════════════
 // CLIENT SECRET & NONCE (v4.0 worker)
 // ═══════════════════════════════════════════════════
 function ensureClientSecret() {
-    let cs = localStorage.getItem('merchClientSecret');
+    let cs = sessionStorage.getItem('merchClientSecret');
     if (!cs) {
         const bytes = new Uint8Array(24);
         crypto.getRandomValues(bytes);
         cs = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-        localStorage.setItem('merchClientSecret', cs);
+        sessionStorage.setItem('merchClientSecret', cs);
     }
     return cs;
 }
@@ -229,7 +228,7 @@ async function callWorker(endpoint, method = 'GET', body = null) {
         };
         
         // Protected endpoints need Session Token
-        const protectedEndpoints = ['/fetchProducts', '/fetchAccessCodes'];
+        const protectedEndpoints = ['/fetchProducts'];
         const isProtected = protectedEndpoints.some(ep => endpoint.includes(ep));
         
         if (isProtected && SESSION_TOKEN) {
@@ -257,7 +256,6 @@ async function callWorker(endpoint, method = 'GET', body = null) {
         
         return await response.json();
     } catch (error) {
-        console.error(`Worker call failed: ${endpoint}`, error);
         return { success: false, message: 'Connection error' };
     }
 }
@@ -281,7 +279,6 @@ async function refreshSessionToken() {
         }
         return false;
     } catch (e) {
-        console.error('Token refresh failed:', e);
         return false;
     }
 }
@@ -396,7 +393,6 @@ async function loadSession() {
         saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
         return true;
     } catch (e) {
-        console.error('loadSession error:', e);
         clearSession();
         return false;
     }
@@ -538,7 +534,6 @@ async function verifyAccessCode() {
         await showSuccess();
 
     } catch (err) {
-        console.error('Verify error:', err);
         showError('Verification failed. Please try again.');
     } finally {
         loginBtn.disabled = false;
@@ -616,7 +611,6 @@ async function performPeriodicCheck() {
         
         const entry = await validateAccessCode(currentAccessCode);
         if (!entry) {
-            console.warn('validateAccessCode returned null — network glitch, will retry next cycle');
             return;
         }
         if (!entry.valid) {
@@ -637,7 +631,10 @@ async function performPeriodicCheck() {
         }
 
         // Refresh token if needed (every 4 minutes)
-        if (!SESSION_TOKEN) {
+        const tokenAge = SESSION_TOKEN
+            ? (Date.now() / 1000) - parseInt(SESSION_TOKEN.split('.')[0])
+            : Infinity;
+        if (!SESSION_TOKEN || tokenAge > 240) {
             SESSION_TOKEN = await generateSessionToken(currentAccessCode);
         }
 
@@ -648,7 +645,6 @@ async function performPeriodicCheck() {
         }
 
     } catch (err) {
-        console.error('Periodic check error:', err);
     }
 }
 
@@ -723,7 +719,6 @@ function cleanOrphanedFavorites() {
     }
     if (changed) {
         saveFavorites();
-        console.log('Removed orphaned favorites (products no longer in data).');
     }
 }
 
@@ -900,7 +895,6 @@ async function initApp() {
     }
 
     loadFavorites();
-    setupEventListeners();
     setupEventDelegation(); // FIX v4.2 CSP: Setup click delegation for dynamic content
     await loadProducts();
     cleanOrphanedFavorites(); // FIX: Remove stuck favorites not in current data
@@ -927,79 +921,11 @@ async function loadProducts() {
         filteredProducts = [...allProducts];
         
     } catch (error) {
-        console.error('Error loading products:', error);
         document.getElementById('productsContainer').innerHTML = 
             '<div class="no-results">⚠️ Failed to load products. Please try again later.</div>';
     }
 }
 
-function setupEventListeners() {
-    // Keyword search
-    document.getElementById('searchKeywordBtn').addEventListener('click', () => {
-        currentKeywordSearch = document.getElementById('keywordSearch').value.trim();
-        applyAllFilters();
-    });
-    
-    document.getElementById('clearKeywordBtn').addEventListener('click', () => {
-        document.getElementById('keywordSearch').value = '';
-        currentKeywordSearch = '';
-        applyAllFilters();
-    });
-    
-    document.getElementById('keywordSearch').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            currentKeywordSearch = document.getElementById('keywordSearch').value.trim();
-            applyAllFilters();
-        }
-    });
-    
-    // Hot niches apply button
-    document.getElementById('applyWordLengthBtn').addEventListener('click', applyNicheControls);
-    document.getElementById('wordLengthInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') applyNicheControls();
-    });
-    document.getElementById('nichesPeriod').addEventListener('change', renderHotNiches);
-    document.getElementById('minRepeats').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') applyNicheControls();
-    });
-    
-    // Modal close
-    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-    document.getElementById('analysisModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('analysisModal')) {
-            closeModal();
-        }
-    });
-    
-    // Live filters
-    document.getElementById('sortSelect').addEventListener('change', applyAllFilters);
-    document.getElementById('dateFilter').addEventListener('change', applyAllFilters);
-    document.getElementById('searchMode').addEventListener('change', () => {
-        if (currentKeywordSearch) applyAllFilters();
-    });
-    document.getElementById('bsrMin').addEventListener('change', applyAllFilters);
-    document.getElementById('bsrMax').addEventListener('change', applyAllFilters);
-    document.getElementById('bsrMin').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') applyAllFilters();
-    });
-    document.getElementById('bsrMax').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') applyAllFilters();
-    });
-
-    // Research modal events
-    const rk = document.getElementById('researchKeyword');
-    if (rk) {
-        rk.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') performAmazonSearch();
-        });
-    }
-    const rm = document.getElementById('researchModal');
-    if (rm) {
-        rm.addEventListener('click', (e) => {
-            if (e.target === rm) closeResearchModal();
-        });
-    }
-}
 
 // ═══════════════════════════════════════════════════
 // FILTERING & SORTING
@@ -1134,7 +1060,7 @@ function renderProducts(products) {
                 <button class="favorite-btn ${favActive}" data-action="favorite" data-asin="${escHtmlSafe(product.asin)}" title="Add to favorites">
                     <i class="${favIcon}"></i>
                 </button>
-                <img class="product-image" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle) || 'Product'}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                <img class="product-image" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle) || 'Product'}" loading="lazy" data-fallback="https://via.placeholder.com/300?text=No+Image">
                 <div class="product-info">
                     ${product.bsrDisplay ? `<div class="bsr-tag">📊 ${product.bsrDisplay}</div>` : ''}
                     <div class="product-title">${escHtmlSafe(product.designTitle) || 'Untitled Design'}</div>
@@ -1158,6 +1084,13 @@ function renderProducts(products) {
     
     html += '</div>';
     container.innerHTML = html;
+    // FIX v4.2 CSP: Attach image error handlers programmatically (no inline onerror)
+    container.querySelectorAll('img[data-fallback]').forEach(img => {
+        img.addEventListener('error', function handler() {
+            this.src = this.dataset.fallback;
+            this.removeEventListener('error', handler);
+        });
+    });
 }
 
 // ═══════════════════════════════════════════════════
@@ -1295,7 +1228,7 @@ function analyzeProduct(asin) {
 
     body.innerHTML = `
         <div style="text-align:center;">
-            <img class="modal-img" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle)}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+            <img class="modal-img" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle)}" data-fallback="https://via.placeholder.com/300?text=No+Image">
         </div>
 
         <div class="detail-block">
