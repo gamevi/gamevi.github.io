@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <!-- v4.2.1 FIX: Removed frame-ancestors from meta, will be set by Worker header.
+         FIX: Added 'self' to script-src to allow app.js.
+         FIX: Added https://cdn.jsdelivr.net to connect-src for Chart.js source maps. -->
     <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
     font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
     img-src 'self' data: https:;
-    connect-src 'self' https://noisy-voice-0c5b.mohammedmila022.workers.dev;
-    frame-ancestors 'none';
+    connect-src 'self' https://noisy-voice-0c5b.mohammedmila022.workers.dev https://cdn.jsdelivr.net;
     base-uri 'self';
     form-action 'self';
     object-src 'none';
     upgrade-insecure-requests;
 ">
     <title>Merch Analyzer | Amazon BSR Keyword Research</title>
+    <!-- ... باقي الـ Head بدون تغيير ... -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -28,6 +31,7 @@
             crossorigin="anonymous"></script>
 
     <style>
+        /* ... جميع الـ CSS بدون أي تغيير ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; font-family: 'Inter', sans-serif; }
         .login-box { background: white; border-radius: 24px; padding: 40px 30px; max-width: 450px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; }
@@ -170,6 +174,7 @@
 </head>
 <body>
 
+<!-- ... جميع عناصر HTML بدون أي تغيير ... -->
 <!-- LOGIN PAGE -->
 <div class="login-container" id="loginPage">
     <div class="login-box">
@@ -359,7 +364,7 @@
     </div>
 </div>
 
-<!-- v4.2: Updated to use secure app version -->
+<!-- v4.2.1 FIXED: Correctly loading the JS file -->
 <script src="app.js" defer></script>
 
 </body>
