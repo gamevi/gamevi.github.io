@@ -1,8 +1,9 @@
-// /═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════
 const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
 
+/* ... جميع الدوال من `ensureClientSecret` حتى `generateSimpleFingerprint` بدون تغيير ... */
 // ═══════════════════════════════════════════════════
 // CLIENT SECRET & NONCE (v4.2 worker)
 // ═══════════════════════════════════════════════════
@@ -102,13 +103,16 @@ function keywordMatchExact(p, kw) {
     const n = kw.trim().toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!n) return true;
     const h = [p.designTitle, p.brand, p.featureBullet1, p.featureBullet2].join(' ').toLowerCase().replace(/[^\w\s]/g, ' ');
-    return new RegExp(`\b${n.replace(/[.*+?^${}()|[\]\]/g, '\$&')}\b`, 'i').test(h);
+    // v4.2.1 FIX: Corrected the RegExp constructor syntax to avoid the 'missing /' error.
+    // Original broken line: new RegExp(`\b${n.replace(/[.*+?^${}()|[\]\]/g, '\$&')}\b`, 'i')
+    return new RegExp('\\b' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(h);
 }
 
 function keywordMatch(p, kw) {
     return (document.getElementById('searchMode')?.value === 'exact') ? keywordMatchExact(p, kw) : keywordMatchNormal(p, kw);
 }
 
+/* ... باقي الكود بدون تغيير بدءًا من extractLongTailByLength ... */
 // ═══════════════════════════════════════════════════
 // LONG-TAIL EXTRACTION
 // ═══════════════════════════════════════════════════
