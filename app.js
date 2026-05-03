@@ -4,7 +4,7 @@
 const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
 
 // ═══════════════════════════════════════════════════
-// CLIENT SECRET & NONCE (v4.0 worker)
+// CLIENT SECRET & NONCE (v4.2 worker)
 // ═══════════════════════════════════════════════════
 function ensureClientSecret() {
     let cs = sessionStorage.getItem('merchClientSecret');
@@ -24,9 +24,9 @@ function generateNonce() {
 const CLIENT_SECRET = ensureClientSecret();
 
 // ═══════════════════════════════════════════════════
-// CLIENT SESSION STATE (NEW)
+// CLIENT SESSION STATE
 // ═══════════════════════════════════════════════════
-let SESSION_TOKEN = null; // In-memory only, never stored in localStorage
+let SESSION_TOKEN = null;
 
 // ═══════════════════════════════════════════════════
 // HELPER FUNCTIONS
@@ -38,18 +38,10 @@ function parseCSVRow(row) {
     for (let i = 0; i < row.length; i++) {
         const char = row[i];
         if (char === '"') {
-            if (inQuotes && row[i + 1] === '"') {
-                current += '"';
-                i++;
-            } else {
-                inQuotes = !inQuotes;
-            }
-        } else if (char === ',' && !inQuotes) {
-            result.push(current.trim());
-            current = '';
-        } else {
-            current += char;
-        }
+            if (inQuotes && row[i + 1] === '"') { current += '"'; i++; }
+            else { inQuotes = !inQuotes; }
+        } else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+        else { current += char; }
     }
     result.push(current.trim());
     return result;
@@ -110,7 +102,7 @@ function keywordMatchExact(p, kw) {
     const n = kw.trim().toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!n) return true;
     const h = [p.designTitle, p.brand, p.featureBullet1, p.featureBullet2].join(' ').toLowerCase().replace(/[^\w\s]/g, ' ');
-    return new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(h);
+    return new RegExp(`\b${n.replace(/[.*+?^${}()|[\]\]/g, '\$&')}\b`, 'i').test(h);
 }
 
 function keywordMatch(p, kw) {
@@ -125,9 +117,7 @@ function extractLongTailByLength(title, n) {
     const t = cleanTokens(title);
     if (t.length < n) return [];
     const s = new Set();
-    for (let i = 0; i <= t.length - n; i++) {
-        s.add(t.slice(i, i + n).join(' '));
-    }
+    for (let i = 0; i <= t.length - n; i++) { s.add(t.slice(i, i + n).join(' ')); }
     return [...s];
 }
 
@@ -156,13 +146,7 @@ function calculateHotNiches(wl, pd, mr) {
     });
     return [...freq.entries()].map(([kw, count]) => {
         const b = bsrM.get(kw) || [];
-        return {
-            keyword: kw,
-            count,
-            avgBSR: Math.round(b.reduce((a, x) => a + x, 0) / b.length),
-            minBSR: Math.min(...b),
-            exampleTitle: titleM.get(kw) || ''
-        };
+        return { keyword: kw, count, avgBSR: Math.round(b.reduce((a, x) => a + x, 0) / b.length), minBSR: Math.min(...b), exampleTitle: titleM.get(kw) || '' };
     }).filter(n => n.count >= mr).sort((a, b) => b.count - a.count || a.avgBSR - b.avgBSR).slice(0, 50);
 }
 
@@ -193,19 +177,9 @@ setInterval(() => rateLimiter.cleanup(), 300000);
 // DEVICE FINGERPRINT
 // ═══════════════════════════════════════════════════
 function generateSimpleFingerprint() {
-    const components = [
-        navigator.userAgent,
-        navigator.language,
-        screen.width + 'x' + screen.height,
-        screen.colorDepth,
-        new Date().getTimezoneOffset()
-    ].join('|');
-    
+    const components = [navigator.userAgent, navigator.language, screen.width + 'x' + screen.height, screen.colorDepth, new Date().getTimezoneOffset()].join('|');
     let hash = 0;
-    for (let i = 0; i < components.length; i++) {
-        hash = ((hash << 5) - hash) + components.charCodeAt(i);
-        hash = hash & hash;
-    }
+    for (let i = 0; i < components.length; i++) { hash = ((hash << 5) - hash) + components.charCodeAt(i); hash = hash & hash; }
     return 'fp_' + Math.abs(hash).toString(36);
 }
 
@@ -219,28 +193,17 @@ let periodicCheckInterval = null;
 const simpleFingerprint = generateSimpleFingerprint();
 
 // ═══════════════════════════════════════════════════
-// WORKER API (UPDATED)
+// WORKER API (v4.2 UPDATED)
 // ═══════════════════════════════════════════════════
 async function callWorker(endpoint, method = 'GET', body = null) {
     try {
-        const headers = { 
-            'Content-Type': 'application/json'
-        };
-        
-        // Protected endpoints need Session Token
+        const headers = { 'Content-Type': 'application/json' };
         const protectedEndpoints = ['/fetchProducts'];
         const isProtected = protectedEndpoints.some(ep => endpoint.includes(ep));
-        
-        if (isProtected && SESSION_TOKEN) {
-            headers['X-Session-Token'] = SESSION_TOKEN;
-        }
-        
+        if (isProtected && SESSION_TOKEN) headers['X-Session-Token'] = SESSION_TOKEN;
         const options = { method, headers };
         if (body) options.body = JSON.stringify(body);
-        
         const response = await fetch(`${WORKER_URL}${endpoint}`, options);
-        
-        // Handle 401 - token expired
         if (response.status === 401) {
             const refreshed = await refreshSessionToken();
             if (refreshed) {
@@ -249,15 +212,10 @@ async function callWorker(endpoint, method = 'GET', body = null) {
                 if (body) retryOptions.body = JSON.stringify(body);
                 const retryResponse = await fetch(`${WORKER_URL}${endpoint}`, retryOptions);
                 return await retryResponse.json();
-            } else {
-                return { success: false, message: 'Session expired' };
-            }
+            } else return { success: false, message: 'Session expired' };
         }
-        
         return await response.json();
-    } catch (error) {
-        return { success: false, message: 'Connection error' };
-    }
+    } catch (error) { return { success: false, message: 'Connection error' }; }
 }
 
 async function refreshSessionToken() {
@@ -265,88 +223,48 @@ async function refreshSessionToken() {
         const response = await fetch(`${WORKER_URL}/sessionRefreshToken`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                sessionId: sessionId,
-                code: currentAccessCode,
-                ua: navigator.userAgent,
-                clientSecret: CLIENT_SECRET
-            })
+            body: JSON.stringify({ sessionId, code: currentAccessCode, ua: navigator.userAgent, clientSecret: CLIENT_SECRET })
         });
         const result = await response.json();
-        if (result.success && result.sessionToken) {
-            SESSION_TOKEN = result.sessionToken;
-            return true;
-        }
+        if (result.success && result.sessionToken) { SESSION_TOKEN = result.sessionToken; return true; }
         return false;
-    } catch (e) {
-        return false;
-    }
+    } catch (e) { return false; }
 }
 
 async function validateAccessCode(code) {
     const result = await callWorker('/validateCode', 'POST', { code: String(code).toUpperCase() });
     if (!result.success) return null;
-    return {
-        code: String(code).toUpperCase(),
-        expiryDate: result.expiryDate,
-        status: result.status,
-        valid: result.valid
-    };
+    return { code: String(code).toUpperCase(), expiryDate: result.expiryDate, status: result.status, valid: result.valid };
 }
 
 async function fetchProductsFromWorker() {
     const result = await callWorker('/fetchProducts', 'GET');
-    if (!result.success || !result.data) {
-        throw new Error('Failed to fetch products');
-    }
-    
+    if (!result.success || !result.data) throw new Error('Failed to fetch products');
     const lines = result.data.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) throw new Error('Empty data');
-    
     return lines.slice(1).map(l => {
         const c = parseCSVRow(l);
         if (c.length < 5) return null;
-        return {
-            asin: c[0] || '',
-            link: c[1] || '#',
-            bsrRaw: c[2] || '',
-            bsrNumber: extractBsrNumber(c[2]),
-            bsrDisplay: cleanBsrDisplay(c[2]),
-            imageUrl: c[3] || 'https://via.placeholder.com/300?text=No+Image',
-            dateAddedRaw: c[4] || '',
-            parsedDate: parseDateFromString(c[4]),
-            designTitle: c[5] || '',
-            brand: c[6] || '',
-            featureBullet1: c[7] || '',
-            featureBullet2: c[8] || ''
-        };
+        return { asin: c[0] || '', link: c[1] || '#', bsrRaw: c[2] || '', bsrNumber: extractBsrNumber(c[2]), bsrDisplay: cleanBsrDisplay(c[2]), imageUrl: c[3] || 'https://via.placeholder.com/300?text=No+Image', dateAddedRaw: c[4] || '', parsedDate: parseDateFromString(c[4]), designTitle: c[5] || '', brand: c[6] || '', featureBullet1: c[7] || '', featureBullet2: c[8] || '' };
     }).filter(Boolean);
 }
 
 // ═══════════════════════════════════════════════════
 // SESSION TOKEN MANAGEMENT
 // ═══════════════════════════════════════════════════
-async function generateSessionToken() {
-    return await refreshSessionToken() ? SESSION_TOKEN : null;
-}
+async function generateSessionToken() { return await refreshSessionToken() ? SESSION_TOKEN : null; }
 
 // ═══════════════════════════════════════════════════
-// SESSION STORAGE (NO SESSION TOKEN)
+// SESSION STORAGE
 // ═══════════════════════════════════════════════════
 function saveLocalSession(code, expiryDate, sid) {
-    localStorage.setItem('merchSession', JSON.stringify({
-        code, expiryDate, sessionId: sid,
-        savedAt: new Date().toISOString()
-    }));
+    localStorage.setItem('merchSession', JSON.stringify({ code, expiryDate, sessionId: sid, savedAt: new Date().toISOString() }));
 }
 
 function clearSession() {
     localStorage.removeItem('merchSession');
     stopPeriodicCheck();
-    currentAccessCode = null;
-    accessData = null;
-    sessionId = null;
-    SESSION_TOKEN = null;
+    currentAccessCode = null; accessData = null; sessionId = null; SESSION_TOKEN = null;
 }
 
 async function loadSession() {
@@ -355,47 +273,22 @@ async function loadSession() {
     try {
         const session = JSON.parse(saved);
         if (!session.sessionId || !session.code) return false;
-        if (!session.expiryDate || new Date(session.expiryDate) < new Date()) {
-            clearSession(); return false;
-        }
+        if (!session.expiryDate || new Date(session.expiryDate) < new Date()) { clearSession(); return false; }
         const ua = navigator.userAgent;
         const entry = await validateAccessCode(session.code);
         if (!entry || !entry.valid) { clearSession(); return false; }
-        // FIX v4.1: With updated worker, sessionTouch no longer requires IP match,
-        // so same-device page refreshes always succeed regardless of IP change.
-        const touch = await callWorker('/sessionTouch', 'POST', {
-            sessionId: session.sessionId,
-            code: session.code,
-            ua,
-            clientSecret: CLIENT_SECRET
-        });
+        const touch = await callWorker('/sessionTouch', 'POST', { sessionId: session.sessionId, code: session.code, ua, clientSecret: CLIENT_SECRET });
         if (!touch.success) {
-            // Touch failed: session is revoked, expired, or is a legacy session
-            // (old sessions without clientSecretHash). AWAIT sessionEnd so Firestore
-            // is cleaned BEFORE the user tries to re-login — otherwise sessionLookup
-            // finds the stale "active" session and shows "already in use" error.
-            try {
-                await callWorker('/sessionEnd', 'POST', {
-                    sessionId: session.sessionId,
-                    code: session.code,
-                    ua,
-                    clientSecret: CLIENT_SECRET
-                });
-            } catch (_) {}
-            clearSession();
-            return false;
+            try { await callWorker('/sessionEnd', 'POST', { sessionId: session.sessionId, code: session.code, ua, clientSecret: CLIENT_SECRET }); } catch (_) {}
+            clearSession(); return false;
         }
         currentAccessCode = session.code.toUpperCase();
         accessData = { code: session.code, expiryDate: entry.expiryDate };
         sessionId = session.sessionId;
-        // Generate new token on load
         SESSION_TOKEN = await generateSessionToken(currentAccessCode);
         saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
         return true;
-    } catch (e) {
-        clearSession();
-        return false;
-    }
+    } catch (e) { clearSession(); return false; }
 }
 
 // ═══════════════════════════════════════════════════
@@ -407,13 +300,13 @@ function showError(message) {
     errorText.textContent = message;
     errorMsg.classList.add('show');
     document.getElementById('successMsg').classList.remove('show');
-    
     const loginBtn = document.getElementById('loginBtn');
     loginBtn.disabled = false;
     document.getElementById('btnText').style.display = 'inline';
     document.getElementById('loadingSpinner').style.display = 'none';
 }
 
+// v4.2 FIX: Updated sessionLookup logic — no longer receives existingSessionId
 async function verifyAccessCode() {
     const codeInput = document.getElementById('accessCode');
     const loginBtn = document.getElementById('loginBtn');
@@ -422,11 +315,7 @@ async function verifyAccessCode() {
 
     const code = codeInput.value.trim().toUpperCase();
     if (!code) { showError('Please enter an access code'); return; }
-
-    if (!rateLimiter.check('login_' + simpleFingerprint, 5, 60000)) {
-        showError('Too many attempts. Please wait a minute.');
-        return;
-    }
+    if (!rateLimiter.check('login_' + simpleFingerprint, 5, 60000)) { showError('Too many attempts. Please wait a minute.'); return; }
 
     loginBtn.disabled = true;
     btnText.style.display = 'none';
@@ -436,7 +325,6 @@ async function verifyAccessCode() {
 
     try {
         const ua = navigator.userAgent;
-
         const entry = await validateAccessCode(code);
         if (!entry) { showError('Connection error. Please try again.'); return; }
         if (!entry.valid) {
@@ -445,108 +333,49 @@ async function verifyAccessCode() {
             showError('This code has expired.'); return;
         }
 
-        // FIX v4.1: Try resuming existing session on THIS device first.
-        // With updated worker, touch succeeds even after IP change.
-        const saved = (() => {
-            try { return JSON.parse(localStorage.getItem('merchSession') || 'null'); }
-            catch { return null; }
-        })();
+        // Try resuming existing session on THIS device first
+        const saved = (() => { try { return JSON.parse(localStorage.getItem('merchSession') || 'null'); } catch { return null; } })();
         if (saved && saved.code === code && saved.sessionId) {
-            const touch = await callWorker('/sessionTouch', 'POST', {
-                sessionId: saved.sessionId,
-                code,
-                ua,
-                clientSecret: CLIENT_SECRET
-            });
+            const touch = await callWorker('/sessionTouch', 'POST', { sessionId: saved.sessionId, code, ua, clientSecret: CLIENT_SECRET });
             if (touch.success) {
-                sessionId = saved.sessionId;
-                currentAccessCode = code;
-                accessData = { code, expiryDate: entry.expiryDate };
+                sessionId = saved.sessionId; currentAccessCode = code; accessData = { code, expiryDate: entry.expiryDate };
                 SESSION_TOKEN = await generateSessionToken();
                 saveLocalSession(code, entry.expiryDate, sessionId);
-                await showSuccess();
-                return;
+                await showSuccess(); return;
             }
-            // Touch failed for our own saved session (revoked/corrupted).
-            // Clear local data so we can create a fresh session below.
-            // The worker's /sessionCreate will end any stale Firestore session for same device.
             localStorage.removeItem('merchSession');
         }
 
-        // Check if code is already active somewhere.
-        // If existingSessionId is returned, try to reclaim it with OUR clientSecret
-        // (same localStorage = same device). If touch succeeds, resume. If not, block.
-        const lookup = await callWorker('/sessionLookup', 'POST', { code, ua });
+        // v4.2 FIX: sessionLookup now requires clientSecret and returns canResume
+        const lookup = await callWorker('/sessionLookup', 'POST', { code, ua, clientSecret: CLIENT_SECRET });
         if (!lookup.success) { showError('Connection error. Please try again.'); return; }
-        if (lookup.exists && lookup.existingSessionId) {
-            const reclaim = await callWorker('/sessionTouch', 'POST', {
-                sessionId: lookup.existingSessionId,
-                code,
-                ua,
-                clientSecret: CLIENT_SECRET
-            });
-            if (reclaim.success) {
-                // Same device — resume the existing session
-                sessionId = lookup.existingSessionId;
-                currentAccessCode = code;
-                accessData = { code, expiryDate: entry.expiryDate };
-                SESSION_TOKEN = await generateSessionToken();
-                saveLocalSession(code, entry.expiryDate, sessionId);
-                await showSuccess();
-                return;
-            }
-            // Touch failed → different device OR session was already cleaned.
-            // 'Legacy session ended' (410): worker ended an old session → safe to create new
-            // 'Session not found'   (404): session already ended (race) → safe to create new
-            // Any other failure    (403): real device mismatch → block
-            const safeToProceed = reclaim.message === 'Legacy session ended'
-                               || reclaim.message === 'Session not found';
-            if (!safeToProceed) {
-                showError('This code is already in use on another device.');
-                return;
-            }
-            // Session was cleaned — fall through to create new session
+
+        if (lookup.exists && lookup.canResume) {
+            // Same device confirmed by Worker, create fresh session (Worker will clean old one)
+        } else if (lookup.exists && !lookup.canResume) {
+            showError('This code is already in use on another device.'); return;
         }
 
-        // Create a brand new session
+        // Create brand new session
         const newSid = generateSessionId();
-        const create = await callWorker('/sessionCreate', 'POST', {
-            code,
-            ua,
-            sessionId: newSid,
-            clientSecret: CLIENT_SECRET,
-            nonce: generateNonce(),
-            expiryDate: entry.expiryDate
-        });
+        const create = await callWorker('/sessionCreate', 'POST', { code, ua, sessionId: newSid, clientSecret: CLIENT_SECRET, nonce: generateNonce(), expiryDate: entry.expiryDate });
         if (!create.success) {
-            const msg = create.message === 'Code in use on another device'
-                ? 'This code is already in use on another device.'
-                : 'Failed to create session. Please try again.';
-            showError(msg);
-            return;
+            const msg = create.message === 'Code in use on another device' ? 'This code is already in use on another device.' : 'Failed to create session. Please try again.';
+            showError(msg); return;
         }
 
-        currentAccessCode = code;
-        accessData = { code, expiryDate: entry.expiryDate };
-        sessionId = newSid;
+        currentAccessCode = code; accessData = { code, expiryDate: entry.expiryDate }; sessionId = newSid;
         SESSION_TOKEN = create.sessionToken || await generateSessionToken();
         saveLocalSession(code, entry.expiryDate, newSid);
         await showSuccess();
-
-    } catch (err) {
-        showError('Verification failed. Please try again.');
-    } finally {
-        loginBtn.disabled = false;
-        btnText.style.display = 'inline';
-        spinner.style.display = 'none';
-    }
+    } catch (err) { showError('Verification failed. Please try again.'); }
+    finally { loginBtn.disabled = false; btnText.style.display = 'inline'; spinner.style.display = 'none'; }
 }
 
 function generateSessionId() {
     const bytes = new Uint8Array(16);
     crypto.getRandomValues(bytes);
-    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-    return 's_' + hex;
+    return 's_' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 async function showSuccess() {
@@ -571,17 +400,9 @@ function updateExpiryBadge() {
     const daysLeft = Math.ceil((exp - new Date()) / (1000*60*60*24));
     const badge = document.getElementById('expiryBadge');
     const text = document.getElementById('expiryText');
-    
-    if (daysLeft <= 0) {
-        badge.classList.add('expired');
-        text.textContent = 'Expired';
-    } else if (daysLeft <= 7) {
-        badge.classList.add('expired');
-        text.textContent = `Expires in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`;
-    } else {
-        badge.classList.remove('expired');
-        text.textContent = `Expires in ${daysLeft} days`;
-    }
+    if (daysLeft <= 0) { badge.classList.add('expired'); text.textContent = 'Expired'; }
+    else if (daysLeft <= 7) { badge.classList.add('expired'); text.textContent = `Expires in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`; }
+    else { badge.classList.remove('expired'); text.textContent = `Expires in ${daysLeft} days`; }
 }
 
 // ═══════════════════════════════════════════════════
@@ -593,73 +414,30 @@ function startPeriodicCheck() {
     periodicCheckInterval = setInterval(performPeriodicCheck, 20 * 1000);
 }
 
-function stopPeriodicCheck() {
-    if (periodicCheckInterval) {
-        clearInterval(periodicCheckInterval);
-        periodicCheckInterval = null;
-    }
-}
+function stopPeriodicCheck() { if (periodicCheckInterval) { clearInterval(periodicCheckInterval); periodicCheckInterval = null; } }
 
 async function performPeriodicCheck() {
-    if (!currentAccessCode || !sessionId) {
-        stopPeriodicCheck();
-        return;
-    }
-
+    if (!currentAccessCode || !sessionId) { stopPeriodicCheck(); return; }
     try {
         const ua = navigator.userAgent;
-        
         const entry = await validateAccessCode(currentAccessCode);
-        if (!entry) {
-            return;
-        }
+        if (!entry) return;
         if (!entry.valid) {
             if (entry.status === 'revoked') { await forceLogout('Access has been revoked.'); return; }
             if (entry.status === 'unknown') { await forceLogout('Access code not found.'); return; }
             await forceLogout('Access code expired.'); return;
         }
-
-        const touch = await callWorker('/sessionTouch', 'POST', {
-            sessionId,
-            code: currentAccessCode,
-            ua,
-            clientSecret: CLIENT_SECRET
-        });
-        if (!touch.success) {
-            await forceLogout('Session terminated.');
-            return;
-        }
-
-        // Refresh token if needed (every 4 minutes)
-        const tokenAge = SESSION_TOKEN
-            ? (Date.now() / 1000) - parseInt(SESSION_TOKEN.split('.')[0])
-            : Infinity;
-        if (!SESSION_TOKEN || tokenAge > 240) {
-            SESSION_TOKEN = await generateSessionToken(currentAccessCode);
-        }
-
-        if (entry.expiryDate !== accessData.expiryDate) {
-            accessData.expiryDate = entry.expiryDate;
-            saveLocalSession(currentAccessCode, entry.expiryDate, sessionId);
-            updateExpiryBadge();
-        }
-
-    } catch (err) {
-    }
+        const touch = await callWorker('/sessionTouch', 'POST', { sessionId, code: currentAccessCode, ua, clientSecret: CLIENT_SECRET });
+        if (!touch.success) { await forceLogout('Session terminated.'); return; }
+        const tokenAge = SESSION_TOKEN ? (Date.now() / 1000) - parseInt(SESSION_TOKEN.split('.')[0]) : Infinity;
+        if (!SESSION_TOKEN || tokenAge > 240) SESSION_TOKEN = await generateSessionToken(currentAccessCode);
+        if (entry.expiryDate !== accessData.expiryDate) { accessData.expiryDate = entry.expiryDate; saveLocalSession(currentAccessCode, entry.expiryDate, sessionId); updateExpiryBadge(); }
+    } catch (err) {}
 }
 
 async function forceLogout(message) {
     stopPeriodicCheck();
-    try {
-        if (sessionId && currentAccessCode) {
-            await callWorker('/sessionEnd', 'POST', {
-                sessionId,
-                code: currentAccessCode,
-                ua: navigator.userAgent,
-                clientSecret: CLIENT_SECRET
-            }).catch(() => {});
-        }
-    } catch (e) {}
+    try { if (sessionId && currentAccessCode) await callWorker('/sessionEnd', 'POST', { sessionId, code: currentAccessCode, ua: navigator.userAgent, clientSecret: CLIENT_SECRET }).catch(() => {}); } catch (e) {}
     clearSession();
     alert(message);
     document.getElementById('mainApp').classList.remove('show');
@@ -667,11 +445,7 @@ async function forceLogout(message) {
     document.getElementById('accessCode').value = '';
 }
 
-async function logout() {
-    if (confirm('Are you sure you want to logout?')) {
-        await forceLogout('You have been logged out.');
-    }
-}
+async function logout() { if (confirm('Are you sure you want to logout?')) await forceLogout('You have been logged out.'); }
 
 // ═══════════════════════════════════════════════════
 // APP DATA & STATE
@@ -689,52 +463,26 @@ let currentWordLength = 3;
 // ═══════════════════════════════════════════════════
 function loadFavorites() {
     const saved = localStorage.getItem('merchFavorites');
-    if (saved) {
-        try {
-            favorites = new Set(JSON.parse(saved));
-        } catch (e) {
-            favorites = new Set();
-        }
-    }
+    if (saved) { try { favorites = new Set(JSON.parse(saved)); } catch (e) { favorites = new Set(); } }
     updateFavoritesUI();
 }
 
-function saveFavorites() {
-    localStorage.setItem('merchFavorites', JSON.stringify([...favorites]));
-    updateFavoritesUI();
-}
+function saveFavorites() { localStorage.setItem('merchFavorites', JSON.stringify([...favorites])); updateFavoritesUI(); }
 
-// FIX: Remove favorites whose ASINs no longer exist in the loaded product data.
-// This clears "stuck" favorites that can't be removed because the product was
-// deleted from the data source. Called once after products are loaded.
 function cleanOrphanedFavorites() {
     if (!allProducts.length) return;
     const asinSet = new Set(allProducts.map(p => p.asin));
     let changed = false;
-    for (const asin of [...favorites]) {
-        if (!asinSet.has(asin)) {
-            favorites.delete(asin);
-            changed = true;
-        }
-    }
-    if (changed) {
-        saveFavorites();
-    }
+    for (const asin of [...favorites]) { if (!asinSet.has(asin)) { favorites.delete(asin); changed = true; } }
+    if (changed) saveFavorites();
 }
 
 function toggleFavorite(asin) {
     if (!asin) return;
-    if (favorites.has(asin)) {
-        favorites.delete(asin);
-    } else {
-        favorites.add(asin);
-    }
+    if (favorites.has(asin)) favorites.delete(asin); else favorites.add(asin);
     saveFavorites();
-    if (favoritesFilterActive) {
-        // In favorites-only mode: re-render to remove un-favorited products from view
-        applyAllFilters();
-    } else {
-        // FIX v4.2 CSP: Update heart buttons using data-asin attribute (no inline onclick)
+    if (favoritesFilterActive) applyAllFilters();
+    else {
         const isFav = favorites.has(asin);
         document.querySelectorAll('.favorite-btn[data-asin="' + CSS.escape(asin) + '"]').forEach(btn => {
             btn.classList.toggle('active', isFav);
@@ -744,58 +492,27 @@ function toggleFavorite(asin) {
     }
 }
 
-function isFavorite(asin) {
-    return favorites.has(asin);
-}
+function isFavorite(asin) { return favorites.has(asin); }
 
 function updateFavoritesUI() {
     const count = favorites.size;
     document.getElementById('favoritesCount').textContent = count;
-    
     const toggleBtn = document.getElementById('favoritesToggleBtn');
     const indicator = document.getElementById('favoritesActiveIndicator');
     const exportBtn = document.getElementById('exportCsvBtn');
-    
-    if (favoritesFilterActive) {
-        toggleBtn.classList.add('active');
-        toggleBtn.querySelector('i').className = 'fas fa-heart';
-        indicator.style.display = 'inline-flex';
-    } else {
-        toggleBtn.classList.remove('active');
-        toggleBtn.querySelector('i').className = 'far fa-heart';
-        indicator.style.display = 'none';
-    }
-    
+    if (favoritesFilterActive) { toggleBtn.classList.add('active'); toggleBtn.querySelector('i').className = 'fas fa-heart'; indicator.style.display = 'inline-flex'; }
+    else { toggleBtn.classList.remove('active'); toggleBtn.querySelector('i').className = 'far fa-heart'; indicator.style.display = 'none'; }
     exportBtn.disabled = count === 0;
 }
 
-function toggleFavoritesFilter() {
-    favoritesFilterActive = !favoritesFilterActive;
-    updateFavoritesUI();
-    applyAllFilters();
-}
+function toggleFavoritesFilter() { favoritesFilterActive = !favoritesFilterActive; updateFavoritesUI(); applyAllFilters(); }
 
 function exportFavoritesToCSV() {
-    if (favorites.size === 0) {
-        showToast('No favorites to export');
-        return;
-    }
-    
+    if (favorites.size === 0) { showToast('No favorites to export'); return; }
     const favProducts = allProducts.filter(p => favorites.has(p.asin));
-    if (favProducts.length === 0) {
-        showToast('No favorite products found in current data');
-        return;
-    }
-    
+    if (favProducts.length === 0) { showToast('No favorite products found in current data'); return; }
     const headers = ['ASIN', 'Title', 'BSR', 'Date Added', 'Link'];
-    const rows = favProducts.map(p => [
-        p.asin,
-        `"${(p.designTitle || '').replace(/"/g, '""')}"`,
-        p.bsrDisplay,
-        p.dateAddedRaw,
-        p.link
-    ]);
-    
+    const rows = favProducts.map(p => [p.asin, `"${(p.designTitle || '').replace(/"/g, '""')}"`, p.bsrDisplay, p.dateAddedRaw, p.link]);
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -804,67 +521,60 @@ function exportFavoritesToCSV() {
     a.download = `merch_favorites_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    
     showToast(`✅ Exported ${favProducts.length} favorites`);
 }
 
 function showToast(message) {
     const existing = document.querySelector('.toast-notification');
     if (existing) existing.remove();
-    
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
     document.body.appendChild(toast);
-    
     setTimeout(() => toast.remove(), 3000);
 }
 
 // ═══════════════════════════════════════════════════
 // AMAZON RESEARCH TOOL
 // ═══════════════════════════════════════════════════
-function openResearchModal() {
-    document.getElementById('researchModal').classList.add('active');
-}
-function closeResearchModal() {
-    document.getElementById('researchModal').classList.remove('active');
-}
+function openResearchModal() { document.getElementById('researchModal').classList.add('active'); }
+function closeResearchModal() { document.getElementById('researchModal').classList.remove('active'); }
 
 const researchUrls = {
     com: {
-        tshirt: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+shirt&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        longsleeve: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+long+sleeve&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        sweatshirt: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+sweatshirt&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        hoodie: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+hoodie&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        vneck: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+v+neck&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        raglan: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+raglan&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
-        tanktop: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+tank+top&=most-purchased-rank&oq=Solid+colors%3A+100%25%2BCotton%3B+Heather+Grey%3A+90%25%2BCotton%2C+10%25%2BPolyester%3B+All+Other+Heathers%3A+50%25%2BCotton%2C+50%25%2BPolyester+Lightweight%2C+Classic+fit%2C+Double-needle+sleeve+and+bottom+hem+Machine+wash+cold+with+like+colors%2C+dry+low+heat+-long+-premium+-sweatshirt+-v-neck+-tank+10+x+8+x+1+inches%3B+4.8+Ounces&qid=1699392328&ref=sr_pg_1',
+        tshirt: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+shirt&=most-purchased-rank',
+        longsleeve: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+long+sleeve&=most-purchased-rank',
+        sweatshirt: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+sweatshirt&=most-purchased-rank',
+        hoodie: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+hoodie&=most-purchased-rank',
+        vneck: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+v+neck&=most-purchased-rank',
+        raglan: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+raglan&=most-purchased-rank',
+        tanktop: 'https://www.amazon.com/s?i=fashion-novelty&bbn=12035955011&rh=p_6%3AATVPDKIKX0DER&s&hidden-keywords=SEARCHTERM+tank+top&=most-purchased-rank',
         popsocket: 'https://www.amazon.com/s?k=SEARCHTERM+%22popsockets%22',
-        case: 'https://www.amazon.com/s?k=SEARCHTERM+%22Two-part+protective+case+made+from+a+premium+scratch-resistant+polycarbonate+shell+and+shock+absorbent+TPU+liner+protects+against+drops%22',
-        throwpillow: 'https://www.amazon.com/s?k=SEARCHTERM+throw+pillow+%22100%25+spun+polyester+fabric',
-        totebag: 'https://www.amazon.com/s?k=SEARCHTERM+%22Tote+Bag%22&hidden-keywords=%2216%E2%80%9D+x+16%E2%80%9D+bag+with+two+14%E2%80%9D+long+and+1%E2%80%9D+wide+black+cotton+webbing+strap+handles%22'
+        case: 'https://www.amazon.com/s?k=SEARCHTERM+%22Two-part+protective+case%22',
+        throwpillow: 'https://www.amazon.com/s?k=SEARCHTERM+throw+pillow+%22100%25+spun+polyester%22',
+        totebag: 'https://www.amazon.com/s?k=SEARCHTERM+%22Tote+Bag%22'
     },
     couk: {
-        tshirt: 'https://www.amazon.co.uk/s?k=SEARCHTERM+shirt&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        longsleeve: 'https://www.amazon.co.uk/s?k=SEARCHTERM+long+sleeve&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        sweatshirt: 'https://www.amazon.co.uk/s?k=SEARCHTERM+sweatshirt&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        hoodie: 'https://www.amazon.co.uk/s?k=SEARCHTERM+hoodie&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        raglan: 'https://www.amazon.co.uk/s?k=SEARCHTERM+raglan&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        vneck: 'https://www.amazon.co.uk/s?k=SEARCHTERM+v+neck&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
-        tanktop: 'https://www.amazon.co.uk/s?k=SEARCHTERM+tank+top&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3AnnZMRGr%2BicY%2F%2BdsHXTyLzOZ5AVaS8BZJ3Hqy6fnccAU&qid=1738951174&rnid=419151031&ref=sr_nr_p_6_1',
+        tshirt: 'https://www.amazon.co.uk/s?k=SEARCHTERM+shirt&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE',
+        longsleeve: 'https://www.amazon.co.uk/s?k=SEARCHTERM+long+sleeve&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE',
+        sweatshirt: 'https://www.amazon.co.uk/s?k=SEARCHTERM+sweatshirt&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE',
+        hoodie: 'https://www.amazon.co.uk/s?k=SEARCHTERM+hoodie&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE',
+        raglan: 'https://www.amazon.co.uk/s?k=SEARCHTERM+raglan&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE',
+        vneck: 'https://www.amazon.co.uk/s?k=SEARCHTERM+v+neck&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE',
+        tanktop: 'https://www.amazon.co.uk/s?k=SEARCHTERM+tank+top&rh=n%3A11961407031%2Cp_6%3AA3P5ROKL5A1OLE',
         popsocket: 'https://www.amazon.co.uk/s?k=SEARCHTERM+%22popsockets%22',
-        case: 'https://www.amazon.co.uk/s?k=SEARCHTERM+phone+case&rh=n%3A560798%2Cp_6%3AA3P5ROKL5A1OLE&dc&ds=v1%3ArapiHdzIV5G%2FQh5nraKtX5A8pijQVB39ApZAQOcrEDM&crid=2H4TYOOBCD6AD&qid=1738953195&rnid=419151031'
+        case: 'https://www.amazon.co.uk/s?k=SEARCHTERM+phone+case&rh=n%3A560798%2Cp_6%3AA3P5ROKL5A1OLE'
     },
     de: {
-        tshirt: 'https://www.amazon.de/s?k=SEARCHTERM+shirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        vneck: 'https://www.amazon.de/s?k=SEARCHTERM+v+neck&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        longsleeve: 'https://www.amazon.de/s?k=SEARCHTERM+langarmshirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        sweatshirt: 'https://www.amazon.de/s?k=SEARCHTERM+sweatshirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        hoodie: 'https://www.amazon.de/s?k=SEARCHTERM+hoodie&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
+        tshirt: 'https://www.amazon.de/s?k=SEARCHTERM+shirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF',
+        vneck: 'https://www.amazon.de/s?k=SEARCHTERM+v+neck&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF',
+        longsleeve: 'https://www.amazon.de/s?k=SEARCHTERM+langarmshirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF',
+        sweatshirt: 'https://www.amazon.de/s?k=SEARCHTERM+sweatshirt&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF',
+        hoodie: 'https://www.amazon.de/s?k=SEARCHTERM+hoodie&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF',
         popsocket: 'https://www.amazon.de/s?k=SEARCHTERM+%22popsockets%22',
-        raglan: 'https://www.amazon.de/s?k=SEARCHTERM+raglan&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        tanktop: 'https://www.amazon.de/s?k=SEARCHTERM+tank+top&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3A%2FG0%2BZ9aqc%2FL3%2F7vcxmAUhq61RUhlZfT7k9UKgG7fj84&crid=S8TTJ7PQP6GF&qid=1738951992&rnid=419115031&ref=sr_nr_p_6_1',
-        case: 'https://www.amazon.de/s?k=SEARCHTERM+H%C3%BClle+phone&rh=n%3A562066%2Cp_6%3AA3JWKAKR8XB7XF&dc&language=en&ds=v1%3ASCh9N13%2Fe97k7MXEjuayDuNNmA8m3AKtyQYi%2BYqQrik&crid=3I1WXN91F3J66&qid=1738952957&rnid=419115031&sprefix=dogh%C3%BClle+phone%2Caps%2C163&ref=sr_nr_p_6_1'
+        raglan: 'https://www.amazon.de/s?k=SEARCHTERM+raglan&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF',
+        tanktop: 'https://www.amazon.de/s?k=SEARCHTERM+tank+top&rh=n%3A11961464031%2Cp_6%3AA3JWKAKR8XB7XF',
+        case: 'https://www.amazon.de/s?k=SEARCHTERM+H%C3%BClle+phone&rh=n%3A562066%2Cp_6%3AA3JWKAKR8XB7XF'
     }
 };
 
@@ -872,16 +582,10 @@ function performAmazonSearch() {
     const locale = document.getElementById('researchLocale').value;
     const category = document.getElementById('researchCategory').value;
     const keyword = document.getElementById('researchKeyword').value.trim();
-    
     const urlTemplate = researchUrls[locale]?.[category];
-    if (!urlTemplate) {
-        showToast('This category is not available for that marketplace');
-        return;
-    }
-    
+    if (!urlTemplate) { showToast('This category is not available for that marketplace'); return; }
     const searchTerm = keyword ? encodeURIComponent(keyword) : '';
-    const finalUrl = urlTemplate.replace('SEARCHTERM', searchTerm);
-    window.open(finalUrl, '_blank');
+    window.open(urlTemplate.replace('SEARCHTERM', searchTerm), '_blank');
 }
 
 // ═══════════════════════════════════════════════════
@@ -889,15 +593,13 @@ function performAmazonSearch() {
 // ═══════════════════════════════════════════════════
 async function initApp() {
     if (!SESSION_TOKEN) {
-        document.getElementById('productsContainer').innerHTML = 
-            '<div class="no-results">⚠️ Session error. Please logout and login again.</div>';
+        document.getElementById('productsContainer').innerHTML = '<div class="no-results">⚠️ Session error. Please logout and login again.</div>';
         return;
     }
-
     loadFavorites();
-    setupEventDelegation(); // FIX v4.2 CSP: Setup click delegation for dynamic content
+    setupEventDelegation();
     await loadProducts();
-    cleanOrphanedFavorites(); // FIX: Remove stuck favorites not in current data
+    cleanOrphanedFavorites();
     renderProducts(allProducts);
     updateTrendChart();
     renderHotNiches();
@@ -907,25 +609,19 @@ async function loadProducts() {
     try {
         const container = document.getElementById('productsContainer');
         container.innerHTML = '<div class="loading">Loading products...</div>';
-        
         allProducts = await fetchProductsFromWorker();
-        
         allProducts.sort((a, b) => {
             if (!a.parsedDate && !b.parsedDate) return 0;
             if (!a.parsedDate) return 1;
             if (!b.parsedDate) return -1;
             return b.parsedDate - a.parsedDate;
         });
-        
         document.getElementById('product-count').textContent = allProducts.length;
         filteredProducts = [...allProducts];
-        
     } catch (error) {
-        document.getElementById('productsContainer').innerHTML = 
-            '<div class="no-results">⚠️ Failed to load products. Please try again later.</div>';
+        document.getElementById('productsContainer').innerHTML = '<div class="no-results">⚠️ Failed to load products. Please try again later.</div>';
     }
 }
-
 
 // ═══════════════════════════════════════════════════
 // FILTERING & SORTING
@@ -936,7 +632,6 @@ function applyAllFilters() {
     const bMax = parseFloat(document.getElementById('bsrMax')?.value) || Infinity;
     const dF = document.getElementById('dateFilter')?.value || 'all';
     const sV = document.getElementById('sortSelect')?.value || 'date-desc';
-    
     let f = allProducts.filter(p => {
         if (favoritesFilterActive && !isFavorite(p.asin)) return false;
         if (!keywordMatch(p, kw)) return false;
@@ -949,7 +644,6 @@ function applyAllFilters() {
         }
         return true;
     });
-    
     f.sort((a, b) => {
         if (sV === 'date-desc') return (b.parsedDate || 0) - (a.parsedDate || 0);
         if (sV === 'date-asc') return (a.parsedDate || 0) - (b.parsedDate || 0);
@@ -957,16 +651,12 @@ function applyAllFilters() {
         if (sV === 'bsr-desc') return b.bsrNumber - a.bsrNumber;
         return 0;
     });
-    
     filteredProducts = f;
     renderProducts(f);
 }
 
 function resetAll() {
-    ['keywordSearch', 'bsrMin', 'bsrMax'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
+    ['keywordSearch', 'bsrMin', 'bsrMax'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     const dateFilter = document.getElementById('dateFilter');
     if (dateFilter) dateFilter.value = 'all';
     const sortSelect = document.getElementById('sortSelect');
@@ -979,57 +669,32 @@ function resetAll() {
 }
 
 // ═══════════════════════════════════════════════════
-// EVENT DELEGATION (CSP-safe: no inline onclick)
+// EVENT DELEGATION (CSP-safe)
 // ═══════════════════════════════════════════════════
 function setupEventDelegation() {
     const container = document.getElementById('productsContainer');
     if (!container) return;
-
     container.addEventListener('click', function(e) {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;
-
         const action = btn.getAttribute('data-action');
         const asin = btn.getAttribute('data-asin');
-
         switch(action) {
-            case 'favorite':
-                e.preventDefault();
-                e.stopPropagation();
-                if (asin) toggleFavorite(asin);
-                break;
-            case 'analyze':
-                e.preventDefault();
-                e.stopPropagation();
-                if (asin) analyzeProduct(asin);
-                break;
-            case 'external-link':
-                // Let the link work normally, just stop propagation to card
-                e.stopPropagation();
-                break;
+            case 'favorite': e.preventDefault(); e.stopPropagation(); if (asin) toggleFavorite(asin); break;
+            case 'analyze': e.preventDefault(); e.stopPropagation(); if (asin) analyzeProduct(asin); break;
+            case 'external-link': e.stopPropagation(); break;
         }
     });
-
-    // Hot niches container delegation
     const nichesContainer = document.getElementById('hotNichesContainer');
     if (nichesContainer) {
         nichesContainer.addEventListener('click', function(e) {
             const btn = e.target.closest('[data-action]');
             if (!btn) return;
-
             const action = btn.getAttribute('data-action');
             const keyword = btn.getAttribute('data-keyword');
-
             switch(action) {
-                case 'search-keyword':
-                    e.preventDefault();
-                    if (keyword) searchByKeyword(keyword);
-                    break;
-                case 'amazon-search':
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (keyword) openAmazonSearch(keyword);
-                    break;
+                case 'search-keyword': e.preventDefault(); if (keyword) searchByKeyword(keyword); break;
+                case 'amazon-search': e.preventDefault(); e.stopPropagation(); if (keyword) openAmazonSearch(keyword); break;
             }
         });
     }
@@ -1040,21 +705,13 @@ function setupEventDelegation() {
 // ═══════════════════════════════════════════════════
 function renderProducts(products) {
     const container = document.getElementById('productsContainer');
-    
-    if (products.length === 0) {
-        container.innerHTML = '<div class="no-results">📭 No products found matching your criteria</div>';
-        return;
-    }
-    
+    if (products.length === 0) { container.innerHTML = '<div class="no-results">📭 No products found matching your criteria</div>'; return; }
     document.getElementById('product-count').innerText = products.length;
-    
     let html = '<div class="products-grid">';
-    
     products.forEach(product => {
         const favActive = isFavorite(product.asin) ? 'active' : '';
         const favIcon = isFavorite(product.asin) ? 'fas fa-heart' : 'far fa-heart';
         const dateDisplay = product.parsedDate ? formatDate(product.parsedDate) : product.dateAddedRaw || 'N/A';
-        
         html += `
             <div class="product-card">
                 <button class="favorite-btn ${favActive}" data-action="favorite" data-asin="${escHtmlSafe(product.asin)}" title="Add to favorites">
@@ -1081,15 +738,10 @@ function renderProducts(products) {
             </div>
         `;
     });
-    
     html += '</div>';
     container.innerHTML = html;
-    // FIX v4.2 CSP: Attach image error handlers programmatically (no inline onerror)
     container.querySelectorAll('img[data-fallback]').forEach(img => {
-        img.addEventListener('error', function handler() {
-            this.src = this.dataset.fallback;
-            this.removeEventListener('error', handler);
-        });
+        img.addEventListener('error', function handler() { this.src = this.dataset.fallback; this.removeEventListener('error', handler); });
     });
 }
 
@@ -1101,12 +753,7 @@ function renderHotNiches() {
     const pd = parseInt(document.getElementById('nichesPeriod')?.value || '7');
     const mr = Math.max(1, parseInt(document.getElementById('minRepeats')?.value || '2'));
     const niches = calculateHotNiches(currentWordLength, pd, mr);
-    
-    if (!niches.length) {
-        container.innerHTML = '<div class="niche-item" style="text-align:center;color:#94a3b8;">No results</div>';
-        return;
-    }
-    
+    if (!niches.length) { container.innerHTML = '<div class="niche-item" style="text-align:center;color:#94a3b8;">No results</div>'; return; }
     const max = niches[0].count;
     container.innerHTML = niches.map((n, i) => {
         const bw = Math.round((n.count / max) * 100);
@@ -1145,18 +792,11 @@ function applyNicheControls() {
     renderHotNiches();
 }
 
-function openAmazonSearch(kw) {
-    window.open(`https://www.amazon.com/s?k=${encodeURIComponent(kw)}`, '_blank');
-}
+function openAmazonSearch(kw) { window.open(`https://www.amazon.com/s?k=${encodeURIComponent(kw)}`, '_blank'); }
 
 function searchByKeyword(kw) {
     const i = document.getElementById('keywordSearch');
-    if (i) {
-        i.value = kw;
-        currentKeywordSearch = kw;
-        applyAllFilters();
-        document.querySelector('.keyword-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (i) { i.value = kw; currentKeywordSearch = kw; applyAllFilters(); document.querySelector('.keyword-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 }
 
 // ═══════════════════════════════════════════════════
@@ -1164,23 +804,12 @@ function searchByKeyword(kw) {
 // ═══════════════════════════════════════════════════
 function escHtmlSafe(str) {
     if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function escHtmlJS(str) {
     if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-        .replace(/\n/g, '\\n');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\n/g, '\\n');
 }
 
 // ═══════════════════════════════════════════════════
@@ -1189,195 +818,57 @@ function escHtmlJS(str) {
 function analyzeProduct(asin) {
     const product = allProducts.find(p => p.asin === asin);
     if (!product) return;
-
     const modal = document.getElementById('analysisModal');
     const body = document.getElementById('modalBody');
-
-    const allText = [product.designTitle, product.featureBullet1, product.featureBullet2, product.brand]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-        .replace(/[^\w\s]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length > 3);
-
+    const allText = [product.designTitle, product.featureBullet1, product.featureBullet2, product.brand].filter(Boolean).join(' ').toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w.length > 3);
     const wordFreq = {};
     allText.forEach(w => { wordFreq[w] = (wordFreq[w] || 0) + 1; });
-
-    const keywords = Object.entries(wordFreq)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([word, count]) => ({ word, count }));
-
-    const titleWords = (product.designTitle || '')
-        .toLowerCase()
-        .replace(/[^\w\s]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length > 2);
+    const keywords = Object.entries(wordFreq).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([word, count]) => ({ word, count }));
+    const titleWords = (product.designTitle || '').toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w.length > 2);
     let longtailPhrases = [];
-    if (titleWords.length >= 3) {
-        for (let i = 0; i <= titleWords.length - 3; i++) {
-            longtailPhrases.push(titleWords.slice(i, i + 3).join(' '));
-        }
-    }
+    if (titleWords.length >= 3) { for (let i = 0; i <= titleWords.length - 3; i++) longtailPhrases.push(titleWords.slice(i, i + 3).join(' ')); }
     longtailPhrases = [...new Set(longtailPhrases)].slice(0, 5);
-
-    const dd = product.parsedDate
-        ? formatDate(product.parsedDate)
-        : (product.dateAddedRaw ? product.dateAddedRaw.replace(/^:\s*/, '') : 'N/A');
-
+    const dd = product.parsedDate ? formatDate(product.parsedDate) : (product.dateAddedRaw ? product.dateAddedRaw.replace(/^:\s*/, '') : 'N/A');
     body.innerHTML = `
         <div style="text-align:center;">
             <img class="modal-img" src="${product.imageUrl}" alt="${escHtmlSafe(product.designTitle)}" data-fallback="https://via.placeholder.com/300?text=No+Image">
         </div>
-
-        <div class="detail-block">
-            <strong>📌 Title:</strong><br>
-            ${escHtmlSafe(product.designTitle) || '<em style="color:#94a3b8;">N/A</em>'}
-        </div>
-
-        <div class="detail-block">
-            <strong>🏷️ Brand:</strong><br>
-            ${escHtmlSafe(product.brand) || '<em style="color:#94a3b8;">N/A</em>'}
-        </div>
-
-        <div class="detail-block">
-            <strong>✨ Feature 1:</strong><br>
-            ${escHtmlSafe(product.featureBullet1) || '<em style="color:#94a3b8;">N/A</em>'}
-        </div>
-
-        <div class="detail-block">
-            <strong>✨ Feature 2:</strong><br>
-            ${escHtmlSafe(product.featureBullet2) || '<em style="color:#94a3b8;">N/A</em>'}
-        </div>
-
-        <div class="detail-block">
-            <strong>📊 BSR:</strong> ${product.bsrDisplay}<br>
-            <strong>📅 Date Added:</strong> ${dd}<br>
-            <strong>🔗 ASIN:</strong> ${product.asin}
-        </div>
-
-        <div class="detail-block">
-            <strong>🔑 Top Keywords:</strong>
-            <div class="keyword-list">
-                ${keywords.length
-                    ? keywords.map(k => `<span class="keyword-badge">${escHtmlSafe(k.word)} (${k.count})</span>`).join('')
-                    : '<em style="color:#94a3b8;">None</em>'}
-            </div>
-        </div>
-
-        ${longtailPhrases.length > 0 ? `
-        <div class="detail-block">
-            <strong>🎯 Long-Tail Phrases:</strong>
-            <div class="keyword-list">
-                ${longtailPhrases.map(p => `<span class="keyword-badge longtail-badge">${escHtmlSafe(p)}</span>`).join('')}
-            </div>
-        </div>` : ''}
-
+        <div class="detail-block"><strong>📌 Title:</strong><br>${escHtmlSafe(product.designTitle) || '<em style="color:#94a3b8;">N/A</em>'}</div>
+        <div class="detail-block"><strong>🏷️ Brand:</strong><br>${escHtmlSafe(product.brand) || '<em style="color:#94a3b8;">N/A</em>'}</div>
+        <div class="detail-block"><strong>✨ Feature 1:</strong><br>${escHtmlSafe(product.featureBullet1) || '<em style="color:#94a3b8;">N/A</em>'}</div>
+        <div class="detail-block"><strong>✨ Feature 2:</strong><br>${escHtmlSafe(product.featureBullet2) || '<em style="color:#94a3b8;">N/A</em>'}</div>
+        <div class="detail-block"><strong>📊 BSR:</strong> ${product.bsrDisplay}<br><strong>📅 Date Added:</strong> ${dd}<br><strong>🔗 ASIN:</strong> ${product.asin}</div>
+        <div class="detail-block"><strong>🔑 Top Keywords:</strong><div class="keyword-list">${keywords.length ? keywords.map(k => `<span class="keyword-badge">${escHtmlSafe(k.word)} (${k.count})</span>`).join('') : '<em style="color:#94a3b8;">None</em>'}</div></div>
+        ${longtailPhrases.length > 0 ? `<div class="detail-block"><strong>🎯 Long-Tail Phrases:</strong><div class="keyword-list">${longtailPhrases.map(p => `<span class="keyword-badge longtail-badge">${escHtmlSafe(p)}</span>`).join('')}</div></div>` : ''}
         <hr style="margin:14px 0;border:none;border-top:1px solid #eef2f8;">
-
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <a href="${product.link}" target="_blank" class="amazon-btn" style="flex:1;text-decoration:none;padding:10px;text-align:center;background:#ff9900;color:white;border-radius:40px;font-weight:600;">
-                <i class="fab fa-amazon"></i> View on Amazon
-            </a>
-            <a href="https://www.amazon.com/dp/${product.asin}" target="_blank" class="amazon-btn" style="flex:1;text-decoration:none;padding:10px;text-align:center;background:#232f3e;color:white;border-radius:40px;font-weight:600;">
-                <i class="fas fa-external-link-alt"></i> Direct Link
-            </a>
+            <a href="${product.link}" target="_blank" class="amazon-btn" style="flex:1;text-decoration:none;padding:10px;text-align:center;background:#ff9900;color:white;border-radius:40px;font-weight:600;"><i class="fab fa-amazon"></i> View on Amazon</a>
+            <a href="https://www.amazon.com/dp/${product.asin}" target="_blank" class="amazon-btn" style="flex:1;text-decoration:none;padding:10px;text-align:center;background:#232f3e;color:white;border-radius:40px;font-weight:600;"><i class="fas fa-external-link-alt"></i> Direct Link</a>
         </div>
     `;
-
     modal.classList.add('active');
 }
 
-function closeModal() {
-    document.getElementById('analysisModal').classList.remove('active');
-}
+function closeModal() { document.getElementById('analysisModal').classList.remove('active'); }
 
 // ═══════════════════════════════════════════════════
 // TREND CHART
 // ═══════════════════════════════════════════════════
 function updateTrendChart() {
     const ctx = document.getElementById('trendChart').getContext('2d');
-    
-    const days = [];
-    const counts = [];
-    
+    const days = [], counts = [];
     for (let i = 13; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        d.setHours(0, 0, 0, 0);
+        const d = new Date(); d.setDate(d.getDate() - i); d.setHours(0, 0, 0, 0);
         days.push(d);
-        
-        const nextDay = new Date(d);
-        nextDay.setDate(nextDay.getDate() + 1);
-        
-        const count = allProducts.filter(p => {
-            return p.parsedDate && p.parsedDate >= d && p.parsedDate < nextDay;
-        }).length;
-        
-        counts.push(count);
+        const nextDay = new Date(d); nextDay.setDate(nextDay.getDate() + 1);
+        counts.push(allProducts.filter(p => p.parsedDate && p.parsedDate >= d && p.parsedDate < nextDay).length);
     }
-    
     const labels = days.map(d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-    
-    if (trendChart) {
-        trendChart.destroy();
-    }
-    
+    if (trendChart) trendChart.destroy();
     trendChart = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Products Added',
-                data: counts,
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointBackgroundColor: '#667eea',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: '#1e293b',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
-                    cornerRadius: 8,
-                    padding: 10
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        font: { size: 11 }
-                    },
-                    grid: {
-                        color: '#f1f5f9'
-                    }
-                },
-                x: {
-                    ticks: {
-                        font: { size: 10 },
-                        maxRotation: 45
-                    },
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
+        data: { labels, datasets: [{ label: 'Products Added', data: counts, borderColor: '#667eea', backgroundColor: 'rgba(102, 126, 234, 0.1)', fill: true, tension: 0.4, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#667eea', borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1e293b', titleColor: '#fff', bodyColor: '#fff', cornerRadius: 8, padding: 10 } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: '#f1f5f9' } }, x: { ticks: { font: { size: 10 }, maxRotation: 45 }, grid: { display: false } } } }
     });
 }
 
@@ -1385,84 +876,35 @@ function updateTrendChart() {
 // INITIAL LOAD & EVENT BINDING
 // ═══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
-    // ── Login Page Events ──
     document.getElementById('loginBtn').addEventListener('click', verifyAccessCode);
-    
-    document.getElementById('accessCode').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') verifyAccessCode();
-    });
-
-    // ── Logout Button ──
+    document.getElementById('accessCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') verifyAccessCode(); });
     document.getElementById('logoutBtn').addEventListener('click', logout);
-
-    // ── Research Button & Modal ──
     document.getElementById('researchBtn').addEventListener('click', openResearchModal);
     document.getElementById('closeResearchModalBtn').addEventListener('click', closeResearchModal);
-    document.getElementById('researchModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('researchModal')) closeResearchModal();
-    });
+    document.getElementById('researchModal').addEventListener('click', (e) => { if (e.target === document.getElementById('researchModal')) closeResearchModal(); });
     document.getElementById('researchSearchBtn').addEventListener('click', performAmazonSearch);
-    document.getElementById('researchKeyword').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performAmazonSearch();
-    });
-
-    // ── Favorites ──
+    document.getElementById('researchKeyword').addEventListener('keypress', (e) => { if (e.key === 'Enter') performAmazonSearch(); });
     document.getElementById('favoritesToggleBtn').addEventListener('click', toggleFavoritesFilter);
     document.getElementById('exportCsvBtn').addEventListener('click', exportFavoritesToCSV);
-
-    // ── Filters ──
     document.getElementById('applyFiltersBtn').addEventListener('click', applyAllFilters);
     document.getElementById('resetFiltersBtn').addEventListener('click', resetAll);
-
-    // ── Keyword Search ──
-    document.getElementById('searchKeywordBtn').addEventListener('click', () => {
-        currentKeywordSearch = document.getElementById('keywordSearch').value.trim();
-        applyAllFilters();
-    });
-    document.getElementById('clearKeywordBtn').addEventListener('click', () => {
-        document.getElementById('keywordSearch').value = '';
-        currentKeywordSearch = '';
-        applyAllFilters();
-    });
-    document.getElementById('keywordSearch').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            currentKeywordSearch = document.getElementById('keywordSearch').value.trim();
-            applyAllFilters();
-        }
-    });
-
-    // ── Hot Niches ──
+    document.getElementById('searchKeywordBtn').addEventListener('click', () => { currentKeywordSearch = document.getElementById('keywordSearch').value.trim(); applyAllFilters(); });
+    document.getElementById('clearKeywordBtn').addEventListener('click', () => { document.getElementById('keywordSearch').value = ''; currentKeywordSearch = ''; applyAllFilters(); });
+    document.getElementById('keywordSearch').addEventListener('keypress', (e) => { if (e.key === 'Enter') { currentKeywordSearch = document.getElementById('keywordSearch').value.trim(); applyAllFilters(); } });
     document.getElementById('applyWordLengthBtn').addEventListener('click', applyNicheControls);
-    document.getElementById('wordLengthInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') applyNicheControls();
-    });
+    document.getElementById('wordLengthInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyNicheControls(); });
     document.getElementById('nichesPeriod').addEventListener('change', renderHotNiches);
-    document.getElementById('minRepeats').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') applyNicheControls();
-    });
-
-    // ── Analysis Modal ──
+    document.getElementById('minRepeats').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyNicheControls(); });
     document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-    document.getElementById('analysisModal').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('analysisModal')) closeModal();
-    });
-
-    // ── Live Filters ──
+    document.getElementById('analysisModal').addEventListener('click', (e) => { if (e.target === document.getElementById('analysisModal')) closeModal(); });
     document.getElementById('sortSelect').addEventListener('change', applyAllFilters);
     document.getElementById('dateFilter').addEventListener('change', applyAllFilters);
-    document.getElementById('searchMode').addEventListener('change', () => {
-        if (currentKeywordSearch) applyAllFilters();
-    });
+    document.getElementById('searchMode').addEventListener('change', () => { if (currentKeywordSearch) applyAllFilters(); });
     document.getElementById('bsrMin').addEventListener('change', applyAllFilters);
     document.getElementById('bsrMax').addEventListener('change', applyAllFilters);
-    document.getElementById('bsrMin').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') applyAllFilters();
-    });
-    document.getElementById('bsrMax').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') applyAllFilters();
-    });
+    document.getElementById('bsrMin').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyAllFilters(); });
+    document.getElementById('bsrMax').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyAllFilters(); });
 
-    // ── Load Session or Show Login ──
     const hasSession = await loadSession();
     if (hasSession) {
         document.getElementById('loginPage').style.display = 'none';
