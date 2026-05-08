@@ -170,9 +170,65 @@
         hr { margin: 16px 0; }
         footer { text-align: center; margin-top: 24px; font-size: 0.65rem; color: #7c8ba0; padding: 10px; }
         @media(max-width:480px){.filters-panel,.keyword-panel,.hot-niches-panel,.trend-chart-panel{padding:12px;border-radius:16px;}.niche-item{padding:10px;}.filter-group{min-width:120px;}.btn{padding:8px 12px;font-size:0.8rem;}}
+      /* ---- زر Get Code العصري ---- */
+.get-code-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: linear-gradient(135deg, #1877F2 0%, #0C5DC7 100%);
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(24, 119, 242, 0.4);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.get-code-btn i {
+    font-size: 18px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+.get-code-btn:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 8px 30px rgba(24, 119, 242, 0.6);
+    background: linear-gradient(135deg, #2B8AF5 0%, #1877F2 100%);
+}
+
+.get-code-btn:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 10px rgba(24, 119, 242, 0.3);
+}
+
+/* تأثير نبض خفيف لجذب الانتباه */
+@keyframes subtlePulse {
+    0% { box-shadow: 0 4px 20px rgba(24, 119, 242, 0.4); }
+    50% { box-shadow: 0 4px 30px rgba(24, 119, 242, 0.7); }
+    100% { box-shadow: 0 4px 20px rgba(24, 119, 242, 0.4); }
+}
+
+.get-code-btn {
+    animation: subtlePulse 2.5s infinite;
+}
     </style>
 </head>
 <body>
+  <!-- زر Get Code -->
+<a href="https://www.facebook.com/Nichify/" target="_blank" rel="noopener noreferrer" class="get-code-btn">
+    <i class="fab fa-facebook-square"></i> Get Code
+</a>
 
 <!-- ... جميع عناصر HTML بدون أي تغيير ... -->
 <!-- LOGIN PAGE -->
