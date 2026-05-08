@@ -35,11 +35,7 @@ function cleanBsrDisplay(bsrString) {
 
 function parseDateFromString(dateString) {
     if (!dateString) return null;
-    const c = dateString
-        .replace(/^[:\s]+/, '')
-        .replace(/[\u200e\u200f\u200b\u00a0]/g, '')
-        .trim();
-    if (!c) return null;
+    const c = dateString.replace(/^:\s*/, '').replace(/\u200e/g, '').trim();
     const dt = new Date(c);
     return isNaN(dt) ? null : dt;
 }
