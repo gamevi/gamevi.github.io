@@ -35,48 +35,13 @@ function cleanBsrDisplay(bsrString) {
 
 function parseDateFromString(dateString) {
     if (!dateString) return null;
-
-    // تنظيف النص من الأحرف الخاصة
-    let c = dateString
+    const c = dateString
         .replace(/^[:\s]+/, '')
-        .replace(/\u200e/g, '')
-        .replace(/\u200f/g, '')
+        .replace(/[\u200e\u200f\u200b\u00a0]/g, '')
         .trim();
-
     if (!c) return null;
-
-    // محاولة التحليل المباشر أولاً
-    let dt = new Date(c);
-    if (!isNaN(dt)) return dt;
-
-    // صيغة  DD/MM/YYYY أو MM/DD/YYYY
-    const slashMatch = c.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (slashMatch) {
-        dt = new Date(`${slashMatch[3]}-${slashMatch[2].padStart(2,'0')}-${slashMatch[1].padStart(2,'0')}`);
-        if (!isNaN(dt)) return dt;
-        dt = new Date(`${slashMatch[3]}-${slashMatch[1].padStart(2,'0')}-${slashMatch[2].padStart(2,'0')}`);
-        if (!isNaN(dt)) return dt;
-    }
-
-    // صيغة  YYYY-MM-DD
-    const dashMatch = c.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-    if (dashMatch) {
-        dt = new Date(c);
-        if (!isNaN(dt)) return dt;
-    }
-
-    // صيغة  "January 1, 2025" أو "Jan 1 2025"
-    const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-    const textMatch = c.match(/([a-z]+)\s+(\d{1,2})[,\s]+(\d{4})/i);
-    if (textMatch) {
-        const m = months[textMatch[1].toLowerCase().slice(0,3)];
-        if (m !== undefined) {
-            dt = new Date(parseInt(textMatch[3]), m, parseInt(textMatch[2]));
-            if (!isNaN(dt)) return dt;
-        }
-    }
-
-    return null;
+    const dt = new Date(c);
+    return isNaN(dt) ? null : dt;
 }
 
 function formatDate(date) {
@@ -454,12 +419,6 @@ async function loadProducts() {
     }
 }
 
-// أضفه مؤقتاً لمعرفة صيغة التواريخ
-const sample = allProducts.slice(0,5).map(p => ({
-    raw: p.dateAddedRaw,
-    parsed: p.parsedDate
-}));
-console.table(sample);
 // ═══════════════════════════════════════════════════
 // FILTERS
 // ═══════════════════════════════════════════════════
