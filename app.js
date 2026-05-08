@@ -1,36 +1,10 @@
-// ═══════════════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════════════
 const WORKER_URL = 'https://noisy-voice-0c5b.mohammedmila022.workers.dev';
-
-/* ... جميع الدوال من `ensureClientSecret` حتى `generateSimpleFingerprint` بدون تغيير ... */
-// ═══════════════════════════════════════════════════
-// CLIENT SECRET & NONCE (v4.2 worker)
-// ═══════════════════════════════════════════════════
-function ensureClientSecret() {
-    let cs = sessionStorage.getItem('merchClientSecret');
-    if (!cs) {
-        const bytes = new Uint8Array(24);
-        crypto.getRandomValues(bytes);
-        cs = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-        sessionStorage.setItem('merchClientSecret', cs);
-    }
-    return cs;
-}
-function generateNonce() {
-    const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-const CLIENT_SECRET = ensureClientSecret();
-
-// ═══════════════════════════════════════════════════
-// CLIENT SESSION STATE
-// ═══════════════════════════════════════════════════
 let SESSION_TOKEN = null;
+let currentAccessCode = null;
+let accessData = null;
 
 // ═══════════════════════════════════════════════════
-// HELPER FUNCTIONS
+// HELPERS (unchanged logic)
 // ═══════════════════════════════════════════════════
 function parseCSVRow(row) {
     const result = [];
@@ -71,9 +45,6 @@ function formatDate(date) {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-// ═══════════════════════════════════════════════════
-// STOP WORDS & STEMMING
-// ═══════════════════════════════════════════════════
 const STOP_WORDS = new Set(['a','an','the','and','or','but','for','of','with','without','by','to','in','on','at','from','up','down','is','are','was','were','be','been','being','have','has','had','do','does','did','so','if','then','when','where','which','while','who','whom','this','that','these','those','no','not','just','very','too','than','over','more','out','as','its','it','i','my','your','our','their','his','her','we','they','me','him','us','them','what','how','all','any','each','few','some','such','into','about','after','before','between','during','off','shirt','shirts','tshirt','tshirts','tee','tees','tank','top','tops','hoodie','hoodies','pullover','sweatshirt','crewneck','vneck','sleeve','sleeves','short','long','graphic','design','printed','print','men','women','man','woman','male','female','boy','girl','boys','girls','kids','adult','adults','unisex','youth','toddler','infant','baby','clothing','wear','apparel','fashion','style','outfit','product','item','merchandise','merch','gift','gifts','present','presents','idea','ideas','great','perfect','best','good','nice','beautiful','pretty','funny','cool','cute','awesome','amazing','unique','original','vintage','retro','classic','new','old','modern','trendy','brand','made','quality','premium','official','licensed','100','cotton','polyester','blend','machine','wash','dry','lightweight','comfortable','comfort','soft','casual','fit','fitted','novelty','humor','humorous','sarcastic','sarcasm','quote','saying','slogan','text','word','words','team','group','crew','squad','club','family','member','members','love','lover','lovers','fan','fans','enthusiast','enthusiasts','life','lifestyle','living','co','inc','llc','ltd','us','uk','ca','usa','america','side','see','soon','day','days','year','years','time']);
 
 function stem(w) {
@@ -87,9 +58,6 @@ function cleanTokens(t) {
     return t.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim().split(' ').filter(w => w.length >= 2 && !/^\d+$/.test(w) && !STOP_WORDS.has(w) && !STOP_WORDS.has(stem(w))).map(w => stem(w));
 }
 
-// ═══════════════════════════════════════════════════
-// KEYWORD MATCHING
-// ═══════════════════════════════════════════════════
 function keywordMatchNormal(p, kw) {
     if (!kw?.trim()) return true;
     const tokens = kw.trim().toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').split(' ').filter(t => t);
@@ -103,8 +71,6 @@ function keywordMatchExact(p, kw) {
     const n = kw.trim().toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!n) return true;
     const h = [p.designTitle, p.brand, p.featureBullet1, p.featureBullet2].join(' ').toLowerCase().replace(/[^\w\s]/g, ' ');
-    // v4.2.1 FIX: Corrected the RegExp constructor syntax to avoid the 'missing /' error.
-    // Original broken line: new RegExp(`\b${n.replace(/[.*+?^${}()|[\]\]/g, '\$&')}\b`, 'i')
     return new RegExp('\\b' + n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(h);
 }
 
@@ -112,10 +78,6 @@ function keywordMatch(p, kw) {
     return (document.getElementById('searchMode')?.value === 'exact') ? keywordMatchExact(p, kw) : keywordMatchNormal(p, kw);
 }
 
-/* ... باقي الكود بدون تغيير بدءًا من extractLongTailByLength ... */
-// ═══════════════════════════════════════════════════
-// LONG-TAIL EXTRACTION
-// ═══════════════════════════════════════════════════
 function extractLongTailByLength(title, n) {
     if (!title || n < 2) return [];
     const t = cleanTokens(title);
@@ -125,9 +87,6 @@ function extractLongTailByLength(title, n) {
     return [...s];
 }
 
-// ═══════════════════════════════════════════════════
-// HOT NICHES CALCULATION
-// ═══════════════════════════════════════════════════
 function calculateHotNiches(wl, pd, mr) {
     let prods = allProducts;
     if (pd > 0) {
@@ -155,84 +114,17 @@ function calculateHotNiches(wl, pd, mr) {
 }
 
 // ═══════════════════════════════════════════════════
-// RATE LIMITER
-// ═══════════════════════════════════════════════════
-const rateLimiter = {
-    attempts: {},
-    check(key, maxAttempts = 5, windowMs = 60000) {
-        const now = Date.now();
-        if (!this.attempts[key]) this.attempts[key] = [];
-        this.attempts[key] = this.attempts[key].filter(t => now - t < windowMs);
-        if (this.attempts[key].length >= maxAttempts) return false;
-        this.attempts[key].push(now);
-        return true;
-    },
-    cleanup() {
-        const now = Date.now();
-        for (const key in this.attempts) {
-            this.attempts[key] = this.attempts[key].filter(t => now - t < 60000);
-            if (this.attempts[key].length === 0) delete this.attempts[key];
-        }
-    }
-};
-setInterval(() => rateLimiter.cleanup(), 300000);
-
-// ═══════════════════════════════════════════════════
-// DEVICE FINGERPRINT
-// ═══════════════════════════════════════════════════
-function generateSimpleFingerprint() {
-    const components = [navigator.userAgent, navigator.language, screen.width + 'x' + screen.height, screen.colorDepth, new Date().getTimezoneOffset()].join('|');
-    let hash = 0;
-    for (let i = 0; i < components.length; i++) { hash = ((hash << 5) - hash) + components.charCodeAt(i); hash = hash & hash; }
-    return 'fp_' + Math.abs(hash).toString(36);
-}
-
-// ═══════════════════════════════════════════════════
-// SESSION STATE VARIABLES
-// ═══════════════════════════════════════════════════
-let currentAccessCode = null;
-let accessData = null;
-let sessionId = null;
-let periodicCheckInterval = null;
-const simpleFingerprint = generateSimpleFingerprint();
-
-// ═══════════════════════════════════════════════════
-// WORKER API (v4.2 UPDATED)
+// WORKER API (Ultra-light)
 // ═══════════════════════════════════════════════════
 async function callWorker(endpoint, method = 'GET', body = null) {
     try {
         const headers = { 'Content-Type': 'application/json' };
-        const protectedEndpoints = ['/fetchProducts'];
-        const isProtected = protectedEndpoints.some(ep => endpoint.includes(ep));
-        if (isProtected && SESSION_TOKEN) headers['X-Session-Token'] = SESSION_TOKEN;
+        if (SESSION_TOKEN) headers['X-Session-Token'] = SESSION_TOKEN;
         const options = { method, headers };
         if (body) options.body = JSON.stringify(body);
         const response = await fetch(`${WORKER_URL}${endpoint}`, options);
-        if (response.status === 401) {
-            const refreshed = await refreshSessionToken();
-            if (refreshed) {
-                headers['X-Session-Token'] = SESSION_TOKEN;
-                const retryOptions = { method, headers };
-                if (body) retryOptions.body = JSON.stringify(body);
-                const retryResponse = await fetch(`${WORKER_URL}${endpoint}`, retryOptions);
-                return await retryResponse.json();
-            } else return { success: false, message: 'Session expired' };
-        }
         return await response.json();
     } catch (error) { return { success: false, message: 'Connection error' }; }
-}
-
-async function refreshSessionToken() {
-    try {
-        const response = await fetch(`${WORKER_URL}/sessionRefreshToken`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId, code: currentAccessCode, ua: navigator.userAgent, clientSecret: CLIENT_SECRET })
-        });
-        const result = await response.json();
-        if (result.success && result.sessionToken) { SESSION_TOKEN = result.sessionToken; return true; }
-        return false;
-    } catch (e) { return false; }
 }
 
 async function validateAccessCode(code) {
@@ -254,48 +146,6 @@ async function fetchProductsFromWorker() {
 }
 
 // ═══════════════════════════════════════════════════
-// SESSION TOKEN MANAGEMENT
-// ═══════════════════════════════════════════════════
-async function generateSessionToken() { return await refreshSessionToken() ? SESSION_TOKEN : null; }
-
-// ═══════════════════════════════════════════════════
-// SESSION STORAGE
-// ═══════════════════════════════════════════════════
-function saveLocalSession(code, expiryDate, sid) {
-    localStorage.setItem('merchSession', JSON.stringify({ code, expiryDate, sessionId: sid, savedAt: new Date().toISOString() }));
-}
-
-function clearSession() {
-    localStorage.removeItem('merchSession');
-    stopPeriodicCheck();
-    currentAccessCode = null; accessData = null; sessionId = null; SESSION_TOKEN = null;
-}
-
-async function loadSession() {
-    const saved = localStorage.getItem('merchSession');
-    if (!saved) return false;
-    try {
-        const session = JSON.parse(saved);
-        if (!session.sessionId || !session.code) return false;
-        if (!session.expiryDate || new Date(session.expiryDate) < new Date()) { clearSession(); return false; }
-        const ua = navigator.userAgent;
-        const entry = await validateAccessCode(session.code);
-        if (!entry || !entry.valid) { clearSession(); return false; }
-        const touch = await callWorker('/sessionTouch', 'POST', { sessionId: session.sessionId, code: session.code, ua, clientSecret: CLIENT_SECRET });
-        if (!touch.success) {
-            try { await callWorker('/sessionEnd', 'POST', { sessionId: session.sessionId, code: session.code, ua, clientSecret: CLIENT_SECRET }); } catch (_) {}
-            clearSession(); return false;
-        }
-        currentAccessCode = session.code.toUpperCase();
-        accessData = { code: session.code, expiryDate: entry.expiryDate };
-        sessionId = session.sessionId;
-        SESSION_TOKEN = await generateSessionToken(currentAccessCode);
-        saveLocalSession(currentAccessCode, entry.expiryDate, session.sessionId);
-        return true;
-    } catch (e) { clearSession(); return false; }
-}
-
-// ═══════════════════════════════════════════════════
 // ACCESS CONTROL
 // ═══════════════════════════════════════════════════
 function showError(message) {
@@ -310,7 +160,6 @@ function showError(message) {
     document.getElementById('loadingSpinner').style.display = 'none';
 }
 
-// v4.2 FIX: Updated sessionLookup logic — no longer receives existingSessionId
 async function verifyAccessCode() {
     const codeInput = document.getElementById('accessCode');
     const loginBtn = document.getElementById('loginBtn');
@@ -319,7 +168,6 @@ async function verifyAccessCode() {
 
     const code = codeInput.value.trim().toUpperCase();
     if (!code) { showError('Please enter an access code'); return; }
-    if (!rateLimiter.check('login_' + simpleFingerprint, 5, 60000)) { showError('Too many attempts. Please wait a minute.'); return; }
 
     loginBtn.disabled = true;
     btnText.style.display = 'none';
@@ -328,7 +176,6 @@ async function verifyAccessCode() {
     document.getElementById('successMsg').classList.remove('show');
 
     try {
-        const ua = navigator.userAgent;
         const entry = await validateAccessCode(code);
         if (!entry) { showError('Connection error. Please try again.'); return; }
         if (!entry.valid) {
@@ -337,49 +184,21 @@ async function verifyAccessCode() {
             showError('This code has expired.'); return;
         }
 
-        // Try resuming existing session on THIS device first
-        const saved = (() => { try { return JSON.parse(localStorage.getItem('merchSession') || 'null'); } catch { return null; } })();
-        if (saved && saved.code === code && saved.sessionId) {
-            const touch = await callWorker('/sessionTouch', 'POST', { sessionId: saved.sessionId, code, ua, clientSecret: CLIENT_SECRET });
-            if (touch.success) {
-                sessionId = saved.sessionId; currentAccessCode = code; accessData = { code, expiryDate: entry.expiryDate };
-                SESSION_TOKEN = await generateSessionToken();
-                saveLocalSession(code, entry.expiryDate, sessionId);
-                await showSuccess(); return;
-            }
-            localStorage.removeItem('merchSession');
+        const create = await callWorker('/createToken', 'POST', { code });
+        if (!create.success || !create.sessionToken) {
+            showError('Failed to create session. Please try again.'); return;
         }
 
-        // v4.2 FIX: sessionLookup now requires clientSecret and returns canResume
-        const lookup = await callWorker('/sessionLookup', 'POST', { code, ua, clientSecret: CLIENT_SECRET });
-        if (!lookup.success) { showError('Connection error. Please try again.'); return; }
+        currentAccessCode = code;
+        accessData = { code, expiryDate: entry.expiryDate };
+        SESSION_TOKEN = create.sessionToken;
+        localStorage.setItem('merchToken', SESSION_TOKEN);
+        localStorage.setItem('merchCode', code);
+        localStorage.setItem('merchExpiry', entry.expiryDate || '');
 
-        if (lookup.exists && lookup.canResume) {
-            // Same device confirmed by Worker, create fresh session (Worker will clean old one)
-        } else if (lookup.exists && !lookup.canResume) {
-            showError('This code is already in use on another device.'); return;
-        }
-
-        // Create brand new session
-        const newSid = generateSessionId();
-        const create = await callWorker('/sessionCreate', 'POST', { code, ua, sessionId: newSid, clientSecret: CLIENT_SECRET, nonce: generateNonce(), expiryDate: entry.expiryDate });
-        if (!create.success) {
-            const msg = create.message === 'Code in use on another device' ? 'This code is already in use on another device.' : 'Failed to create session. Please try again.';
-            showError(msg); return;
-        }
-
-        currentAccessCode = code; accessData = { code, expiryDate: entry.expiryDate }; sessionId = newSid;
-        SESSION_TOKEN = create.sessionToken || await generateSessionToken();
-        saveLocalSession(code, entry.expiryDate, newSid);
         await showSuccess();
     } catch (err) { showError('Verification failed. Please try again.'); }
     finally { loginBtn.disabled = false; btnText.style.display = 'inline'; spinner.style.display = 'none'; }
-}
-
-function generateSessionId() {
-    const bytes = new Uint8Array(16);
-    crypto.getRandomValues(bytes);
-    return 's_' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 async function showSuccess() {
@@ -394,7 +213,6 @@ async function showMainApp() {
     document.getElementById('mainApp').classList.add('show');
     document.getElementById('currentCode').textContent = currentAccessCode;
     updateExpiryBadge();
-    startPeriodicCheck();
     await initApp();
 }
 
@@ -409,47 +227,17 @@ function updateExpiryBadge() {
     else { badge.classList.remove('expired'); text.textContent = `Expires in ${daysLeft} days`; }
 }
 
-// ═══════════════════════════════════════════════════
-// PERIODIC CHECK
-// ═══════════════════════════════════════════════════
-function startPeriodicCheck() {
-    if (periodicCheckInterval) clearInterval(periodicCheckInterval);
-    setTimeout(() => performPeriodicCheck(), 5000);
-    periodicCheckInterval = setInterval(performPeriodicCheck, 20 * 1000);
+async function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('merchToken');
+        localStorage.removeItem('merchCode');
+        localStorage.removeItem('merchExpiry');
+        SESSION_TOKEN = null;
+        currentAccessCode = null;
+        accessData = null;
+        location.reload();
+    }
 }
-
-function stopPeriodicCheck() { if (periodicCheckInterval) { clearInterval(periodicCheckInterval); periodicCheckInterval = null; } }
-
-async function performPeriodicCheck() {
-    if (!currentAccessCode || !sessionId) { stopPeriodicCheck(); return; }
-    try {
-        const ua = navigator.userAgent;
-        const entry = await validateAccessCode(currentAccessCode);
-        if (!entry) return;
-        if (!entry.valid) {
-            if (entry.status === 'revoked') { await forceLogout('Access has been revoked.'); return; }
-            if (entry.status === 'unknown') { await forceLogout('Access code not found.'); return; }
-            await forceLogout('Access code expired.'); return;
-        }
-        const touch = await callWorker('/sessionTouch', 'POST', { sessionId, code: currentAccessCode, ua, clientSecret: CLIENT_SECRET });
-        if (!touch.success) { await forceLogout('Session terminated.'); return; }
-        const tokenAge = SESSION_TOKEN ? (Date.now() / 1000) - parseInt(SESSION_TOKEN.split('.')[0]) : Infinity;
-        if (!SESSION_TOKEN || tokenAge > 240) SESSION_TOKEN = await generateSessionToken(currentAccessCode);
-        if (entry.expiryDate !== accessData.expiryDate) { accessData.expiryDate = entry.expiryDate; saveLocalSession(currentAccessCode, entry.expiryDate, sessionId); updateExpiryBadge(); }
-    } catch (err) {}
-}
-
-async function forceLogout(message) {
-    stopPeriodicCheck();
-    try { if (sessionId && currentAccessCode) await callWorker('/sessionEnd', 'POST', { sessionId, code: currentAccessCode, ua: navigator.userAgent, clientSecret: CLIENT_SECRET }).catch(() => {}); } catch (e) {}
-    clearSession();
-    alert(message);
-    document.getElementById('mainApp').classList.remove('show');
-    document.getElementById('loginPage').style.display = 'flex';
-    document.getElementById('accessCode').value = '';
-}
-
-async function logout() { if (confirm('Are you sure you want to logout?')) await forceLogout('You have been logged out.'); }
 
 // ═══════════════════════════════════════════════════
 // APP DATA & STATE
@@ -463,7 +251,7 @@ let trendChart = null;
 let currentWordLength = 3;
 
 // ═══════════════════════════════════════════════════
-// FAVORITES MANAGEMENT
+// FAVORITES
 // ═══════════════════════════════════════════════════
 function loadFavorites() {
     const saved = localStorage.getItem('merchFavorites');
@@ -539,7 +327,7 @@ function showToast(message) {
 }
 
 // ═══════════════════════════════════════════════════
-// AMAZON RESEARCH TOOL
+// AMAZON RESEARCH
 // ═══════════════════════════════════════════════════
 function openResearchModal() { document.getElementById('researchModal').classList.add('active'); }
 function closeResearchModal() { document.getElementById('researchModal').classList.remove('active'); }
@@ -593,7 +381,7 @@ function performAmazonSearch() {
 }
 
 // ═══════════════════════════════════════════════════
-// INITIALIZATION
+// INIT
 // ═══════════════════════════════════════════════════
 async function initApp() {
     if (!SESSION_TOKEN) {
@@ -628,7 +416,7 @@ async function loadProducts() {
 }
 
 // ═══════════════════════════════════════════════════
-// FILTERING & SORTING
+// FILTERS
 // ═══════════════════════════════════════════════════
 function applyAllFilters() {
     const kw = document.getElementById('keywordSearch')?.value || '';
@@ -673,7 +461,7 @@ function resetAll() {
 }
 
 // ═══════════════════════════════════════════════════
-// EVENT DELEGATION (CSP-safe)
+// EVENT DELEGATION
 // ═══════════════════════════════════════════════════
 function setupEventDelegation() {
     const container = document.getElementById('productsContainer');
@@ -749,9 +537,6 @@ function renderProducts(products) {
     });
 }
 
-// ═══════════════════════════════════════════════════
-// HOT NICHES RENDERING
-// ═══════════════════════════════════════════════════
 function renderHotNiches() {
     const container = document.getElementById('hotNichesContainer');
     const pd = parseInt(document.getElementById('nichesPeriod')?.value || '7');
@@ -803,9 +588,6 @@ function searchByKeyword(kw) {
     if (i) { i.value = kw; currentKeywordSearch = kw; applyAllFilters(); document.querySelector('.keyword-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 }
 
-// ═══════════════════════════════════════════════════
-// HTML ESCAPE FUNCTIONS
-// ═══════════════════════════════════════════════════
 function escHtmlSafe(str) {
     if (str === null || str === undefined) return '';
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -816,9 +598,6 @@ function escHtmlJS(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\n/g, '\\n');
 }
 
-// ═══════════════════════════════════════════════════
-// PRODUCT ANALYSIS MODAL
-// ═══════════════════════════════════════════════════
 function analyzeProduct(asin) {
     const product = allProducts.find(p => p.asin === asin);
     if (!product) return;
@@ -855,9 +634,6 @@ function analyzeProduct(asin) {
 
 function closeModal() { document.getElementById('analysisModal').classList.remove('active'); }
 
-// ═══════════════════════════════════════════════════
-// TREND CHART
-// ═══════════════════════════════════════════════════
 function updateTrendChart() {
     const ctx = document.getElementById('trendChart').getContext('2d');
     const days = [], counts = [];
@@ -909,23 +685,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('bsrMin').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyAllFilters(); });
     document.getElementById('bsrMax').addEventListener('keypress', (e) => { if (e.key === 'Enter') applyAllFilters(); });
 
-    const hasSession = await loadSession();
-    if (hasSession) {
-        document.getElementById('loginPage').style.display = 'none';
-        document.getElementById('mainApp').classList.add('show');
-        document.getElementById('currentCode').textContent = currentAccessCode;
-        updateExpiryBadge();
-        startPeriodicCheck();
-        await initApp();
-    } else {
-        document.getElementById('loginPage').style.display = 'flex';
-        document.getElementById('mainApp').classList.remove('show');
+    // Ultra-light session restore (no periodic checks, no fingerprint)
+    const savedToken = localStorage.getItem('merchToken');
+    const savedCode = localStorage.getItem('merchCode');
+    const savedExpiry = localStorage.getItem('merchExpiry');
+
+    if (savedToken && savedCode) {
+        if (savedExpiry && new Date(savedExpiry) < new Date()) {
+            localStorage.removeItem('merchToken');
+            localStorage.removeItem('merchCode');
+            localStorage.removeItem('merchExpiry');
+        } else {
+            SESSION_TOKEN = savedToken;
+            currentAccessCode = savedCode;
+            accessData = { code: savedCode, expiryDate: savedExpiry };
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainApp').classList.add('show');
+            document.getElementById('currentCode').textContent = currentAccessCode;
+            updateExpiryBadge();
+            await initApp();
+        }
     }
 });
 
-// ═══════════════════════════════════════════════════
-// GLOBAL EXPOSURE
-// ═══════════════════════════════════════════════════
 window.toggleFavoritesFilter = toggleFavoritesFilter;
 window.toggleFavorite = toggleFavorite;
 window.exportFavoritesToCSV = exportFavoritesToCSV;
