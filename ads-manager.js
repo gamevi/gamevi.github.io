@@ -1554,4 +1554,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.head.appendChild(style);
   
   console.log('🎨 تم تحميل أنماط الإعلانات');
+
+  if (config.inPagePushTag?.enabled) {
+
+  setTimeout(() => {
+
+    const s = document.createElement('script');
+
+    s.dataset.zone = config.inPagePushTag.zone;
+    s.src = config.inPagePushTag.scriptUrl;
+    s.async = true;
+
+    (document.head || document.body || document.documentElement)
+      .appendChild(s);
+
+  }, config.inPagePushTag.delay || 0);
+
+}
 });
