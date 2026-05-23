@@ -2,7 +2,7 @@
   "antiAdblock": {
     "enabled": false,
     "showWarning": true,
-    "warningPosition": "bottom-right",
+    "warningPosition": "bottom-right", 
     "warningDuration": 10000
   },
   
@@ -15,16 +15,19 @@
       "https://pl28434861.effectivegatecpm.com/32/d4/9f/32d49f1b6a1e48f0897909667f379a52.js"
     ]
   },
+  
   "socialBar": {
     "enabled": false,
     "delay": 5000,
     "script": "https://pl28434871.effectivegatecpm.com/8e/c0/1d/8ec01d013b8bf12745ff310c43b869db.js"
   },
+  
   "nativeBanner": {
     "enabled": false,
     "script": "https://pl28434879.effectivegatecpm.com/7b2b9b89487b3dfaf080703b2e99b18b/invoke.js",
     "html": "<div id='container-7b2b9b89487b3dfaf080703b2e99b18b'></div>"
   },
+  
   "banners": {
     "aboveIframe": {
       "enabled": false,
@@ -61,6 +64,7 @@
         }
       ]
     },
+    
     "belowIframe": {
       "enabled": false,
       "rotation": false,
@@ -96,6 +100,7 @@
         }
       ]
     },
+    
     "pageBottom": {
       "enabled": false,
       "rotation": false,
@@ -131,24 +136,44 @@
         }
       ]
     },
+    
     "pageMiddle": {
-      "enabled": true,
+      "enabled": false,
       "rotation": false,
       "rotationInterval": 40000,
       "ads": [
         {
-          "id": "hilltopads-300x250-middle",
-          "script": "https://prizefamily.com/bVX.VKsqdTGil/0/YHWAcR/Betmm9ruiZFU/lWk/PlTRcow-NJzsAh2EMjj/kTtzNwzAAe3ZMPD/YvzCMUwR",
+          "id": "banner-300x250-middle",
+          "script": "https://www.highperformanceformat.com/c84b7f14ef2b488fb99e7411123accf1/invoke.js",
           "config": {
-            "format": "script",
+            "key": "c84b7f14ef2b488fb99e7411123accf1",
+            "format": "iframe",
             "height": 250,
             "width": 300,
-            "params": {}
+            "params": {
+              "domain": "gameivo.github.io",
+              "source": "highperformanceformat"
+            }
+          }
+        },
+        {
+          "id": "banner-468x60-middle",
+          "script": "https://www.highperformanceformat.com/3991d606bc816a1ffa67472290af625a/invoke.js",
+          "config": {
+            "key": "3991d606bc816a1ffa67472290af625a",
+            "format": "iframe",
+            "height": 60,
+            "width": 468,
+            "params": {
+              "domain": "gameivo.github.io",
+              "source": "highperformanceformat"
+            }
           }
         }
       ]
     }
   },
+  
   "sidebarAd": {
     "enabled": false,
     "rotation": false,
@@ -198,6 +223,7 @@
       }
     ]
   },
+  
   "sidebarAdExtra": {
     "enabled": false,
     "rotation": false,
@@ -233,6 +259,7 @@
       }
     ]
   },
+
   "vignetteBanner": {
     "enabled": false,
     "delay": 1000,
@@ -241,12 +268,15 @@
     "repeatInterval": 300000,
     "maxShowsPerSession": 10
   },
+
   "inPagePush": {
-    "enabled": true,
-    "zone": "11041566",
-    "script": "https://nap5k.com/tag.min.js",
-    "delay": 2000
-  },
+  "enabled": true,
+  "zone": "11041566",
+  "script": "https://nap5k.com/tag.min.js",
+  "delay": 2000
+},
+
+ 
   "smartlink": {
     "enabled": false,
     "url": "https://www.effectivegatecpm.com/juirxbme?key=10bf57330ed7a86975a587aa5e69f302",
