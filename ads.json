@@ -138,41 +138,50 @@
     },
     
     "pageMiddle": {
-      "enabled": false,
-      "rotation": false,
-      "rotationInterval": 40000,
-      "ads": [
-        {
-          "id": "banner-300x250-middle",
-          "script": "https://www.highperformanceformat.com/c84b7f14ef2b488fb99e7411123accf1/invoke.js",
-          "config": {
-            "key": "c84b7f14ef2b488fb99e7411123accf1",
-            "format": "iframe",
-            "height": 250,
-            "width": 300,
-            "params": {
-              "domain": "gameivo.github.io",
-              "source": "highperformanceformat"
-            }
-          }
-        },
-        {
-          "id": "banner-468x60-middle",
-          "script": "https://www.highperformanceformat.com/3991d606bc816a1ffa67472290af625a/invoke.js",
-          "config": {
-            "key": "3991d606bc816a1ffa67472290af625a",
-            "format": "iframe",
-            "height": 60,
-            "width": 468,
-            "params": {
-              "domain": "gameivo.github.io",
-              "source": "highperformanceformat"
-            }
-          }
+  "enabled": true,
+  "rotation": true,
+  "rotationInterval": 40000,
+  "ads": [
+    {
+      "id": "banner-300x250-middle",
+      "script": "https://www.highperformanceformat.com/c84b7f14ef2b488fb99e7411123accf1/invoke.js",
+      "config": {
+        "key": "c84b7f14ef2b488fb99e7411123accf1",
+        "format": "iframe",
+        "height": 250,
+        "width": 300,
+        "params": {
+          "domain": "gameivo.github.io",
+          "source": "highperformanceformat"
         }
-      ]
+      }
+    },
+    {
+      "id": "banner-468x60-middle",
+      "script": "https://www.highperformanceformat.com/3991d606bc816a1ffa67472290af625a/invoke.js",
+      "config": {
+        "key": "3991d606bc816a1ffa67472290af625a",
+        "format": "iframe",
+        "height": 60,
+        "width": 468,
+        "params": {
+          "domain": "gameivo.github.io",
+          "source": "highperformanceformat"
+        }
+      }
+    },
+    {
+      "id": "hilltopads-300x250-middle",
+      "script": "https://prizefamily.com/bVX.VKsqdTGil/0/YHWAcR/Betmm9ruiZFU/lWk/PlTRcow-NJzsAh2EMjj/kTtzNwzAAe3ZMPD/YvzCMUwR",
+      "config": {
+        "format": "script",
+        "height": 250,
+        "width": 300,
+        "params": {}
+      }
     }
-  },
+  ]
+},
   
   "sidebarAd": {
     "enabled": false,
