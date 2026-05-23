@@ -137,7 +137,7 @@
     },
     
     "pageMiddle": {
-      "enabled": false,
+      "enabled": true,
       "rotation": false,
       "rotationInterval": 40000,
       "ads": [
