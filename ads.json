@@ -137,19 +137,22 @@
       ]
     },
     
-    "pageMiddle": {
-  "enabled": true,
-  "rotation": false,
-  "rotationInterval": 40000,
-  "ads": [
-    {
-      "id": "banner-300x250-middle-hilltop",
-      "script": "//prizefamily.com/bZXFVwshd.GrlO0wYxWace/_exm/9yukZbUIltkZPHTec/wuNpzXAl2lMAj/k/t/NezpAj3NMKDeYGzGMuwN",
-      "config": {
-        "format": "iframe",
-        "height": 250,
-        "width": 300,
-        "provider": "hilltopads"
+    ""pageMiddle": {
+      "enabled": true,
+      "rotation": false,
+      "rotationInterval": 40000,
+      "ads": [
+        {
+          "id": "banner-300x250-middle",
+          "script": "https://www.highperformanceformat.com/c84b7f14ef2b488fb99e7411123accf1/invoke.js",
+          "config": {
+            "key": "c84b7f14ef2b488fb99e7411123accf1",
+            "format": "iframe",
+            "height": 250,
+            "width": 300,
+            "params": {
+              "domain": "gameivo.github.io",
+              "source": "highperformanceformat"
             }
           }
         },
