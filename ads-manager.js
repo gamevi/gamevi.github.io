@@ -580,85 +580,59 @@ this.loadInPagePush();
 
   // === دالة تحميل الإعلان ===
   loadSingleAd(container, ad, containerId) {
-  if (!ad || !ad.script) return;
-  
-  console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
-  
-  const uniqueId = `${ad.id}-${Date.now()}`;
-  
-  // ✅ التحقق إذا كان الإعلان من HilltopAds
-  const isHilltopAd = ad.script.includes('prizefamily.com');
-  
-  const adDiv = document.createElement('div');
-  adDiv.className = 'ad-banner ad-modern-wrapper';
-  adDiv.id = `ad-wrapper-${uniqueId}`;
-  adDiv.setAttribute('data-ad-id', ad.id);
-  adDiv.setAttribute('data-container', containerId);
-  adDiv.innerHTML = `
-    <div class="ad-label">Advertisement</div>
-    <div class="ad-content-scaler" id="banner-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 90}px;background:transparent;"></div>
-  `;
-  
-  container.innerHTML = '';
-  container.appendChild(adDiv);
-  
-  setTimeout(() => {
-    const targetElement = document.getElementById(`banner-${uniqueId}`);
-    if (!targetElement) return;
+    if (!ad || !ad.script) return;
     
-    if (isHilltopAd) {
-      // ✅ طريقة تحميل HilltopAds
-      const hilltopScript = document.createElement('script');
-      hilltopScript.innerHTML = `
-        (function(iinz){
-          var d = document,
-              s = d.createElement('script'),
-              l = d.scripts[d.scripts.length - 1];
-          s.settings = iinz || {};
-          s.src = "${ad.script}";
-          s.async = true;
-          s.referrerPolicy = 'no-referrer-when-downgrade';
-          l.parentNode.insertBefore(s, l);
-        })({})
-      `;
-      targetElement.appendChild(hilltopScript);
-      console.log(`✅ تم تحميل HilltopAd: ${ad.id}`);
-      
-      setTimeout(() => {
-        const adElement = document.getElementById(`banner-${uniqueId}`);
-        if (adElement) this.scaleAdElement(adElement);
-      }, 1000);
-    } else {
-      // الطريقة الأصلية للإعلانات الأخرى
-      window.atOptions = window.atOptions || {};
-      Object.assign(window.atOptions, {
-          ...ad.config,
-          params: ad.config?.params || {}
-      });
-      
-      const script = document.createElement('script');
-      script.src = ad.script;
-      script.async = true;
-      script.setAttribute('data-cfasync', 'false');
-      script.id = `script-${uniqueId}`;
-      
-      script.onload = () => {
-          console.log(`✅ تم تحميل إعلان: ${ad.id}`);
-          setTimeout(() => {
-            const adElement = document.getElementById(`banner-${uniqueId}`);
-            if (adElement) this.scaleAdElement(adElement);
-          }, 1000);
-      };
-      
-      script.onerror = () => {
-          console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
-          this.showFallbackInContainer(container);
-      };
-      
-      targetElement.appendChild(script);
-    }
-  }, 300);
-}
+    console.log(`📢 تحميل إعلان: ${ad.id} في ${containerId}`);
+    
+    const uniqueId = `${ad.id}-${Date.now()}`;
+    
+    // استخدام atOptions ثابت
+    window.atOptions = window.atOptions || {};
+    Object.assign(window.atOptions, {
+        ...ad.config,
+        params: ad.config?.params || {}
+    });
+    
+    // استخدام هيكل HTML محسن
+    const adDiv = document.createElement('div');
+    adDiv.className = 'ad-banner ad-modern-wrapper';
+    adDiv.id = `ad-wrapper-${uniqueId}`;
+    adDiv.setAttribute('data-ad-id', ad.id);
+    adDiv.setAttribute('data-container', containerId);
+    adDiv.innerHTML = `
+      <div class="ad-label">Advertisement</div>
+      <div class="ad-content-scaler" id="banner-${uniqueId}" style="text-align:center;min-height:${ad.config?.height || 90}px;background:transparent;"></div>
+    `;
+    
+    container.innerHTML = '';
+    container.appendChild(adDiv);
+    
+    setTimeout(() => {
+        const script = document.createElement('script');
+        script.src = ad.script;
+        script.async = true;
+        script.setAttribute('data-cfasync', 'false');
+        script.id = `script-${uniqueId}`;
+        
+        script.onload = () => {
+            console.log(`✅ تم تحميل إعلان: ${ad.id}`);
+            setTimeout(() => {
+              const adElement = document.getElementById(`banner-${uniqueId}`);
+              if (adElement) this.scaleAdElement(adElement);
+            }, 1000);
+        };
+        
+        script.onerror = () => {
+            console.warn(`⚠️ فشل تحميل إعلان: ${ad.id}`);
+            this.showFallbackInContainer(container);
+        };
+        
+        const targetElement = document.getElementById(`banner-${uniqueId}`);
+        if (targetElement) {
+            targetElement.appendChild(script);
+        }
+    }, 300);
+  }
 
   // === 8. إضافة إعلان في وسط المحتوى ===
   loadMiddleAd() {
@@ -1254,36 +1228,12 @@ loadVignetteBanner() {
         if (sidebar) {
           sidebar.appendChild(container);
         }
-      } else if (containerId === 'ad-page-middle') {
-      // وضع الإعلان في المنتصف تلقائياً
-      const gameFrame = document.querySelector('.game-frame');
-      const gameContainer = document.querySelector('.game-container');
-      const aboveBanner = document.getElementById('ad-above-iframe');
-
-      if (gameFrame && gameFrame.parentNode) {
-        // وضعه بعد إطار اللعبة مباشرة
-        gameFrame.parentNode.insertBefore(container, gameFrame.nextSibling);
-      } else if (aboveBanner && aboveBanner.parentNode) {
-        // وضعه بعد البانر العلوي
-        aboveBanner.parentNode.insertBefore(container, aboveBanner.nextSibling);
-      } else if (gameContainer) {
-        // وضعه في منتصف حاوية اللعبة
-        const children = Array.from(gameContainer.children);
-        const midIndex = Math.floor(children.length / 2);
-        if (children[midIndex]) {
-          gameContainer.insertBefore(container, children[midIndex]);
-        } else {
-          gameContainer.appendChild(container);
-        }
       } else {
         document.body.appendChild(container);
       }
-    } else {
-      document.body.appendChild(container);
     }
-  }
-
-  return container;
+    
+    return container;
   }
 
   // === 17. عرض إعلانات فولباك ===
