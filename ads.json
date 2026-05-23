@@ -27,7 +27,7 @@
   },
   "banners": {
     "aboveIframe": {
-      "enabled": false,
+      "enabled": true,
       "rotation": false,
       "rotationInterval": 30000,
       "ads": [
