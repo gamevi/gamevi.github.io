@@ -1182,26 +1182,9 @@ loadVignetteBanner() {
             break;
             
           case 'ad-page-middle':
-            // ✅ وضع الإعلان في المنتصف: بعد إطار اللعبة مباشرة
-            const gameContainer = document.querySelector('.game-container');
-            const gameFrame = document.querySelector('.game-frame, #game-iframe');
-            const aboveBanner = document.getElementById('ad-above-iframe');
-            const belowBanner = document.getElementById('ad-below-iframe');
-
-            if (gameFrame && gameFrame.parentNode) {
-              // أفضل خيار: بعد إطار اللعبة مباشرة
-              gameFrame.parentNode.insertBefore(container, gameFrame.nextSibling);
-            } else if (aboveBanner && aboveBanner.parentNode) {
-              // ثاني خيار: بعد البانر العلوي
-              aboveBanner.parentNode.insertBefore(container, aboveBanner.nextSibling);
-            } else if (belowBanner && belowBanner.parentNode) {
-              // ثالث خيار: قبل البانر السفلي
-              belowBanner.parentNode.insertBefore(container, belowBanner);
-            } else if (gameContainer) {
-              // رابع خيار: في منتصف حاوية اللعبة
-              const children = Array.from(gameContainer.children);
-              const mid = Math.floor(children.length / 2);
-              gameContainer.insertBefore(container, children[mid] || null);
+            const gameInfo = document.querySelector('.game-info');
+            if (gameInfo) {
+              gameInfo.parentNode.insertBefore(container, gameInfo.nextSibling);
             }
             break;
         }
