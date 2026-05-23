@@ -5,8 +5,6 @@
     "warningPosition": "bottom-right", 
     "warningDuration": 10000
   },
-
-  
   "popunder": {
     "enabled": false,
     "frequency": "once_per_session",
