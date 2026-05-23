@@ -1182,9 +1182,21 @@ loadVignetteBanner() {
             break;
             
           case 'ad-page-middle':
-            const gameInfo = document.querySelector('.game-info');
-            if (gameInfo) {
-              gameInfo.parentNode.insertBefore(container, gameInfo.nextSibling);
+            const gameFrame3 = document.querySelector('.game-frame, #game-iframe');
+            const aboveBanner3 = document.getElementById('ad-above-iframe');
+            const belowBanner3 = document.getElementById('ad-below-iframe');
+            const gameContainer3 = document.querySelector('.game-container');
+
+            if (gameFrame3 && gameFrame3.parentNode) {
+              gameFrame3.parentNode.insertBefore(container, gameFrame3.nextSibling);
+            } else if (aboveBanner3 && aboveBanner3.parentNode) {
+              aboveBanner3.parentNode.insertBefore(container, aboveBanner3.nextSibling);
+            } else if (belowBanner3 && belowBanner3.parentNode) {
+              belowBanner3.parentNode.insertBefore(container, belowBanner3);
+            } else if (gameContainer3) {
+              const children3 = Array.from(gameContainer3.children);
+              const mid3 = Math.floor(children3.length / 2);
+              gameContainer3.insertBefore(container, children3[mid3] || null);
             }
             break;
         }
