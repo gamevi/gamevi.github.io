@@ -1,5 +1,5 @@
 /**
- * 🎯 نظام إدار1ة الإعلانات الذكي - النسخة المحسّنة والمُصلحة
+ * 🎯 نظام إدارة الإعلانات الذكي - النسخة المحسّنة والمُصلحة
  * ✅ إصلاح البانرات السوداء
  * ✅ إصلاح Popunder للعمل مرة واحدة فقط
  * ✅ إضافة جميع الإعلانات الجديدة
@@ -515,10 +515,6 @@ class AdsManager {
     // 8. Vignette Banner
 await this.delay(3500);
 this.loadVignetteBanner(); 
-
-    // 9. In-Page Push
-await this.delay(4000);
-this.loadInPagePush();
   
   }
 
@@ -613,8 +609,6 @@ this.loadInPagePush();
         script.async = true;
         script.setAttribute('data-cfasync', 'false');
         script.id = `script-${uniqueId}`;
-
-    
         
         script.onload = () => {
             console.log(`✅ تم تحميل إعلان: ${ad.id}`);
@@ -995,39 +989,7 @@ this.loadInPagePush();
     setTimeout(() => checkGameLoaded(), 2000);
   }
 
-// === تحميل In-Page Push (Monetag) ===
-loadInPagePush() {
-  if (!this.config.inPagePush?.enabled) return;
-
-  const zone = this.config.inPagePush.zone;
-  const scriptUrl = this.config.inPagePush.script;
-  const delay = this.config.inPagePush.delay || 2000;
-
-  if (!scriptUrl || !zone) {
-    console.warn('⚠️ In-Page Push: بيانات ناقصة');
-    return;
-  }
-
-  const scriptKey = `inpagepush-${zone}`;
-  if (this.loadedScripts.has(scriptKey)) {
-    console.log('⚠️ In-Page Push already loaded');
-    return;
-  }
-
-  setTimeout(() => {
-    const script = document.createElement('script');
-    script.dataset.zone = zone;
-    script.src = scriptUrl;
-    script.async = true;
-    script.setAttribute('data-cfasync', 'false');
-
-    document.body.appendChild(script);
-    this.loadedScripts.add(scriptKey);
-
-    script.onload = () => console.log('✅ In-Page Push loaded');
-    script.onerror = () => console.warn('⚠️ فشل تحميل In-Page Push');
-  }, delay);
-}
+// === تحميل Vignette Banner مع التحكم في التكرار ===
 // === تحميل Vignette Banner مع التحكم في التكرار ===
 loadVignetteBanner() {
   if (!this.config.vignetteBanner?.enabled) return;
