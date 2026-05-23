@@ -614,21 +614,7 @@ this.loadInPagePush();
         script.setAttribute('data-cfasync', 'false');
         script.id = `script-${uniqueId}`;
 
-      // معالجة خاصة لـ HilltopAds
-if (ad.config?.provider === 'hilltopads') {
-  const hilltopScript = document.createElement('script');
-  hilltopScript.settings = {};
-  hilltopScript.src = ad.script;
-  hilltopScript.async = true;
-  hilltopScript.referrerPolicy = 'no-referrer-when-downgrade';
-  
-  const targetElement = document.getElementById(`banner-${uniqueId}`);
-  if (targetElement) {
-    targetElement.appendChild(hilltopScript);
-    console.log(`✅ HilltopAds loaded: ${ad.id}`);
-  }
-  return; // ← توقف هنا ولا تكمل باقي الكود
-}
+    
         
         script.onload = () => {
             console.log(`✅ تم تحميل إعلان: ${ad.id}`);
