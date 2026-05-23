@@ -1254,12 +1254,36 @@ loadVignetteBanner() {
         if (sidebar) {
           sidebar.appendChild(container);
         }
+      } else if (containerId === 'ad-page-middle') {
+      // وضع الإعلان في المنتصف تلقائياً
+      const gameFrame = document.querySelector('.game-frame');
+      const gameContainer = document.querySelector('.game-container');
+      const aboveBanner = document.getElementById('ad-above-iframe');
+
+      if (gameFrame && gameFrame.parentNode) {
+        // وضعه بعد إطار اللعبة مباشرة
+        gameFrame.parentNode.insertBefore(container, gameFrame.nextSibling);
+      } else if (aboveBanner && aboveBanner.parentNode) {
+        // وضعه بعد البانر العلوي
+        aboveBanner.parentNode.insertBefore(container, aboveBanner.nextSibling);
+      } else if (gameContainer) {
+        // وضعه في منتصف حاوية اللعبة
+        const children = Array.from(gameContainer.children);
+        const midIndex = Math.floor(children.length / 2);
+        if (children[midIndex]) {
+          gameContainer.insertBefore(container, children[midIndex]);
+        } else {
+          gameContainer.appendChild(container);
+        }
       } else {
         document.body.appendChild(container);
       }
+    } else {
+      document.body.appendChild(container);
     }
-    
-    return container;
+  }
+
+  return container;
   }
 
   // === 17. عرض إعلانات فولباك ===
