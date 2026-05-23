@@ -269,6 +269,13 @@
     "maxShowsPerSession": 10
   },
 
+  "inPagePush": {
+  "enabled": true,
+  "zone": "11041566",
+  "script": "https://nap5k.com/tag.min.js",
+  "delay": 2000
+},
+
  
   "smartlink": {
     "enabled": false,
