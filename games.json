@@ -1,5 +1,20 @@
 [
    {
+    "id": "emberwars-io",
+    "thumbnail": "https://gamevi.github.io/images/216.webp",
+    "genre": "Action, Strategy, IO, Multiplayer, Arcade, Survival"
+  },
+  {
+    "id": "pixel-warfare-io",
+    "thumbnail": "https://gamevi.github.io/images/215.webp",
+    "genre": "Action, Shooter, FPS, 3D, Blocks, IO, Multiplayer"
+  },
+   {
+    "id": "minibattles",
+    "thumbnail": "https://gamevi.github.io/images/214.webp",
+    "genre": "Action, Arcade, 2-Player, Multiplayer, Local Party"
+  },
+   {
     "id": "cs-chaos-squad",
     "thumbnail": "https://gamevi.github.io/images/213.webp",
     "genre": "Action, Shooter, FPS, 3D, Tactical Multiplayer"
