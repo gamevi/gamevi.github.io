@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merch Analyzer — رفع CSV</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f4ff; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: white; border-radius: 24px; padding: 40px; max-width: 560px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.12); }
+  h1 { font-size: 1.5rem; color: #1e293b; margin-bottom: 6px; }
+  .sub { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; }
+  label { display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type=text], input[type=password] {
+    width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px;
+    font-size: 0.95rem; outline: none; transition: border 0.2s; margin-bottom: 16px;
+    font-family: monospace;
+  }
+  input:focus { border-color: #667eea; }
+  .drop-zone {
+    border: 2px dashed #cbd5e1; border-radius: 16px; padding: 40px 20px;
+    text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px;
+    background: #f8fafc;
+  }
+  .drop-zone.drag { border-color: #667eea; background: #eef2ff; }
+  .drop-zone.has-file { border-color: #10b981; background: #f0fdf4; }
+  .drop-zone i { font-size: 2.5rem; margin-bottom: 10px; display: block; }
+  .drop-zone.has-file i { color: #10b981; }
+  .drop-zone p { color: #64748b; font-size: 0.9rem; }
+  .drop-zone .file-name { color: #1e293b; font-weight: 600; font-size: 1rem; margin-top: 6px; }
+  input[type=file] { display: none; }
+  .btn {
+    width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; border: none; border-radius: 14px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: all 0.2s; display: flex;
+    align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,0.4); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .result {
+    margin-top: 20px; padding: 16px 20px; border-radius: 12px; font-size: 0.9rem;
+    display: none; line-height: 1.6;
+  }
+  .result.success { background: #dcfce7; color: #15803d; display: block; }
+  .result.error   { background: #fee2e2; color: #dc2626; display: block; }
+  .progress { margin-top: 16px; display: none; }
+  .progress-bar { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #10b981); border-radius: 99px; transition: width 0.3s; width: 0%; }
+  .progress-text { text-align: center; font-size: 0.8rem; color: #64748b; margin-top: 6px; }
+  .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .stats { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .stat-box { flex: 1; min-width: 100px; background: #f8fafc; border-radius: 12px; padding: 12px; text-align: center; }
+  .stat-box .num { font-size: 1.5rem; font-weight: 800; color: #667eea; }
+  .stat-box .lbl { font-size: 0.75rem; color: #64748b; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>📦 رفع منتجات CSV</h1>
+  <p class="sub">يتم دمج المنتجات مع القاعدة — لا تكرار، BSR يتحدث تلقائياً</p>
+
+  <label>Worker URL</label>
+  <input type="text" id="workerUrl" placeholder="https://xxxx.workers.dev" value="">
+
+  <label>Admin Token</label>
+  <input type="password" id="adminToken" placeholder="M8ZwR+smNH...">
+
+  <label>ملف CSV</label>
+  <div class="drop-zone" id="dropZone">
+    <i id="dropIcon">📂</i>
+    <p id="dropText">اسحب ملف CSV هنا أو اضغط للاختيار</p>
+    <p class="file-name" id="fileName"></p>
+  </div>
+  <input type="file" id="fileInput" accept=".csv">
+
+  <button class="btn" id="uploadBtn" disabled>
+    <span id="btnText">اختر ملف أولاً</span>
+  </button>
+
+  <div class="progress" id="progressDiv">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <p class="progress-text" id="progressText">جاري الرفع...</p>
+  </div>
+
+  <div class="result" id="result"></div>
+
+  <div class="stats" id="statsDiv" style="display:none">
+    <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">إجمالي الصفوف</div></div>
+    <div class="stat-box"><div class="num" id="statInserted">0</div><div class="lbl">مضاف/محدَّث</div></div>
+    <div class="stat-box"><div class="num" id="statSkipped">0</div><div class="lbl">مهمل</div></div>
+  </div>
+</div>
+
+<script>
+const dropZone  = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const btnText   = document.getElementById('btnText');
+const fileName  = document.getElementById('fileName');
+const dropText  = document.getElementById('dropText');
+const dropIcon  = document.getElementById('dropIcon');
+const result    = document.getElementById('result');
+const statsDiv  = document.getElementById('statsDiv');
+const progressDiv  = document.getElementById('progressDiv');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+
+// حفظ الإعدادات في localStorage
+const urlInput   = document.getElementById('workerUrl');
+const tokenInput = document.getElementById('adminToken');
+urlInput.value   = localStorage.getItem('workerUrl')   || '';
+tokenInput.value = localStorage.getItem('adminToken')  || '';
+urlInput.addEventListener('input', () => localStorage.setItem('workerUrl',   urlInput.value));
+tokenInput.addEventListener('input', () => localStorage.setItem('adminToken', tokenInput.value));
+
+let selectedFile = null;
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f) setFile(f);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) setFile(fileInput.files[0]);
+});
+
+function setFile(f) {
+  if (!f.name.endsWith('.csv')) {
+    showResult('error', 'الملف يجب أن يكون بصيغة CSV');
+    return;
+  }
+  selectedFile = f;
+  dropZone.classList.add('has-file');
+  dropIcon.textContent = '✅';
+  dropText.textContent = 'الملف جاهز للرفع';
+  fileName.textContent = f.name + ' (' + (f.size / 1024).toFixed(1) + ' KB)';
+  uploadBtn.disabled = false;
+  btnText.textContent = 'رفع إلى D1';
+  result.className = 'result';
+  statsDiv.style.display = 'none';
+}
+
+uploadBtn.addEventListener('click', async () => {
+  const workerUrl  = urlInput.value.trim().replace(/\/$/, '');
+  const adminToken = tokenInput.value.trim();
+
+  if (!workerUrl) { showResult('error', 'أدخل Worker URL'); return; }
+  if (!adminToken) { showResult('error', 'أدخل Admin Token'); return; }
+  if (!selectedFile) { showResult('error', 'اختر ملف CSV'); return; }
+
+  uploadBtn.disabled = true;
+  btnText.innerHTML = '<div class="spinner"></div> جاري الرفع...';
+  result.className = 'result';
+  statsDiv.style.display = 'none';
+  progressDiv.style.display = 'block';
+  progressFill.style.width = '10%';
+  progressText.textContent = 'جاري قراءة الملف...';
+
+  try {
+    const csvText = await selectedFile.text();
+    const lines = csvText.split('\n').filter(l => l.trim()).length - 1;
+    progressFill.style.width = '30%';
+    progressText.textContent = `${lines} صف جاهز للإرسال...`;
+
+    progressFill.style.width = '60%';
+    progressText.textContent = 'جاري الإرسال للـ Worker...';
+
+    const res = await fetch(workerUrl + '/admin/syncProducts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Admin-Token': adminToken
+      },
+      body: csvText
+    });
+
+    progressFill.style.width = '90%';
+    const data = await res.json();
+    progressFill.style.width = '100%';
+    progressText.textContent = 'اكتمل!';
+
+    if (data.success) {
+      showResult('success', `✅ تم بنجاح! Cache تم مسحه — الزوار سيشوفون البيانات الجديدة فوراً.`);
+      document.getElementById('statTotal').textContent    = data.total    || 0;
+      document.getElementById('statInserted').textContent = data.inserted || 0;
+      document.getElementById('statSkipped').textContent  = data.skipped  || 0;
+      statsDiv.style.display = 'flex';
+    } else {
+      showResult('error', '❌ خطأ: ' + (data.message || 'unknown error'));
+    }
+  } catch (e) {
+    showResult('error', '❌ فشل الاتصال: ' + e.message);
+  } finally {
+    uploadBtn.disabled = false;
+    btnText.textContent = 'رفع مرة أخرى';
+    setTimeout(() => { progressDiv.style.display = 'none'; progressFill.style.width = '0%'; }, 2000);
+  }
+});
+
+function showResult(type, msg) {
+  result.className = 'result ' + type;
+  result.textContent = msg;
+}
+</script>
+</body>
+</html>
