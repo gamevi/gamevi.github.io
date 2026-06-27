@@ -136,15 +136,27 @@ async function validateAccessCode(code) {
 async function fetchProductsFromWorker() {
     const result = await callWorker('/fetchProducts', 'GET');
     if (!result.success || !result.data) throw new Error('Failed to fetch products');
-    const lines = result.data.split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) throw new Error('Empty data');
-    return lines.slice(1).map(l => {
-        const c = parseCSVRow(l);
-        if (c.length < 5) return null;
-        return { asin: c[0] || '', link: c[1] || '#', bsrRaw: c[2] || '', bsrNumber: extractBsrNumber(c[2]), bsrDisplay: cleanBsrDisplay(c[2]), imageUrl: c[3] || 'https://via.placeholder.com/300?text=No+Image', dateAddedRaw: c[4] || '', parsedDate: parseDateFromString(c[4]), designTitle: c[5] || '', brand: c[6] || '', featureBullet1: c[7] || '', featureBullet2: c[8] || '' };
+    const rows = result.data;
+    if (!Array.isArray(rows) || rows.length === 0) throw new Error('Empty data');
+    return rows.map(r => {
+        if (!r.asin) return null;
+        const bsrRaw = r.bsr ? '#' + r.bsr.toLocaleString('en-US') + ' in Clothing, Shoes & Jewelry' : '';
+        return {
+            asin:          r.asin || '',
+            link:          r.link || '#',
+            bsrRaw:        bsrRaw,
+            bsrNumber:     r.bsr || 99999999,
+            bsrDisplay:    r.bsr ? '#' + r.bsr.toLocaleString('en-US') : 'N/A',
+            imageUrl:      r.image_url || 'https://via.placeholder.com/300?text=No+Image',
+            dateAddedRaw:  r.date_added || '',
+            parsedDate:    r.date_added ? new Date(r.date_added) : null,
+            designTitle:   r.design_title || '',
+            brand:         r.brand || '',
+            featureBullet1: r.feature1 || '',
+            featureBullet2: r.feature2 || ''
+        };
     }).filter(Boolean);
 }
-
 // ═══════════════════════════════════════════════════
 // ACCESS CONTROL
 // ═══════════════════════════════════════════════════
