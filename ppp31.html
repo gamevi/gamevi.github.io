@@ -8,9 +8,6 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <!-- v4.2.1 FIX: Removed frame-ancestors from meta, will be set by Worker header.
-         FIX: Added 'self' to script-src to allow app.js.
-         FIX: Added https://cdn.jsdelivr.net to connect-src for Chart.js source maps. -->
     <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
@@ -24,7 +21,6 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
     upgrade-insecure-requests;
 ">
     <title>Merch Analyzer | Amazon BSR Keyword Research</title>
-    <!-- ... باقي الـ Head بدون تغيير ... -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -36,7 +32,6 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
             crossorigin="anonymous"></script>
 
     <style>
-        /* ... جميع الـ CSS بدون أي تغيير ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; font-family: 'Inter', sans-serif; }
         .login-box { background: white; border-radius: 24px; padding: 40px 30px; max-width: 450px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; }
@@ -175,67 +170,20 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
         hr { margin: 16px 0; }
         footer { text-align: center; margin-top: 24px; font-size: 0.65rem; color: #7c8ba0; padding: 10px; }
         @media(max-width:480px){.filters-panel,.keyword-panel,.hot-niches-panel,.trend-chart-panel{padding:12px;border-radius:16px;}.niche-item{padding:10px;}.filter-group{min-width:120px;}.btn{padding:8px 12px;font-size:0.8rem;}}
-      /* ---- زر Get Code العصري ---- */
-.get-code-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9999;
-    background: linear-gradient(135deg, #1877F2 0%, #0C5DC7 100%);
-    color: white;
-    border: none;
-    padding: 12px 22px;
-    border-radius: 50px;
-    font-size: 14px;
-    font-weight: 700;
-    font-family: 'Inter', sans-serif;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 20px rgba(24, 119, 242, 0.4);
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.2);
-    text-decoration: none;
-    letter-spacing: 0.5px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.get-code-btn i {
-    font-size: 18px;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-}
-
-.get-code-btn:hover {
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 0 8px 30px rgba(24, 119, 242, 0.6);
-    background: linear-gradient(135deg, #2B8AF5 0%, #1877F2 100%);
-}
-
-.get-code-btn:active {
-    transform: translateY(0) scale(0.98);
-    box-shadow: 0 2px 10px rgba(24, 119, 242, 0.3);
-}
-
-/* تأثير نبض خفيف لجذب الانتباه */
-@keyframes subtlePulse {
-    0% { box-shadow: 0 4px 20px rgba(24, 119, 242, 0.4); }
-    50% { box-shadow: 0 4px 30px rgba(24, 119, 242, 0.7); }
-    100% { box-shadow: 0 4px 20px rgba(24, 119, 242, 0.4); }
-}
-
-.get-code-btn {
-    animation: subtlePulse 2.5s infinite;
-}
+        .get-code-btn { position: fixed; top: 20px; right: 20px; z-index: 9999; background: linear-gradient(135deg, #1877F2 0%, #0C5DC7 100%); color: white; border: none; padding: 12px 22px; border-radius: 50px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 20px rgba(24, 119, 242, 0.4); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1.2); text-decoration: none; letter-spacing: 0.5px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .get-code-btn i { font-size: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .get-code-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 8px 30px rgba(24, 119, 242, 0.6); background: linear-gradient(135deg, #2B8AF5 0%, #1877F2 100%); }
+        .get-code-btn:active { transform: translateY(0) scale(0.98); box-shadow: 0 2px 10px rgba(24, 119, 242, 0.3); }
+        @keyframes subtlePulse { 0% { box-shadow: 0 4px 20px rgba(24, 119, 242, 0.4); } 50% { box-shadow: 0 4px 30px rgba(24, 119, 242, 0.7); } 100% { box-shadow: 0 4px 20px rgba(24, 119, 242, 0.4); } }
+        .get-code-btn { animation: subtlePulse 2.5s infinite; }
     </style>
+<base target="_blank">
 </head>
 <body>
-  <!-- زر Get Code -->
-<a href="https://www.facebook.com/Nichify/" target="_blank" rel="noopener noreferrer" class="get-code-btn">
+  <a href="https://www.facebook.com/Nichify/" target="_blank" rel="noopener noreferrer" class="get-code-btn">
     <i class="fab fa-facebook-square"></i> Get Code
-</a>
+  </a>
 
-<!-- ... جميع عناصر HTML بدون أي تغيير ... -->
 <!-- LOGIN PAGE -->
 <div class="login-container" id="loginPage">
     <div class="login-box">
@@ -289,6 +237,9 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
             </div>
         </div>
 
+        <!-- SMART ALERT CONTAINER -->
+        <div id="smartAlertContainer" style="display:none;"></div>
+
         <div class="hot-niches-panel">
             <div class="panel-title"><i class="fas fa-fire-flame-curved" style="color:#e95e2e;"></i> 🔥 Hot Long-Tail Niches</div>
             <div class="niches-controls">
@@ -296,11 +247,11 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
                 <input type="number" id="wordLengthInput" min="2" max="6" value="3">
                 <label><i class="fas fa-calendar-alt"></i> Period:</label>
                 <select id="nichesPeriod">
-    <option value="7">Last 7 days</option>
-    <option value="14">Last 14 days</option>
-    <option value="30">Last 30 days</option>
-    <option value="0">All time</option>
-</select>
+                    <option value="7">Last 7 days</option>
+                    <option value="14">Last 14 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="0">All time</option>
+                </select>
                 <label><i class="fas fa-sort-amount-down"></i> Min:</label>
                 <input type="number" id="minRepeats" min="1" max="20" value="2" style="width:55px;">
                 <button id="applyWordLengthBtn"><i class="fas fa-sync-alt"></i> Apply</button>
@@ -327,17 +278,17 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
             <div class="search-feedback"><i class="fas fa-info-circle"></i> Searches for ALL words (ignores punctuation and case).</div>
         </div>
 
-      <div class="hot-niches-panel" style="background:linear-gradient(135deg,#eefaf1 0%,#fff 100%);border-color:#bbf0d0;">
-    <div class="panel-title"><i class="fas fa-flask" style="color:#10b981;"></i> 🧪 مولّد كلمات واقعية (من منتجاتك فقط)</div>
-    <div class="keyword-row" style="margin-bottom:12px;">
-        <input type="text" id="keywordGenInput" placeholder="اكتب كلمة أساسية... مثل: cat mom" autocomplete="off">
-        <button id="keywordGenBtn"><i class="fas fa-flask"></i> ولّد</button>
-    </div>
-    <div class="search-feedback" style="margin-bottom:12px;">
-        <i class="fas fa-shield-check"></i> كل نتيجة مأخوذة من عنوان منتج حقيقي عندك — لا كلمات مصطنعة.
-    </div>
-    <div id="keywordGenResults" class="niche-badges"></div>
-</div>
+        <!-- KEYWORD GENERATOR (مولّد الكلمات الواقعية) -->
+        <div class="hot-niches-panel" style="background: linear-gradient(135deg,#f0fdf4 0%,#fff 100%); border-color: #86efac;">
+            <div class="panel-title"><i class="fas fa-flask" style="color:#16a34a;"></i> 🧪 مولّد كلمات واقعية (من منتجاتك فقط)</div>
+            <div class="search-feedback" style="margin-bottom: 12px;"><i class="fas fa-info-circle"></i> كل نتيجة مأخوذة من عنوان منتج حقيقي عندك — لا كلمات مصطنعة</div>
+            <div class="keyword-row">
+                <input type="text" id="keywordGenInput" placeholder="اكتب كلمة أساسية مثل: cat, programmer, hiking..." autocomplete="off" style="flex: 1;">
+                <button id="keywordGenBtn"><i class="fas fa-magic"></i> ولّد</button>
+            </div>
+            <div id="subAnglesContainer" style="display:none;"></div>
+            <div id="keywordGenResults" class="niche-badges" style="margin-top: 12px;"><div class="niche-item" style="text-align:center;color:#94a3b8;">اكتب كلمة أساسية أولاً</div></div>
+        </div>
 
         <div class="filters-panel">
             <div class="filter-row">
@@ -437,7 +388,6 @@ window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);
     </div>
 </div>
 
-<!-- v4.2.1 FIXED: Correctly loading the JS file -->
 <script src="app.js" defer></script>
 
 </body>
