@@ -3,6 +3,9 @@ let SESSION_TOKEN = null;
 let currentAccessCode = null;
 let accessData = null;
 
+// ═══════════════════════════════════════════════════
+// HELPERS (unchanged logic)
+// ═══════════════════════════════════════════════════
 function parseCSVRow(row) {
     const result = [];
     let current = '';
@@ -175,10 +178,10 @@ function calculateCompetitionIndex(niche) {
 }
 
 function getCompetitionLabel(score) {
-    if (score >= 80) return { text: 'فرصة ذهبية', color: '#16a34a', bg: '#dcfce7', emoji: '🟢' };
-    if (score >= 60) return { text: 'فرصة جيدة', color: '#ca8a04', bg: '#fef9c3', emoji: '🟡' };
-    if (score >= 40) return { text: 'متوسط', color: '#ea580c', bg: '#ffedd5', emoji: '🟠' };
-    return { text: 'مشبع/ضعيف', color: '#dc2626', bg: '#fee2e2', emoji: '🔴' };
+    if (score >= 80) return { text: 'Golden Opportunity', color: '#16a34a', bg: '#dcfce7', emoji: '🟢' };
+    if (score >= 60) return { text: 'Good Opportunity', color: '#ca8a04', bg: '#fef9c3', emoji: '🟡' };
+    if (score >= 40) return { text: 'Average', color: '#ea580c', bg: '#ffedd5', emoji: '🟠' };
+    return { text: 'Saturated/Weak', color: '#dc2626', bg: '#fee2e2', emoji: '🔴' };
 }
 
 // ═══════════════════════════════════════════════════
@@ -241,17 +244,17 @@ function showSmartAlert() {
                 <span style="font-size: 24px;">⚡</span>
                 <div>
                     <div style="font-weight: 700; font-size: 0.95rem; color: #1e293b;">
-                        ${strongNiches.length} نيشة جديدة قوية هذا الأسبوع!
+                        ${strongNiches.length} strong new niches this week!
                     </div>
                     <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">
-                        أقوى نيشة: <strong style="color: #e95e2e;">${escHtmlSafe(topNiche.keyword)}</strong>
-                        (${topNiche.count} منتج · avg BSR ${topNiche.avgBSR.toLocaleString()})
+                        Top niche: <strong style="color: #e95e2e;">${escHtmlSafe(topNiche.keyword)}</strong>
+                        (${topNiche.count} products · avg BSR ${topNiche.avgBSR.toLocaleString()})
                         <span style="display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; background: ${label.bg}; color: ${label.color}; margin-right: 6px;">${label.emoji} ${label.text}</span>
                     </div>
                 </div>
             </div>
             <button class="btn btn-primary" style="border-radius: 40px; padding: 8px 18px; font-size: 0.85rem;" onclick="searchByKeyword('${escHtmlJS(topNiche.keyword)}')">
-                <i class="fas fa-search"></i> استكشف
+                <i class="fas fa-search"></i> Explore
             </button>
         </div>
     `;
@@ -269,19 +272,19 @@ function renderKeywordSuggestions() {
     if (!container) return;
 
     if (!baseKeyword) {
-        container.innerHTML = '<div class="niche-item" style="text-align:center;color:#94a3b8;">اكتب كلمة أساسية أولاً</div>';
+        container.innerHTML = '<div class="niche-item" style="text-align:center;color:#94a3b8;">Enter a base keyword first</div>';
         return;
     }
 
     const { matched, results } = generateKeywordSuggestions(baseKeyword, 2, 4);
 
     if (matched === 0) {
-        container.innerHTML = `<div class="niche-item" style="text-align:center;color:#dc2626;">لم تُستخدم كلمة "${escHtmlSafe(baseKeyword)}" في أي منتج عندك بعد</div>`;
+        container.innerHTML = `<div class="niche-item" style="text-align:center;color:#dc2626;">The word "${escHtmlSafe(baseKeyword)}" has not been used in any of your products yet</div>`;
         return;
     }
 
     if (results.length === 0) {
-        container.innerHTML = `<div class="niche-item" style="text-align:center;color:#ca8a04;">وُجد ${matched} منتج يحتوي هذه الكلمة لكن لا عبارات كافية الطول</div>`;
+        container.innerHTML = `<div class="niche-item" style="text-align:center;color:#ca8a04;">Found ${matched} products contain this word but not enough long phrases</div>`;
         return;
     }
 
@@ -298,7 +301,7 @@ function renderKeywordSuggestions() {
                     <span class="niche-keyword" title="${escHtmlJS(n.exampleTitle)}">${escHtmlSafe(n.keyword)}</span>
                 </div>
                 <div class="niche-stats">
-                    <span class="niche-count" style="background:${rc};">${n.count} منتج حقيقي</span>
+                    <span class="niche-count" style="background:${rc};">${n.count} real products</span>
                     <span class="niche-bsr">avg:${n.avgBSR.toLocaleString()}</span>
                     <span class="niche-bsr">🏆${n.minBSR.toLocaleString()}</span>
                     <span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;background:${label.bg};color:${label.color};">${label.emoji} ${label.text}</span>
@@ -337,7 +340,7 @@ function renderSubAngles(baseKeyword) {
     container.innerHTML = `
         <div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 14px;">
             <div style="font-weight: 700; font-size: 0.85rem; color: #166534; margin-bottom: 8px;">
-                <i class="fas fa-lightbulb" style="color: #eab308;"></i> زوايا فرعية مقترحة:
+                <i class="fas fa-lightbulb" style="color: #eab308;"></i> Suggested Sub-Angles:
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                 ${angles.map(a => {
