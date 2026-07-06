@@ -3,9 +3,9 @@ let SESSION_TOKEN = null;
 let currentAccessCode = null;
 let accessData = null;
 
-// ══════════════════════════════════════════════════--═
-// HELPERS (unchanged logic)
-// ═══════════════════════════════════════════════════
+//// ══════════════════════════════════════════════════--═
+//// HELPERS (unchanged logic)
+//// ═══════════════════════════════════════════════════
 function parseCSVRow(row) {
     const result = [];
     let current = '';
