@@ -1,5 +1,15 @@
 [
    {
+    "id": "nightfall-survivors",
+    "thumbnail": "https://gamevi.github.io/images/218.webp",
+    "genre": "Action, Survival, Roguelike"
+  },
+   {
+    "id": "traffic-racer-pro",
+    "thumbnail": "https://gamevi.github.io/images/217.webp",
+    "genre": "Racing, Arcade"
+  },
+   {
     "id": "emberwars-io",
     "thumbnail": "https://gamevi.github.io/images/216.webp",
     "genre": "Action, Strategy, IO, Multiplayer, Arcade, Survival"
