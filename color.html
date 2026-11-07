@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>لوّن معي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF8EC;--bg2:#FFEFD9;--co:#FF6B5A;--co2:#E95343;--te:#2EC4B6;--su:#FFC857;--ink:#22304A;--sk:#8ED6FF;--mi:#B8F2E6;--gr:#8E6BBF;--pk:#FF9FB2;--ok:#2E9E6B;--er:#D64545;--sh:0 6px 18px rgba(34,48,74,.12)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Cairo,Tahoma,Arial,sans-serif;font-size:17px;line-height:1.35}
+#v,#ed{position:absolute;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+#ed{display:none}
+h1{margin:6px 0;font-size:30px;font-weight:800;text-align:center}h2{margin:4px 0;font-size:22px;font-weight:800}p{margin:6px 0}
+.sc{flex:1;overflow:auto;padding:0 14px 90px}
+.top{display:flex;align-items:center;gap:8px;padding:10px 12px}.sp{flex:1;font-weight:800;font-size:20px}
+.ib{width:52px;height:52px;border:0;border-radius:18px;background:#fff;box-shadow:var(--sh);font-size:24px;color:var(--ink);padding:0;flex:0 0 auto}
+.btn{min-height:56px;border:0;border-radius:22px;background:#fff;color:var(--ink);padding:8px 22px;font:inherit;font-weight:800;font-size:18px;box-shadow:var(--sh);cursor:pointer}
+.btn.p{background:var(--co)}.btn.g{background:var(--te)}.btn.s{background:var(--su)}
+.btn:active,.ib:active,.tp:active,.pg:active{transform:scale(.95)}
+.lnk{border:0;background:none;color:var(--ink);font:inherit;font-size:15px;text-decoration:underline;padding:10px}
+.card{background:#fff;border-radius:24px;box-shadow:var(--sh);padding:12px}
+.res{display:flex;align-items:center;gap:14px;background:var(--bg2);border-radius:24px;padding:12px;box-shadow:var(--sh);margin:6px 0 14px;animation:in .28s both}
+.res img{width:38%;border-radius:16px;background:#fff;box-shadow:var(--sh)}.res div{flex:1}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tp{position:relative;border:0;border-radius:24px;background:var(--c);color:var(--ink);padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;box-shadow:var(--sh);animation:in .28s both;animation-delay:calc(var(--i)*40ms)}
+.tp i{font-style:normal;font-size:44px;line-height:1.1}.tp b{font-size:16px;font-weight:800}.tp.on{outline:5px solid var(--ink)}
+.tp u{position:absolute;top:6px;left:6px;text-decoration:none;font-size:18px;background:#fff;border-radius:50%;width:28px;height:28px;line-height:28px;text-align:center}
+.ring{width:30px;height:30px;border-radius:50%;background:conic-gradient(var(--ink) calc(var(--p)*1%),rgba(255,255,255,.7) 0);margin-top:4px}
+.strip{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0));background:var(--ink);color:#fff;border-radius:24px;padding:8px 14px;display:flex;align-items:center;gap:8px;box-shadow:var(--sh);flex-wrap:wrap}
+.strip span{flex:1;font-weight:800}.strip .lnk{color:#fff;font-size:13px;padding:2px}
+.chips{display:flex;gap:8px;padding:0 14px 10px;overflow-x:auto}.chip{flex:0 0 auto;border:0;border-radius:18px;background:#fff;padding:8px 16px;font:inherit;font-weight:600;box-shadow:var(--sh)}.chip.on{background:var(--su);font-weight:800}
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.pg{position:relative;background:#fff;border-radius:24px;box-shadow:var(--sh);padding:8px;animation:in .28s both;font-weight:800;text-align:center}
+.pg img{width:100%;display:block;border-radius:16px;background:#fff}.pg small{display:block;font-weight:600;font-size:14px}
+.pg em{position:absolute;top:-6px;right:-4px;min-width:30px;height:30px;border-radius:15px;background:var(--su);font-style:normal;line-height:30px;padding:0 6px}
+.pg .fv{position:absolute;top:10px;left:10px;width:44px;height:44px;border:0;border-radius:50%;background:#fff;font-size:24px;color:var(--co);box-shadow:var(--sh)}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0))}
+.ob{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}.big{font-size:110px;animation:in .5s both}
+.ul{list-style:none;padding:0;font-size:22px;font-weight:600;line-height:2}.row3{display:flex;gap:12px;width:100%}.row3 .tp{flex:1;padding:26px 4px;font-size:26px}
+.dots{display:flex;justify-content:center;gap:8px}.dots i{width:12px;height:12px;border-radius:50%;background:var(--bg2)}.dots i.on{background:var(--co)}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:12px 18px}
+.spl{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:in .5s both}.spl i{font-style:normal;font-size:120px}
+.plan{display:flex;align-items:center;gap:10px;background:#fff;border:4px solid transparent;border-radius:22px;padding:12px 14px;margin:8px 0;box-shadow:var(--sh);width:100%;font:inherit;text-align:right}
+.plan.on{border-color:var(--co);background:var(--bg2)}.plan b{flex:1}
+details{background:#fff;border-radius:18px;padding:10px 14px;margin:8px 0;box-shadow:var(--sh)}summary{font-weight:800}
+.row{display:flex;align-items:center;gap:10px;background:#fff;border-radius:20px;padding:10px 14px;margin:8px 0;box-shadow:var(--sh);flex-wrap:wrap}.row b{flex:1}
+.badge{background:var(--te);color:var(--ink);border-radius:14px;padding:2px 12px;font-weight:800;font-size:14px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.pad .btn{min-height:60px;font-size:24px;padding:0}
+#gd{font-size:40px;font-weight:800;min-height:56px;letter-spacing:6px}
+/* editor */
+#area{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 8px}
+#stage{position:relative;background:#fff;border-radius:16px;overflow:hidden;touch-action:none;box-shadow:var(--sh);border:3px solid #fff}
+#stage canvas{position:absolute;inset:0;width:100%;height:100%}
+.bar{display:flex;gap:8px;padding:6px 12px;overflow-x:auto;scrollbar-width:none;align-items:center}.bar::-webkit-scrollbar{display:none}
+.tool{flex:0 0 auto;min-width:68px;height:70px;border:0;border-radius:20px;background:#fff;color:var(--ink);font:inherit;font-size:13px;font-weight:800;box-shadow:var(--sh);padding:2px 4px}.tool span{display:block;font-size:26px;line-height:1.2}
+.tool.sel{background:var(--su);transform:translateY(-4px)}
+.sw{flex:0 0 auto;width:48px;height:48px;border-radius:50%;border:3px solid #fff;box-shadow:var(--sh);padding:0;background-size:cover}.sw.sel{outline:4px solid var(--ink);outline-offset:2px}
+.size{display:flex;align-items:center;gap:10px;padding:0 18px 8px}.size input{flex:1;accent-color:var(--co);height:36px}
+#dot{width:44px;height:44px;display:flex;align-items:center;justify-content:center}#dot i{display:block;border-radius:50%;background:var(--ink)}
+/* overlays */
+#mo{position:fixed;inset:0;background:rgba(34,48,74,.6);display:none;align-items:flex-end;justify-content:center;z-index:5}#mo.on{display:flex}
+.box{background:var(--bg);border-radius:28px 28px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom,0));width:min(100%,480px);text-align:center;animation:up .28s both}
+.box.c{border-radius:28px;margin:auto}#mo.cn{align-items:center}.acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.box input{width:100%;font:inherit;font-size:22px;padding:10px;border-radius:14px;border:3px solid var(--su);text-align:center;user-select:text;-webkit-user-select:text}
+#ts{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0));transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:800;padding:10px 20px;border-radius:24px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:7;display:flex;gap:12px;align-items:center;white-space:nowrap}#ts.on{opacity:1}#ts.a{pointer-events:auto}#ts button{background:var(--su);border:0;border-radius:12px;padding:4px 12px;font:inherit;font-weight:800}
+@keyframes in{from{opacity:0;transform:scale(.92)}}@keyframes up{from{transform:translateY(40px);opacity:0}}
+.rm *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="v"></div>
+<section id="ed">
+  <div class="top"><button class="ib" data-a="edback" aria-label="رجوع">→</button><span class="sp" id="ttl"></span><button class="ib" data-a="undo" aria-label="تراجع">↶</button><button class="ib" data-a="clear" aria-label="مسح الكل">🗑️</button><button class="ib" data-a="savep" aria-label="حفظ" style="background:var(--su)">💾</button></div>
+  <div id="area"><div id="stage"><canvas id="paint" width="800" height="600"></canvas><canvas id="line" width="800" height="600"></canvas></div></div>
+  <div class="bar" id="tools"></div>
+  <div class="bar" id="tabs"><button class="chip on" data-a="tab" data-v="c">الألوان</button><button class="chip" data-a="tab" data-v="p">النقوش</button></div>
+  <div class="bar" id="pal"></div>
+  <div class="size"><div id="dot"><i></i></div><input type="range" id="size" min="4" max="64" value="24" aria-label="الحجم"></div>
+</section>
+<div id="mo"></div><div id="ts"></div>
+
+<script>
+const W=800,H=600,$=s=>document.querySelector(s);
+const c=(x,y,r)=>`M${x-r} ${y}a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0Z`;
+const e=(x,y,a,b)=>`M${x-a} ${y}a${a} ${b} 0 1 0 ${2*a} 0a${a} ${b} 0 1 0 ${-2*a} 0Z`;
+/* ===== placeholder content (later: fetch from R2/D1) ===== */
+const PIC={
+ fish:{n:'سمكة',d:[e(380,300,220,130),'M598 300L720 200L720 400Z','M300 175Q340 90 430 140Q400 160 390 180Z',c(270,270,24),c(270,270,8),'M170 335q28 18 56 0','M420 180Q460 300 420 420',c(120,190,18),c(85,130,12)]},
+ cat:{n:'قطة',d:[e(400,340,200,170),'M240 240L225 90L345 175Z','M560 240L575 90L455 175Z',c(330,320,30),c(470,320,30),c(330,320,10),c(470,320,10),'M385 375h30l-15 20Z','M400 395q-30 40-60 20M400 395q30 40 60 20','M250 385L130 360M250 415L130 445M550 385L670 360M550 415L670 445']},
+ bfly:{n:'فراشة',d:['M382 260Q250 70 130 180Q100 300 382 300Z','M418 260Q550 70 670 180Q700 300 418 300Z','M382 310Q220 330 200 480Q300 540 382 360Z','M418 310Q580 330 600 480Q500 540 418 360Z',e(400,300,18,120),c(230,220,30),c(570,220,30),c(290,430,25),c(510,430,25),'M392 185Q362 115 332 95M408 185Q438 115 468 95']},
+ car:{n:'سيارة',d:['M80 400V340L180 330L240 240H500L580 330L720 350V440H80Z','M262 262h100v68H212Z','M385 262h100l55 68H385Z',c(220,450,55),c(220,450,20),c(580,450,55),c(580,450,20),c(690,100,45),'M0 510h800']},
+ bus:{n:'حافلة',d:['M90 200h620v250H90Z','M130 240h110v90H130Z','M270 240h110v90H270Z','M410 240h110v90H410Z','M550 240h120v90H550Z','M90 370h620',c(230,460,50),c(230,460,18),c(570,460,50),c(570,460,18),'M0 515h800']},
+ boat:{n:'قارب',d:['M120 360h560l-90 130H210Z','M390 340V90L560 340Z','M370 340V150L240 340Z','M390 90V50l55 20-55 20',c(680,110,50),'M0 530q50-30 100 0t100 0t100 0t100 0t100 0t100 0t100 0t100 0']},
+ rocket:{n:'صاروخ',d:['M400 60Q500 160 500 330V450H300V330Q300 160 400 60Z',c(400,230,45),'M300 400L210 520L300 470Z','M500 400L590 520L500 470Z','M350 450Q400 590 450 450Z',c(130,120,12),c(680,180,14),c(620,420,10),c(150,380,11)]},
+ robot:{n:'روبوت',d:['M280 100h240v170H280Z',c(350,170,30),c(450,170,30),'M340 230h120','M400 100V50',c(400,40,12),'M250 290h300v220H250Z','M330 340h140v80H330Z','M250 320H170V460H250Z','M550 320H630V460H550Z','M300 510h60v70h-60Z','M440 510h60v70h-60Z']},
+ flower:{n:'وردة',d:['M400 335V590','M400 480Q280 400 230 470Q320 540 400 480Z','M400 480Q520 400 570 470Q480 540 400 480Z',c(500,230,55),c(450,317,55),c(350,317,55),c(300,230,55),c(350,143,55),c(450,143,55),c(400,230,50)]},
+ tree:{n:'شجرة',d:['M360 560V380h80v180',c(400,230,140),c(350,200,20),c(450,270,20),c(400,150,18),c(680,100,50),'M0 560h800']},
+ house:{n:'بيت',d:['M200 300h400v250H200Z','M170 300L400 100L630 300Z','M360 550V400h90v150','M240 340h90v90h-90ZM285 340v90M240 385h90','M470 340h90v90h-90ZM515 340v90M470 385h90','M500 200V110h60v130',c(710,90,50)]},
+ crown:{n:'تاج',d:['M180 420L150 170L290 290L400 130L510 290L650 170L620 420Z','M180 420h440v90H180Z',c(400,330,30),c(260,465,20),c(400,465,20),c(540,465,20),c(150,160,18),c(400,115,18),c(650,160,18)]},
+ castle:{n:'قلعة',d:['M200 300h400v250H200Z','M120 250h120v300H120Z','M560 250h120v300H560Z','M105 250L180 130L255 250Z','M545 250L620 130L695 250Z','M330 300L400 180L470 300Z','M350 550V430Q400 380 450 430V550',c(180,350,25),c(620,350,25),'M180 130V70l40 15-40 15M620 130V70l40 15-40 15']},
+ star:{n:'نجمة',d:['M400 70L460 230L630 240L500 345L545 515L400 420L255 515L300 345L170 240L340 230Z',c(360,300,16),c(440,300,16),'M360 360q40 40 80 0',c(110,110,12),c(700,140,14),c(120,480,10),c(690,490,12)]},
+ dino:{n:'ديناصور',d:[e(360,360,200,110),'M500 290Q540 150 640 130Q720 130 730 190Q720 230 650 220Q620 230 590 330Z',c(670,165,10),'M250 450v90h60v-90M400 460v80h60v-80','M170 340Q80 330 40 400Q120 390 180 400Z','M280 255l30-50 30 50M350 250l30-50 30 50M420 255l30-50 30 50']}
+};
+const PK=[
+ {id:'an',n:'حيوانات',e:'🐯',c:'#FFC857',p:['cat','bfly','fish']},
+ {id:'fl',n:'زهور',e:'🌸',c:'#FF9FB2',p:['flower','tree','bfly']},
+ {id:'ve',n:'مركبات',e:'🚗',c:'#8ED6FF',p:['car','bus','boat']},
+ {id:'di',n:'ديناصورات',e:'🦖',c:'#B8F2E6',p:['dino','tree'],pr:1},
+ {id:'pr',n:'أميرات',e:'👑',c:'#D9C2FF',p:['crown','castle','star'],pr:1},
+ {id:'ft',n:'حكايات',e:'🧚',c:'#FFD9A8',p:['castle','house','star'],pr:1},
+ {id:'ro',n:'روبوتات',e:'🤖',c:'#C9D6E8',p:['robot','rocket'],pr:1},
+ {id:'xm',n:'الميلاد',e:'🎄',c:'#B9E8A6',p:['tree','star','house'],pr:1},
+ {id:'uw',n:'تحت الماء',e:'🐠',c:'#9FE3F2',p:['fish','boat'],pr:1}
+];
+const COLORS=['#E53935','#FF6B5A','#FB8C00','#FFC857','#9CCC65','#43A047','#2EC4B6','#8ED6FF','#1E56C8','#8E6BBF','#FF9FB2','#795548','#212121','#9E9E9E','#FFCC99','#FFFFFF'];
+const TL=[['brush','🖌️','فرشاة',0],['fill','🎨','تعبئة',0],['pattern','🔳','نقش',0],['eraser','🧽','ممحاة',0],['marker','🖊️','ماركر',1],['spray','💨','سبراي',1],['shine','✨','لمعان',1],['pencil','✏️','قلم',2],['outline','🖋️','تحديد',2]];
+const PT=[(x,y)=>(x+y)%28<14,(x,y)=>((x%24)-12)**2+((y%24)-12)**2<40,(x,y)=>((x>>4)+(y>>4))%2,(x,y)=>x%26<13,(x,y)=>(y+Math.sin(x/12)*9|0)%26<13,(x,y)=>x%24<5||y%24<5];
+const AV=['🦊','🐼','🦁','🐸'],WD=['صفر','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر','عشرون'];
+const PLANS=[['w','أسبوعي','$2.99 / أسبوع',1],['m','شهري','$6.99 / شهر',1],['y','سنوي','$29.99 / سنة (≈ $2.50 / شهر)',1],['l','مدى الحياة','$8 دفعة واحدة',0]];
+
+/* ===== state ===== */
+let S={ob:0,prem:0,sfx:1,rm:0,act:0,prof:[{id:'p1',name:'فنان',av:'🦊',band:1,done:{},fav:{},th:{},art:{},last:null}]};
+try{Object.assign(S,JSON.parse(localStorage.getItem('lm3')||'{}'))}catch(x){}
+const save=()=>{try{localStorage.setItem('lm3',JSON.stringify(S))}catch(x){}},pr=()=>S.prof[S.act];
+const DB=new Promise(r=>{try{const q=indexedDB.open('lm3',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(x){r(null)}});
+async function idb(m,k,v){const d=await DB;if(!d)return;return new Promise(r=>{const o=d.transaction('k',m==='get'?'readonly':'readwrite').objectStore('k'),q=m==='get'?o.get(k):m==='put'?o.put(v,k):o.delete(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r()})}
+const V=h=>{$('#v').innerHTML=h},R={};let PKID,flt='all',OB=0,plan='y';
+function sfx(f,d=.1){if(!S.sfx)return;try{const a=sfx.a||(sfx.a=new(window.AudioContext||webkitAudioContext)()),o=a.createOscillator(),g=a.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.08,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+d)}catch(x){}}
+function toast(t,fn){const o=$('#ts');o.innerHTML=t+(fn?'<button>تراجع</button>':'');o.className='on'+(fn?' a':'');if(fn)o.querySelector('button').onclick=()=>{fn();o.className=''};clearTimeout(toast.t);toast.t=setTimeout(()=>o.className='',fn?5000:2000)}
+function M(h,cls){const m=$('#mo');m.innerHTML=`<div class="box ${cls||''}">${h}</div>`;m.className='on'+(cls?' cn':'')}
+const CM=()=>$('#mo').className='';
+$('#mo').onclick=ev=>{if(ev.target.id==='mo')CM()};
+function go(n,a){$('#ed').style.display=n==='ed'?'flex':'none';$('#v').style.display=n==='ed'?'none':'flex';document.body.classList.toggle('rm',!!S.rm);if(n!=='ed')R[n](a)}
+const LT={};function lineThumb(k){if(LT[k])return LT[k];const t=document.createElement('canvas');t.width=256;t.height=192;const x=t.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,256,192);drawLines(x,PIC[k],.32);return LT[k]=t.toDataURL()}
+let LC='#222';function drawLines(ctx,pic,s,col){ctx.save();ctx.setTransform(s,0,0,s,0,0);ctx.lineWidth=7;ctx.lineJoin=ctx.lineCap='round';ctx.strokeStyle=col||LC;pic.d.forEach(d=>ctx.stroke(new Path2D(d)));ctx.restore()}
+const pct=k=>Math.round(k.p.filter(q=>pr().done[k.id+'.'+q]).length/k.p.length*100);
+
+/* ===== parental gate: arithmetic in words, 3 tries, 30s lock, 10 min session ===== */
+let pUntil=0,fails=0,lockT=0,cyc=0,gcb,gans,gin='';
+function gate(cb){
+  if(Date.now()<pUntil)return cb();gcb=cb;gin='';
+  const pl=Math.random()<.6;let a,b;if(pl){a=2+~~(Math.random()*9);b=2+~~(Math.random()*(19-a))}else{a=8+~~(Math.random()*12);b=2+~~(Math.random()*(a-2))}
+  gans=pl?a+b:a-b;gq=`${WD[a]} ${pl?'+':'−'} ${WD[b]} = ؟`;gui();
+}
+let gq;
+function gui(){
+  const locked=Date.now()<lockT;
+  if(cyc>=3)return M(`<h2>تعذّر التحقق الآن</h2><p>يمكنك المحاولة لاحقاً.</p><button class="btn" onclick="CM()">رجوع</button>`);
+  M(`<h2>👨‍👩‍👧 للأهل فقط</h2><p>للمتابعة، حل المسألة.</p><p><b>${gq}</b></p><div id="gd">${gin||'&nbsp;'}</div><p id="gm" style="color:var(--er);min-height:24px">${locked?'المحاولة متاحة بعد '+Math.ceil((lockT-Date.now())/1000)+' ث':''}</p>
+  <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="btn" data-a="gk" data-v="${n}">${n}</button>`).join('')}<button class="btn" data-a="gx">مسح</button><button class="btn" data-a="gk" data-v="0">0</button><button class="btn s" data-a="gok">تأكيد</button></div><button class="lnk" onclick="CM()">إلغاء</button>`);
+  if(locked){clearTimeout(gui.t);gui.t=setTimeout(()=>{if($('#gm'))gui()},1000)}
+}
+/* ===== screens ===== */
+R.splash=()=>{V(`<div class="spl"><i>🖍️</i><h1>لوّن معي</h1></div>`);setTimeout(()=>go(S.ob?'home':'ob'),1300)};
+R.ob=()=>{const p=pr(),pg=[`<div class="big">🎨</div><h1>لنلوّن معاً!</h1><p>رسومات ممتعة وأدوات رسم حقيقية</p>`,
+ `<h1>كم عمر الطفل؟</h1><div class="row3">${['2–4','5–7','8–10'].map((t,j)=>`<button class="tp ${p.band===j?'on':''}" style="--c:${['#FFC857','#8ED6FF','#B8F2E6'][j]}" data-a="band" data-v="${j}"><b>${t}</b></button>`).join('')}</div><p>العمر يحدد صعوبة الأدوات فقط.</p>`,
+ `<h1>لماذا نحن؟</h1><ul class="ul"><li>🖌️ أدوات رسم حقيقية</li><li>🚫 بلا إعلانات</li><li>📴 يعمل دون إنترنت</li></ul><p>ثلاثة كتب مجانية، والبقية بالاشتراك أو الشراء.</p>`];
+ V(`<div class="sc ob" style="flex:1">${pg[OB]}</div><div class="dots">${pg.map((_,i)=>`<i class="${i===OB?'on':''}"></i>`).join('')}</div><div class="nav"><button class="lnk" data-a="skip">تخطي</button><button class="btn p" data-a="next">${OB===2?'ابدأ':'التالي'}</button></div>`)};
+R.home=()=>{const p=pr(),lt=p.last&&p.th[p.last],lp=p.last&&p.last.split('.')[1];
+ V(`<div class="top"><button class="ib" data-a="prof" aria-label="تبديل الملف">${p.av}</button><span class="sp">أهلاً ${p.name}</span><button class="ib" data-a="snd" aria-label="الصوت">${S.sfx?'🔊':'🔇'}</button><button class="ib" data-a="gal" aria-label="المعرض">🖼️</button><button class="ib" data-a="par" aria-label="الوالدين">⚙️</button></div>
+ <div class="sc"><div class="res"><img src="${lt||lineThumb('star')}" alt=""><div><h2>${lt?'أكمل الرسم':'ابدأ أول رسمة'}</h2><p>${lp?PIC[lp].n:'اضغط وابدأ التلوين'}</p><button class="btn p" data-a="resume">${lt?'أكمل ←':'ابدأ ←'}</button></div></div>
+ <div class="g3">${PK.map((k,i)=>`<button class="tp" style="--c:${k.c};--i:${i}" data-a="pack" data-v="${k.id}"><i>${k.e}</i><b>${k.n}</b><span class="ring" style="--p:${pct(k)}"></span>${k.pr&&!S.prem?'<u>🔒</u>':''}</button>`).join('')}</div></div>
+ ${S.prem?'':`<div class="strip"><span>👑 افتح كل الكتب</span><button class="btn s" data-a="pw">اشترك</button><button class="lnk" data-a="rest">استعادة المشتريات</button></div>`}`)};
+R.pack=id=>{if(id)PKID=id;const k=PK.find(q=>q.id===PKID),p=pr(),ids=k.p.map(q=>k.id+'.'+q),done=ids.filter(q=>p.done[q]).length;
+ const ok={all:()=>1,prog:q=>!p.done[q]&&p.th[q],done:q=>p.done[q],fav:q=>p.fav[q]};
+ V(`<div class="top"><button class="ib" data-a="home" aria-label="رجوع">→</button><span class="sp">${k.e} ${k.n} · ${done} / ${ids.length}</span></div>
+ <div class="chips">${[['all','الكل'],['prog','قيد الرسم'],['done','مكتملة'],['fav','المفضلة']].map(([f,t])=>`<button class="chip ${flt===f?'on':''}" data-a="flt" data-v="${f}">${t}</button>`).join('')}</div>
+ <div class="sc"><div class="g2">${ids.filter(q=>ok[flt](q)).map((q,i)=>{const pc=q.split('.')[1];return`<div class="pg" style="--i:${i}" data-a="open" data-v="${q}"><img src="${p.th[q]||lineThumb(pc)}" alt=""><em>${ids.indexOf(q)+1}</em><button class="fv" data-a="fav" data-v="${q}" aria-label="مفضلة">${p.fav[q]?'★':'☆'}</button>${PIC[pc].n}<small>${p.done[q]?'✔ مكتملة':p.th[q]?'قيد الرسم':'جديدة'}</small></div>`}).join('')||'<p style="text-align:center">لا توجد صفحات هنا بعد</p>'}</div></div>
+ <button class="btn p fab" data-a="cont">أكمل من حيث توقفت</button>`)};
+R.gal=()=>{const p=pr(),l=Object.keys(p.art).sort((a,b)=>p.art[b]-p.art[a]);
+ V(`<div class="top"><button class="ib" data-a="home" aria-label="رجوع">→</button><span class="sp">🖼️ رسوماتي</span></div><div class="sc">${l.length?`<div class="g2">${l.map(q=>`<div class="pg"><img src="${p.th[q]}" alt=""><b>${PIC[q.split('.')[1]].n}</b><small>${new Date(p.art[q]).toLocaleDateString('ar')}</small><div class="acts"><button class="ib" data-a="share" data-v="${q}" aria-label="مشاركة">🔗</button><button class="ib" data-a="del" data-v="${q}" aria-label="حذف">🗑️</button></div></div>`).join('')}</div>`:`<div class="ob"><div class="big">🖍️</div><h2>لم ترسم شيئاً بعد</h2><button class="btn p" data-a="resume">ابدأ الرسم</button></div>`}</div>`)};
+R.pw=()=>V(`<div class="top"><button class="ib" data-a="home" aria-label="رجوع">→</button><span class="sp">👑 افتح عالم الألوان</span></div><div class="sc"><ul class="ul" style="font-size:18px;line-height:1.7"><li>📚 كل الكتب</li><li>✨ أدوات اللمعان والنقوش</li><li>👧 ملفات للأطفال (حتى 4)</li></ul>
+ ${PLANS.map(([i,n,pz])=>`<button class="plan ${plan===i?'on':''}" data-a="plan" data-v="${i}"><b>${n}</b><span>${pz}</span></button>`).join('')}
+ <p style="font-size:14px">${plan==='l'?'دفعة واحدة دون تجديد.':'جرّب 3 أيام مجاناً، ثم السعر المعروض. ألغِ في أي وقت قبل 24 ساعة من انتهاء التجربة من إدارة اشتراكات Google Play.'} (الأسعار تجريبية)</p>
+ <div class="acts"><button class="btn p" data-a="buy">${plan==='l'?'اشترِ الآن':'ابدأ التجربة'}</button></div><div class="acts"><button class="lnk" data-a="rest">استعادة المشتريات</button><button class="lnk" data-a="faq">الخصوصية والشروط</button></div></div>`);
+R.par=()=>{const p=pr();V(`<div class="top"><button class="ib" data-a="home" aria-label="رجوع">→</button><span class="sp">⚙️ الوالدان</span><span class="badge">وضع الوالدين</span></div><div class="sc">
+ <h2>ملفات الأطفال</h2>${S.prof.map((q,i)=>`<div class="row"><span style="font-size:30px">${q.av}</span><b>${q.name} <small>${['2–4','5–7','8–10'][q.band]}</small></b>${i===S.act?'<span class="badge">نشط</span>':`<button class="chip" data-a="pick" data-v="${i}">اختيار</button>`}<button class="chip" data-a="ren" data-v="${i}">✎</button>${S.prof.length>1?`<button class="chip" data-a="pdel" data-v="${i}">🗑️</button>`:''}</div>`).join('')}
+ ${S.prof.length<4?'<button class="btn g" data-a="padd">+ إضافة طفل</button>':''}
+ <h2 style="margin-top:16px">الإعدادات</h2><div class="row"><b>مؤثرات الصوت</b><button class="chip ${S.sfx?'on':''}" data-a="snd2">${S.sfx?'مفعّلة':'متوقفة'}</button></div><div class="row"><b>تقليل الحركة</b><button class="chip ${S.rm?'on':''}" data-a="rm">${S.rm?'مفعّل':'متوقف'}</button></div>
+ <div class="row"><b>الاشتراك</b><span>${S.prem?'مفعّل':'غير مفعّل'}</span><button class="chip" data-a="pw">${S.prem?'إدارة':'اشترك'}</button></div>
+ <h2 style="margin-top:16px">المساعدة</h2><details><summary>كيف أستعيد مشترياتي؟</summary><p>من صفحة الاشتراك اضغط «استعادة المشتريات».</p></details><details><summary>كيف ألغي الاشتراك؟</summary><p>من إدارة اشتراكات Google Play على جهازك.</p></details><details><summary>هل يُحفظ التقدم دون إنترنت؟</summary><p>نعم، كل الرسومات والتقدم محفوظة على جهازك فقط.</p></details><details><summary>هل يجمع التطبيق بيانات عن الطفل؟</summary><p>لا. لا إعلانات ولا تحليلات ولا بيانات شخصية.</p></details>
+ <button class="btn" style="margin-top:14px;color:var(--er)" data-a="wipe">حذف كل البيانات</button><p style="text-align:center;font-size:13px">لوّن معي · الإصدار 3.0</p></div>`)};
+
+/* ===== actions ===== */
+const A={
+ band:el=>{pr().band=+el.dataset.v;save();R.ob()},next:()=>{if(OB<2){OB++;R.ob()}else{S.ob=1;save();go('home')}},skip:()=>{S.ob=1;save();go('home')},
+ home:()=>go('home'),snd:()=>{S.sfx=!S.sfx;save();R.home()},snd2:()=>{S.sfx=!S.sfx;save();R.par()},rm:()=>{S.rm=!S.rm;save();go('par')},
+ gal:()=>go('gal'),par:()=>gate(()=>{CM();go('par')}),pw:()=>{CM();go('pw')},plan:el=>{plan=el.dataset.v;R.pw()},
+ prof:()=>{S.act=(S.act+1)%S.prof.length;save();R.home();toast('الملف: '+pr().name)},
+ pack:el=>{const k=PK.find(q=>q.id===el.dataset.v);sfx(520);if(k.pr&&!S.prem)return M(`<h2>${k.e} ${k.n}</h2><p>هذا الكتاب ضمن النسخة الكاملة: كل الكتب، النقوش واللمعان، وملفات الأطفال.</p><div class="acts"><button class="btn p" data-a="pw">شاهد الخطط</button><button class="btn" onclick="CM()">ليس الآن</button></div>`);flt='all';go('pack',k.id)},
+ flt:el=>{flt=el.dataset.v;R.pack()},fav:el=>{const p=pr(),q=el.dataset.v;p.fav[q]=!p.fav[q];save();R.pack()},
+ open:el=>openPage(el.dataset.v),
+ cont:()=>{const k=PK.find(q=>q.id===PKID),p=pr(),q=k.p.map(x=>k.id+'.'+x).find(x=>!p.done[x])||k.id+'.'+k.p[0];openPage(q)},
+ resume:()=>{const p=pr();openPage(p.last||'an.cat')},
+ rest:()=>toast(S.prem?'تمت استعادة مشترياتك':'لا توجد مشتريات لاستعادتها'),
+ faq:()=>M(`<h2>الخصوصية والشروط</h2><p>لا يجمع التطبيق أي بيانات شخصية، وتُحفظ الرسومات على جهازك فقط.</p><button class="btn" onclick="CM()">حسناً</button>`),
+ buy:()=>gate(()=>{CM();S.prem=1;save();sfx(784,.2);toast('تم فتح كل الكتب 🎉 (تجريبي)');go('home')}),
+ gk:el=>{if(gin.length<2&&Date.now()>=lockT){gin+=el.dataset.v;$('#gd').textContent=gin}},gx:()=>{gin='';$('#gd').innerHTML='&nbsp;'},
+ gok:()=>{if(Date.now()<lockT)return;if(+gin===gans){fails=0;cyc=0;pUntil=Date.now()+6e5;CM();gcb()}else{fails++;gin='';if(fails>=3){fails=0;cyc++;lockT=Date.now()+3e4;gui()}else{$('#gd').innerHTML='&nbsp;';$('#gm').textContent='إجابة غير صحيحة، حاول مرة أخرى.'}}},
+ share:el=>gate(async()=>{CM();const q=el.dataset.v,d=await idb('get','a:'+pr().id+':'+q);if(!d)return toast('تعذّر فتح الرسمة');const b=await (await fetch(d)).blob(),f=new File([b],'drawing.png',{type:'image/png'});try{if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f]});else{const a=document.createElement('a');a.href=d;a.download='drawing.png';a.click()}}catch(x){}}),
+ del:el=>M(`<h2>حذف الرسم؟</h2><p>سيُحذف هذا الرسم نهائياً.</p><div class="acts"><button class="btn p" data-a="del2" data-v="${el.dataset.v}">احذف</button><button class="btn" onclick="CM()">إلغاء</button></div>`,'c'),
+ del2:el=>{CM();const p=pr(),q=el.dataset.v,ts=p.art[q],t=setTimeout(()=>idb('del','a:'+p.id+':'+q),5000);delete p.art[q];save();R.gal();toast('تم الحذف',()=>{clearTimeout(t);p.art[q]=ts;save();R.gal()})},
+ pick:el=>{S.act=+el.dataset.v;save();R.par()},
+ padd:()=>{const n=S.prof.length;S.prof.push({id:'p'+Date.now(),name:'فنان '+(n+1),av:AV[n],band:1,done:{},fav:{},th:{},art:{},last:null});save();R.par()},
+ pdel:el=>M(`<h2>حذف الملف؟</h2><p>ستُحذف رسومات هذا الطفل وتقدمه.</p><div class="acts"><button class="btn p" data-a="pdel2" data-v="${el.dataset.v}">احذف</button><button class="btn" onclick="CM()">إلغاء</button></div>`,'c'),
+ pdel2:el=>{CM();S.prof.splice(+el.dataset.v,1);S.act=0;save();R.par()},
+ ren:el=>M(`<h2>اسم الطفل (اختياري)</h2><input id="nm" maxlength="14" value="${S.prof[+el.dataset.v].name}"><div class="acts"><button class="btn p" data-a="ren2" data-v="${el.dataset.v}">حفظ</button></div>`,'c'),
+ ren2:el=>{S.prof[+el.dataset.v].name=$('#nm').value.trim()||'فنان';save();CM();R.par()},
+ wipe:()=>M(`<h2>حذف كل البيانات؟</h2><p>ستُحذف كل الرسومات والتقدم من هذا الجهاز نهائياً.</p><div class="acts"><button class="btn p" data-a="wipe2">متابعة</button><button class="btn" onclick="CM()">إلغاء</button></div>`,'c'),
+ wipe2:()=>M(`<h2>هل أنت متأكد؟</h2><p>لا يمكن التراجع عن هذا الإجراء.</p><div class="acts"><button class="btn p" data-a="wipe3">نعم، احذف</button><button class="btn" onclick="CM()">إلغاء</button></div>`,'c'),
+ wipe3:()=>{try{localStorage.clear();indexedDB.deleteDatabase('lm3')}catch(x){}location.reload()},
+ /* editor */
+ edback:async()=>{await autosave();go('pack',cur.k)},
+ undo:()=>{if(hist.length){pc.putImageData(hist.pop(),0,0);dirty=1}},
+ clear:()=>M(`<h2>هل تريد مسح الرسم؟</h2><div class="acts"><button class="btn p" data-a="clear2">امسح</button><button class="btn g" onclick="CM()">احتفظ</button></div>`,'c'),
+ clear2:()=>{CM();snap();pc.fillStyle='#fff';pc.fillRect(0,0,W,H);dirty=1},
+ tab:el=>{tabv=el.dataset.v;document.querySelectorAll('#tabs .chip').forEach(b=>b.classList.toggle('on',b===el));pal()},
+ tool:el=>setTool(el.dataset.v),
+ col:el=>{color=el.dataset.v;if(tool==='eraser'||tool==='pattern'&&0)setTool('brush');if(tool==='pattern'&&tabv==='c'){}sfx(700,.05);pal()},
+ pat:el=>{pat=+el.dataset.v;setTool('pattern');pal()},
+ savep:async()=>{const t=await exportPNG(),p=pr();await idb('put','a:'+p.id+':'+cur.id,t.toDataURL('image/png'));p.th[cur.id]=thumb();p.done[cur.id]=1;p.art[cur.id]=Date.now();p.last=cur.id;dirty=0;save();[523,659,784,1046].forEach((f,i)=>setTimeout(()=>sfx(f,.15),i*100));M(`<h2>⭐ تم حفظ رسمتك</h2><div class="acts"><button class="btn p" data-a="tog">شاهدها في المعرض</button><button class="btn" onclick="CM()">متابعة</button></div>`,'c')},
+ tog:async()=>{CM();await autosave();go('gal')}
+};
+document.addEventListener('click',ev=>{const el=ev.target.closest('[data-a]');if(el&&A[el.dataset.a]){if(!/^(gk|tool|col|pat)$/.test(el.dataset.a))sfx(440,.05);A[el.dataset.a](el)}});
+
+/* ===== editor ===== */
+const pcv=$('#paint'),pc=pcv.getContext('2d',{willReadFrequently:true}),lc=$('#line').getContext('2d',{willReadFrequently:true});
+let cur,tool='brush',color=COLORS[1],pat=0,size=24,bar,hist=[],dirty=0,tabv='c',down=false,last,pts,base;
+const PTU=PT.map(f=>{const t=document.createElement('canvas');t.width=t.height=48;const x=t.getContext('2d'),d=x.createImageData(48,48);for(let j=0;j<48;j++)for(let i=0;i<48;i++){const o=(j*48+i)*4,v=f(i,j)?[34,48,74]:[255,239,217];d.data[o]=v[0];d.data[o+1]=v[1];d.data[o+2]=v[2];d.data[o+3]=255}x.putImageData(d,0,0);return t.toDataURL()});
+function setTool(t){tool=t;buildTools();if(t==='pattern'&&tabv!=='p')A.tab({dataset:{v:'p'}});}
+function buildTools(){$('#tools').innerHTML=TL.filter(t=>t[3]<=pr().band).map(([id,ic,n])=>`<button class="tool ${id===tool?'sel':''}" data-a="tool" data-v="${id}"><span>${ic}</span>${n}</button>`).join('')}
+function pal(){$('#pal').innerHTML=tabv==='c'?COLORS.map(q=>`<button class="sw ${q===color?'sel':''}" style="background:${q}" data-a="col" data-v="${q}" aria-label="لون"></button>`).join(''):PTU.map((u,i)=>`<button class="sw ${i===pat&&tool==='pattern'?'sel':''}" style="background-image:url(${u})" data-a="pat" data-v="${i}" aria-label="نقش ${i+1}"></button>`).join('')}
+function setDot(){const d=$('#dot i');d.style.width=d.style.height=Math.max(6,size*.7)+'px'}
+$('#size').oninput=ev=>{size=+ev.target.value;setDot()};
+async function openPage(id){
+  if(cur)await autosave();const[k,pic]=id.split('.');cur={id,pic,k};PKID=k;
+  pc.fillStyle='#fff';pc.fillRect(0,0,W,H);LC='#222';lc.clearRect(0,0,W,H);drawLines(lc,PIC[pic],1);
+  const a=lc.getImageData(0,0,W,H).data;bar=new Uint8Array(W*H);for(let i=0;i<W*H;i++)bar[i]=a[i*4+3]>60?1:0;
+  const d=await idb('get','d:'+pr().id+':'+id);if(d){const im=new Image();im.onload=()=>pc.drawImage(im,0,0);im.src=d}
+  hist=[];dirty=0;tool='brush';size=[40,28,18][pr().band];$('#size').value=size;setDot();$('#ttl').textContent=PIC[pic].n;buildTools();pal();go('ed');fit();
+}
+function fit(){const a=$('#area'),w=Math.min(a.clientWidth-8,(a.clientHeight-8)*4/3),s=$('#stage');s.style.width=w+'px';s.style.height=w*.75+'px'}
+addEventListener('resize',fit);
+function snap(){hist.push(pc.getImageData(0,0,W,H));while(hist.length>20&&hist.length*W*H*4>64e6)hist.shift()}
+function thumb(){const t=document.createElement('canvas');t.width=256;t.height=192;const x=t.getContext('2d');x.drawImage(pcv,0,0,256,192);drawLines(x,PIC[cur.pic],.32);return t.toDataURL('image/jpeg',.7)}
+async function exportPNG(){const t=document.createElement('canvas');t.width=2048;t.height=1536;const x=t.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(pcv,0,0,2048,1536);drawLines(x,PIC[cur.pic],2.56);return t}
+async function autosave(){if(!dirty||!cur)return;dirty=0;const p=pr();await idb('put','d:'+p.id+':'+cur.id,pcv.toDataURL());p.th[cur.id]=thumb();p.last=cur.id;save()}
+setInterval(autosave,1e4);document.addEventListener('visibilitychange',()=>{if(document.hidden)autosave()});
+
+const hex=q=>[1,3,5].map(i=>parseInt(q.slice(i,i+2),16)),mix=a=>a.map(v=>v+(255-v)*.55|0);
+function fill(x,y){
+  x|=0;y|=0;if(x<0||y<0||x>=W||y>=H||bar[y*W+x])return;snap();
+  const img=pc.getImageData(0,0,W,H),D=img.data,C1=hex(color),C2=mix(C1),pf=tool==='pattern'?PT[pat]:null,seen=new Uint8Array(W*H),s=[x,y];
+  while(s.length){
+    const y0=s.pop(),x0=s.pop();if(seen[y0*W+x0]||bar[y0*W+x0])continue;let l=x0,r=x0;
+    while(l>0&&!bar[y0*W+l-1]&&!seen[y0*W+l-1])l--;while(r<W-1&&!bar[y0*W+r+1]&&!seen[y0*W+r+1])r++;
+    for(let k=l;k<=r;k++){const j=y0*W+k,v=pf&&!pf(k,y0)?C2:C1;seen[j]=1;D[j*4]=v[0];D[j*4+1]=v[1];D[j*4+2]=v[2];D[j*4+3]=255;
+      if(y0>0&&!seen[j-W]&&!bar[j-W])s.push(k,y0-1);if(y0<H-1&&!seen[j+W]&&!bar[j+W])s.push(k,y0+1)}
+  }
+  pc.putImageData(img,0,0);dirty=1;
+}
+const rnd=n=>(Math.random()-.5)*2*n;
+function pos(ev){const r=$('#line').getBoundingClientRect();return[(ev.clientX-r.left)*W/r.width,(ev.clientY-r.top)*H/r.height]}
+function line(a,b,lw,col,al){pc.globalAlpha=al||1;pc.strokeStyle=col;pc.lineWidth=lw;pc.lineCap=pc.lineJoin='round';pc.beginPath();pc.moveTo(a[0],a[1]);pc.lineTo(b[0]+.01,b[1]);pc.stroke();pc.globalAlpha=1}
+function spark(x,y,r){pc.beginPath();pc.moveTo(x,y-r);pc.quadraticCurveTo(x,y,x+r,y);pc.quadraticCurveTo(x,y,x,y+r);pc.quadraticCurveTo(x,y,x-r,y);pc.quadraticCurveTo(x,y,x,y-r);pc.fill()}
+function seg(a,b){
+  const dx=b[0]-a[0],dy=b[1]-a[1],n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/3)),sp=Math.hypot(dx,dy);
+  switch(tool){
+    case'brush':line(a,b,size*(1.1-Math.min(sp,30)/150),color);break;
+    case'pencil':line(a,b,size*.2+1.5,color,.92);break;
+    case'eraser':line(a,b,size*1.6,'#fff');break;
+    case'marker':pc.putImageData(base,0,0);pc.globalAlpha=.65;pc.strokeStyle=color;pc.lineWidth=size*.9;pc.lineCap=pc.lineJoin='round';pc.beginPath();pc.moveTo(pts[0][0],pts[0][1]);pts.forEach(p=>pc.lineTo(p[0]+.01,p[1]));pc.stroke();pc.globalAlpha=1;break;
+    case'spray':pc.fillStyle=color;pc.globalAlpha=.55;for(let k=0;k<n;k++){const px=a[0]+dx*k/n,py=a[1]+dy*k/n;for(let m=0;m<size*.9;m++){const g=(Math.random()+Math.random()+Math.random()-1.5)*size*.9,h=(Math.random()+Math.random()+Math.random()-1.5)*size*.9;pc.fillRect(px+g,py+h,2,2)}}pc.globalAlpha=1;break;
+    case'shine':line(a,b,size*.7,color,.3);for(let k=0;k<n;k++){const px=a[0]+dx*k/n+rnd(size*.5),py=a[1]+dy*k/n+rnd(size*.5);if(Math.random()<.35){pc.fillStyle=Math.random()<.5?'#fff':'#FFC857';spark(px,py,3+Math.random()*size*.25)}}break;
+  }
+}
+const stg=$('#stage');let fingers=0;
+stg.addEventListener('pointerdown',ev=>{
+  ev.preventDefault();const p=pos(ev);
+  if(tool==='fill'||tool==='pattern'){fill(p[0],p[1]);sfx(500+Math.random()*300,.1);return}
+  if(tool==='outline'){LC=color;lc.clearRect(0,0,W,H);drawLines(lc,PIC[cur.pic],1);dirty=1;return}
+  stg.setPointerCapture(ev.pointerId);snap();down=true;last=p;pts=[p];if(tool==='marker')base=pc.getImageData(0,0,W,H);seg(p,p);
+});
+stg.addEventListener('pointermove',ev=>{if(!down)return;ev.preventDefault();const p=pos(ev);pts.push(p);seg(last,p);last=p});
+['pointerup','pointercancel'].forEach(t=>stg.addEventListener(t,()=>{if(down){down=false;dirty=1}}));
+
+/* ===== start ===== */
+go('splash');
+</script>
+</body>
+</html>
